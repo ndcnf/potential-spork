@@ -17,6 +17,7 @@ def home():
 
     for movie in movies:
         projections = []
+        infos = []
 
         film_title = movie.find(class_='archive-movie__item__title')
 
@@ -28,7 +29,17 @@ def home():
 
         genre = movie.find(class_='archive-movie__item__genre').get_text(strip=True) if movie.find(class_='archive-movie__item__genre') else "N/A"
         category = movie.find(class_='archive-movie__item__categories').get_text(strip=True) if movie.find(class_='archive-movie__item__categories') else "N/A"
+
+        if category == 'NIFFF Invasion':
+            continue
+
         projections_raw = movie.find(class_='archive-movie__item__information--right')
+
+        infos_raw = movie.find(class_='archive-movie__item__information--left')
+
+        for info in infos_raw:
+            if '<br/>' not in str(info) and len(str(info)) > 2 :
+                infos.append(str(info).strip())
 
         for day in projections_raw:
             if '<br/>' not in str(day) and len(str(day)) > 2 :
@@ -37,7 +48,8 @@ def home():
         films[title] = {
             'genre': genre,
             'category': category,
-            'projections': projections
+            'projections': projections,
+            'infos': infos
         }
 
     return render_template("index.html", films=films)
