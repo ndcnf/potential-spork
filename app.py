@@ -5,14 +5,6 @@ from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
-
-
-
-
-
-
-
-
 @app.route("/")
 @app.route("/2024")
 def home():
@@ -43,14 +35,12 @@ def home():
                 projections.append(str(day).strip())
 
         films[title] = {
-            # 'title': film_title,
             'genre': genre,
             'category': category,
             'projections': projections
         }
 
-    return (films)
-    # return render_template("index.html", titles=titles, genres=genres, infos=infos, categories=categories, projections=projections)
+    return render_template("index.html", films=films)
 
 if __name__ == "__main__":
     app.run(debug=True)
