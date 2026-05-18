@@ -9,6 +9,46 @@ const mockCycles: Cycle[] = previewDataset.cycles
 const mockFilms: Film[] = previewDataset.films
 const mockScreenings: Screening[] = previewDataset.screenings
 
+function overlaps(left: Screening, right: Screening): boolean {
+  if (!left.starts_at || !left.ends_at || !right.starts_at || !right.ends_at || left.id === right.id) {
+    return false
+  }
+
+  return left.starts_at < right.ends_at && right.starts_at < left.ends_at
+}
+
+function recomputeScreeningStates(screenings: Screening[]): Screening[] {
+  return screenings.map((screening) => {
+    if (screening.selection_status === 'tentative' || screening.selection_status === 'confirmed') {
+      return { ...screening, derived_state: 'selected' }
+    }
+
+    const siblingSelected = screenings.find(
+      (other) =>
+        other.film_id === screening.film_id &&
+        other.id !== screening.id &&
+        (other.selection_status === 'tentative' || other.selection_status === 'confirmed'),
+    )
+
+    if (siblingSelected) {
+      return { ...screening, derived_state: 'disabled' }
+    }
+
+    const conflictSelected = screenings.find(
+      (other) =>
+        other.id !== screening.id &&
+        (other.selection_status === 'tentative' || other.selection_status === 'confirmed') &&
+        overlaps(screening, other),
+    )
+
+    if (conflictSelected) {
+      return { ...screening, derived_state: 'conflict' }
+    }
+
+    return { ...screening, derived_state: 'available' }
+  })
+}
+
 export const useFestivalStore = defineStore('festival', {
   state: () => ({
     cycles: [] as Cycle[],
@@ -42,6 +82,18 @@ export const useFestivalStore = defineStore('festival', {
     },
   },
   actions: {
+    ensureWorkingData() {
+      if (!this.cycles.length) {
+        this.cycles = structuredClone(mockCycles)
+      }
+      if (!this.films.length) {
+        this.films = structuredClone(mockFilms)
+      }
+      if (!this.screenings.length) {
+        this.screenings = structuredClone(mockScreenings)
+        this.usingMocks = true
+      }
+    },
     async bootstrap() {
       this.loading = true
       try {
@@ -74,16 +126,39 @@ export const useFestivalStore = defineStore('festival', {
       }
     },
     updateFilmPriority(filmId: number, priority: Priority) {
+      this.ensureWorkingData()
       const target = this.films.find((film) => film.id === filmId)
       if (target) {
         target.priority = priority
       }
     },
     updateCyclePriority(cycleId: number, priority: Priority) {
+      this.ensureWorkingData()
       const target = this.cycles.find((cycle) => cycle.id === cycleId)
       if (target) {
         target.priority = priority
       }
+    },
+    setScreeningSelection(screeningId: number, status: Screening['selection_status']) {
+      this.ensureWorkingData()
+
+      const target = this.screenings.find((screening) => screening.id === screeningId)
+      if (!target) {
+        return
+      }
+
+      if (status === 'none') {
+        target.selection_status = 'none'
+      } else {
+        target.selection_status = status
+        for (const sibling of this.screenings) {
+          if (sibling.film_id === target.film_id && sibling.id !== target.id) {
+            sibling.selection_status = 'none'
+          }
+        }
+      }
+
+      this.screenings = recomputeScreeningStates(this.screenings)
     },
   },
 })
