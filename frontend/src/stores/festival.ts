@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 
+import { screeningsOverlapWithBuffer } from '@/lib/planning'
 import { buildPreviewDataset } from '@/mock/nifff2025Preview'
 import { api } from '@/services/api'
 import type { Cycle, Film, Priority, Screening } from '@/types'
@@ -8,14 +9,6 @@ const previewDataset = buildPreviewDataset()
 const mockCycles: Cycle[] = previewDataset.cycles
 const mockFilms: Film[] = previewDataset.films
 const mockScreenings: Screening[] = previewDataset.screenings
-
-function overlaps(left: Screening, right: Screening): boolean {
-  if (!left.starts_at || !left.ends_at || !right.starts_at || !right.ends_at || left.id === right.id) {
-    return false
-  }
-
-  return left.starts_at < right.ends_at && right.starts_at < left.ends_at
-}
 
 function recomputeScreeningStates(screenings: Screening[]): Screening[] {
   return screenings.map((screening) => {
@@ -38,7 +31,7 @@ function recomputeScreeningStates(screenings: Screening[]): Screening[] {
       (other) =>
         other.id !== screening.id &&
         (other.selection_status === 'tentative' || other.selection_status === 'confirmed') &&
-        overlaps(screening, other),
+        screeningsOverlapWithBuffer(screening, other),
     )
 
     if (conflictSelected) {

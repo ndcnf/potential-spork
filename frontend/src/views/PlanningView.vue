@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 
+import { formatMinutes, formatTimeRange as formatTimeRangeValue, RESERVATION_BUFFER_MINUTES, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
 import type { Film, Screening } from '@/types'
 
@@ -42,19 +43,21 @@ const plannableFilmIds = computed(
 )
 
 const planningScreenings = computed<PlanningScreening[]>(() => {
-  const selectedFilmIds = new Set(
-    store.visibleScreenings
-      .filter((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')
-      .map((screening) => screening.film_id),
+  const baseScreenings = store.visibleScreenings.filter((screening) => screening.starts_at && screening.ends_at)
+  const selectedScreenings = baseScreenings.filter(
+    (screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed',
   )
+  const selectedFilmIds = new Set(selectedScreenings.map((screening) => screening.film_id))
 
-  return store.visibleScreenings
+  return baseScreenings
     .filter((screening) => screening.starts_at && screening.ends_at)
     .filter((screening) => plannableFilmIds.value.has(screening.film_id))
     .map((screening) => {
       const dayKey = screening.starts_at?.slice(0, 10) ?? 'Sans date'
       const startMinutes = toMinutes(screening.starts_at)
       const endMinutes = toMinutes(screening.ends_at)
+      const isSelected = screening.selection_status === 'tentative' || screening.selection_status === 'confirmed'
+      const isConflict = selectedScreenings.some((other) => screeningsOverlapWithBuffer(screening, other))
 
       return {
         ...screening,
@@ -62,9 +65,9 @@ const planningScreenings = computed<PlanningScreening[]>(() => {
         dayKey,
         startMinutes,
         endMinutes,
-        isSelected: screening.selection_status === 'tentative' || screening.selection_status === 'confirmed',
+        isSelected,
         isAlternative: selectedFilmIds.has(screening.film_id) && screening.selection_status === 'none',
-        isConflict: screening.derived_state === 'conflict',
+        isConflict,
       }
     })
     .sort((left, right) => {
@@ -96,12 +99,16 @@ const selectedAgenda = computed(() => selectedDayScreenings.value.filter((screen
 
 const candidateList = computed(() =>
   selectedDayScreenings.value.filter(
-    (screening) => !screening.isSelected && screening.derived_state !== 'disabled' && screening.derived_state !== 'past',
+    (screening) =>
+      !screening.isSelected &&
+      screening.derived_state !== 'disabled' &&
+      screening.derived_state !== 'past' &&
+      screening.derived_state !== 'conflict',
   ),
 )
 
 const conflictList = computed(() =>
-  selectedDayScreenings.value.filter((screening) => screening.isConflict || screening.derived_state === 'conflict'),
+  selectedDayScreenings.value.filter((screening) => screening.isSelected && screening.isConflict),
 )
 
 const alternativesList = computed(() =>
@@ -117,7 +124,7 @@ const dayGaps = computed<PlanningGap[]>(() => {
     const next = selected[index + 1]
     const duration = next.startMinutes - current.endMinutes
 
-    if (duration >= 45) {
+    if (duration >= RESERVATION_BUFFER_MINUTES) {
       gaps.push({
         dayKey: current.dayKey,
         start: current.ends_at?.slice(11, 16) ?? '--:--',
@@ -133,7 +140,7 @@ const dayGaps = computed<PlanningGap[]>(() => {
 const summary = computed(() => ({
   films: store.films.filter((film) => isPlanningPriority(film.priority)).length,
   selected: planningScreenings.value.filter((screening) => screening.isSelected).length,
-  conflicts: planningScreenings.value.filter((screening) => screening.isConflict).length,
+  conflicts: planningScreenings.value.filter((screening) => screening.isSelected && screening.isConflict).length,
   alternatives: planningScreenings.value.filter((screening) => screening.isAlternative || screening.derived_state === 'disabled').length,
   gaps: dayGaps.value.length,
 }))
@@ -150,30 +157,23 @@ const gridByVenue = computed(() =>
   })),
 )
 
-function toMinutes(value: string | null): number {
-  if (!value) return 0
-  const hours = Number(value.slice(11, 13))
-  const minutes = Number(value.slice(14, 16))
-  const normalizedHours = hours < 6 ? hours + 24 : hours
-  return normalizedHours * 60 + minutes
-}
-
 function formatDayLabel(dayKey: string): string {
   const date = new Date(`${dayKey}T12:00:00`)
   return new Intl.DateTimeFormat('fr-CH', { weekday: 'short', day: '2-digit', month: '2-digit' }).format(date)
 }
 
 function formatTimeRange(screening: PlanningScreening): string {
-  return `${screening.starts_at?.slice(11, 16) ?? '--:--'} - ${screening.ends_at?.slice(11, 16) ?? '--:--'}`
+  return formatTimeRangeValue(screening.starts_at, screening.ends_at)
 }
 
 function filmMeta(screening: PlanningScreening): string {
   const countries = screening.film?.countries ?? 'Pays ?'
-  const duration = screening.film?.duration_minutes ?? '?'
-  return `${countries} · ${duration} min`
+  const duration = screening.film?.duration_minutes
+  return `${countries} · ${formatMinutes(duration)}`
 }
 
 function screeningReason(screening: PlanningScreening): string {
+  if (screening.isConflict) return 'Conflit avec autre seance choisie'
   if (screening.selection_status === 'confirmed') return 'Confirmee'
   if (screening.selection_status === 'tentative') return 'Tentative'
   if (screening.derived_state === 'disabled') return 'Autre seance de ce film deja choisie'
@@ -181,9 +181,18 @@ function screeningReason(screening: PlanningScreening): string {
   return 'Disponible'
 }
 
+function gapLabel(durationMinutes: number): string {
+  if (durationMinutes <= 15) return 'Faudra courir'
+  if (durationMinutes <= 45) return 'Tu peux souffler un peu'
+  if (durationMinutes <= 120) return "T'as pense a manger ?"
+  return "C'est un jour de conge ?"
+}
+
 function setSelection(screeningId: number, status: Screening['selection_status']): void {
   store.setScreeningSelection(screeningId, status)
 }
+
+const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
 </script>
 
 <template>
@@ -196,6 +205,7 @@ function setSelection(screeningId: number, status: Screening['selection_status']
           Une vue pour arbitrer le plan choisi, une vue pour retrouver la lecture globale proche de la grille du festival.
         </p>
       </div>
+      <a class="planning__export" :href="exportUrl" target="_blank" rel="noopener">Exporter iCal</a>
     </header>
 
     <section class="planning__summary">
@@ -217,7 +227,7 @@ function setSelection(screeningId: number, status: Screening['selection_status']
       </article>
       <article class="planning__summary-card">
         <strong>{{ summary.gaps }}</strong>
-        <span>trou(s) utiles</span>
+        <span>creneau(x) dispo</span>
       </article>
     </section>
 
@@ -255,7 +265,7 @@ function setSelection(screeningId: number, status: Screening['selection_status']
 
           <div v-if="selectedAgenda.length" class="planning__agenda">
             <template v-for="screening in selectedAgenda" :key="screening.id">
-              <article class="planning__item planning__item--selected">
+              <article class="planning__item planning__item--selected" :class="{ 'planning__item--conflict': screening.isConflict }">
                 <div class="planning__item-time">{{ formatTimeRange(screening) }}</div>
                 <div class="planning__item-body">
                   <strong>{{ screening.film_title }}</strong>
@@ -277,8 +287,8 @@ function setSelection(screeningId: number, status: Screening['selection_status']
                 :key="`${gap.dayKey}-${gap.start}-${gap.end}`"
                 class="planning__gap"
               >
-                <strong>Trou utile</strong>
-                <span>{{ gap.start }} -> {{ gap.end }} · {{ gap.durationMinutes }} min</span>
+                <strong>Creneau disponible</strong>
+                <span>{{ gap.start }} -> {{ gap.end }} · {{ formatMinutes(gap.durationMinutes) }} · {{ gapLabel(gap.durationMinutes) }}</span>
               </article>
             </template>
           </div>
@@ -320,7 +330,7 @@ function setSelection(screeningId: number, status: Screening['selection_status']
               <p>{{ formatTimeRange(screening) }} · {{ screening.venue_name }}</p>
               <p>{{ screeningReason(screening) }}</p>
               <div class="planning__action-group">
-                <button type="button" class="planning__action" @click="setSelection(screening.id, 'tentative')">Choisir ici</button>
+                <button type="button" class="planning__action planning__action--ghost" @click="setSelection(screening.id, 'none')">Retirer</button>
               </div>
             </article>
           </div>

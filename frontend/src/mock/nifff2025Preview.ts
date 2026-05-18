@@ -1,3 +1,4 @@
+import { screeningsOverlapWithBuffer } from '@/lib/planning'
 import type { Cycle, Film, Priority, Screening } from '@/types'
 
 type PreviewCycle = {
@@ -147,15 +148,13 @@ function parseDetails(details: string | null): { countries: string | null; year:
 function computeEnd(start: string, duration: number | null): string {
   const date = new Date(start)
   date.setMinutes(date.getMinutes() + (duration ?? 120))
-  return date.toISOString().slice(0, 19)
-}
-
-function overlaps(left: Screening, right: Screening): boolean {
-  if (!left.starts_at || !left.ends_at || !right.starts_at || !right.ends_at || left.id === right.id) {
-    return false
-  }
-
-  return left.starts_at < right.ends_at && right.starts_at < left.ends_at
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`
 }
 
 export function buildPreviewDataset(): { cycles: Cycle[]; films: Film[]; screenings: Screening[] } {
@@ -225,7 +224,7 @@ export function buildPreviewDataset(): { cycles: Cycle[]; films: Film[]; screeni
       (other) =>
         other.id !== screening.id &&
         (other.selection_status === 'tentative' || other.selection_status === 'confirmed') &&
-        overlaps(screening, other),
+        screeningsOverlapWithBuffer(screening, other),
     )
 
     let derived: Screening['derived_state'] = 'available'

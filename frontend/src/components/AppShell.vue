@@ -6,40 +6,37 @@ const route = useRoute()
 const tabs = [
   { label: 'Films', to: '/films', hint: 'Selection initiale' },
   { label: 'Planning', to: '/planning', hint: 'Assemblage visuel' },
-  { label: 'Trous', to: '/gaps', hint: 'Remplissage cible' },
+  { label: 'Creneaux libres', to: '/gaps', hint: 'Remplissage cible' },
 ]
+
+const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
 </script>
 
 <template>
   <div class="shell">
-    <aside class="sidebar">
-      <div>
+    <header class="app-header">
+      <div class="app-header__brand">
         <p class="eyebrow">Potential Spork</p>
-        <p class="step-indicator">Etape {{ tabs.findIndex((tab) => tab.to === route.path) + 1 }} / 3</p>
         <h1>Festival planner</h1>
-        <p class="sidebar-copy">
-          Prioriser les films d'abord, visualiser les seances ensuite, combler les trous sans bruit.
-        </p>
       </div>
 
-      <nav class="nav">
+      <nav class="app-header__nav">
         <RouterLink
           v-for="tab in tabs"
           :key="tab.to"
           :to="tab.to"
-          class="nav-link"
-          :class="{ active: route.path === tab.to }"
+          class="app-header__link"
+          :class="{ 'app-header__link--active': route.path === tab.to }"
         >
           <span>{{ tab.label }}</span>
           <small>{{ tab.hint }}</small>
         </RouterLink>
       </nav>
 
-      <div class="sidebar-card">
-        <strong>V1</strong>
-        <p>Mono-festival, priorites cycle/film, planning manuel assiste, export `.ics`.</p>
+      <div class="app-header__actions">
+        <a class="app-header__export" :href="exportUrl" target="_blank" rel="noopener">Exporter iCal</a>
       </div>
-    </aside>
+    </header>
 
     <main class="main-panel">
       <RouterView />

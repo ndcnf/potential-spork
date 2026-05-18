@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive } from 'vue'
 
+import { formatTimeRange } from '@/lib/planning'
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import PrioritySelect from '@/components/ui/PrioritySelect.vue'
 import { useFestivalStore } from '@/stores/festival'
-import type { Film, Priority } from '@/types'
+import type { Film, Priority, Screening } from '@/types'
 
 const store = useFestivalStore()
 
@@ -51,6 +52,22 @@ const filteredGroups = computed(() => {
     .filter((group) => group.films.length > 0)
 })
 
+const selectedScreeningByFilmId = computed(() => {
+  const selected = new Map<number, Screening>()
+
+  for (const screening of store.visibleScreenings) {
+    if (!screening.starts_at || !screening.ends_at) {
+      continue
+    }
+
+    if (screening.selection_status === 'tentative' || screening.selection_status === 'confirmed') {
+      selected.set(screening.film_id, screening)
+    }
+  }
+
+  return selected
+})
+
 function sortFilms(left: Film, right: Film, mode: string): number {
   if (mode === 'priority') {
     return priorityRank(right.priority) - priorityRank(left.priority) || left.title.localeCompare(right.title)
@@ -77,6 +94,27 @@ function isCycleOpen(cycleId: number): boolean {
 
 function toggleCycle(cycleId: number): void {
   openCycles[cycleId] = !isCycleOpen(cycleId)
+}
+
+function shouldWarnMissingScreening(priority: Priority): boolean {
+  return priority === 'medium' || priority === 'high' || priority === 'must-see'
+}
+
+function formatScreeningLabel(screening: Screening): string {
+  if (!screening.starts_at || !screening.ends_at) {
+    return 'Horaire inconnu'
+  }
+
+  const date = new Date(`${screening.starts_at.slice(0, 10)}T12:00:00`)
+  const dayLabel = new Intl.DateTimeFormat('fr-CH', { weekday: 'short' })
+    .format(date)
+    .replace('.', '')
+    .toLowerCase()
+  const day = screening.starts_at.slice(8, 10)
+  const month = screening.starts_at.slice(5, 7)
+  const timeRange = formatTimeRange(screening.starts_at, screening.ends_at).replace(/:/g, 'h').replace(' - ', '-')
+
+  return `${dayLabel} ${day}.${month} ${timeRange}`
 }
 </script>
 
@@ -154,6 +192,15 @@ function toggleCycle(cycleId: number): void {
 
             <p class="film-meta film-meta--compact">{{ film.countries || 'Pays ?' }} · {{ film.duration_minutes || '?' }} min</p>
             <p class="film-tagline film-tagline--compact">{{ film.tagline || 'Tagline NIFFF a importer' }}</p>
+
+            <div v-if="selectedScreeningByFilmId.get(film.id)" class="film-screenings">
+              <span class="film-screenings__item">
+                {{ formatScreeningLabel(selectedScreeningByFilmId.get(film.id)!) }}
+              </span>
+            </div>
+            <div v-else-if="shouldWarnMissingScreening(film.priority)" class="film-screenings">
+              <span class="film-screenings__item film-screenings__item--warning">pas de seance prevue</span>
+            </div>
           </div>
         </article>
       </div>
