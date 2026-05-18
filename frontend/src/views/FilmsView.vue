@@ -122,15 +122,10 @@ function formatScreeningLabel(screening: Screening): string {
   <section class="page">
     <header class="page-header">
       <div>
-        <p class="eyebrow">Etape 1</p>
         <h2>Liste films</h2>
         <p class="page-copy">
           Vue groupee par cycle. Le cycle reste visible comme structure, mais la decision se prend au niveau du film.
         </p>
-      </div>
-      <div class="status-card" :class="{ mock: store.usingMocks }">
-        <strong>{{ store.usingMocks ? 'Apercu 2025' : 'API connectee' }}</strong>
-        <span>{{ store.usingMocks ? 'PDF + Wayback croises' : 'Donnees du backend' }}</span>
       </div>
     </header>
 
@@ -160,9 +155,12 @@ function formatScreeningLabel(screening: Screening): string {
 
     <section v-for="group in filteredGroups" :key="group.cycle.id" class="cycle-group">
       <header class="cycle-header" :style="{ borderColor: group.cycle.color ?? '#3a3a3a' }">
-        <div>
-          <p class="cycle-title">{{ group.cycle.name }}</p>
-          <small>
+        <div class="cycle-header__main">
+          <div class="cycle-header__title-row">
+            <span class="cycle-header__swatch" :style="{ backgroundColor: group.cycle.color ?? '#3a3a3a' }" />
+            <p class="cycle-title">{{ group.cycle.name }}</p>
+          </div>
+          <small class="cycle-header__meta">
             {{ group.films.length }} film(s) ·
             {{ group.films.filter((film) => film.priority === 'must-see' || film.priority === 'high').length }} fort+
           </small>
@@ -176,7 +174,7 @@ function formatScreeningLabel(screening: Screening): string {
         </div>
       </header>
 
-      <div v-if="isCycleOpen(group.cycle.id)">
+      <div v-if="isCycleOpen(group.cycle.id)" class="cycle-group__body">
         <article v-for="film in group.films" :key="film.id" class="film-card">
           <div class="film-card-grid">
             <div class="film-card-primary">
@@ -205,5 +203,9 @@ function formatScreeningLabel(screening: Screening): string {
         </article>
       </div>
     </section>
+
+    <footer class="page-footer">
+      <small>{{ store.usingMocks ? 'Donnees de preview : NIFFF 2025 croise PDF + Wayback' : 'Donnees : base locale / API courante' }}</small>
+    </footer>
   </section>
 </template>

@@ -15,31 +15,35 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
 <template>
   <div class="shell">
     <header class="app-header">
-      <div class="app-header__brand">
-        <p class="eyebrow">Potential Spork</p>
-        <h1>Festival planner</h1>
-      </div>
+      <div class="app-header__inner">
+        <div class="app-header__brand">
+          <p class="eyebrow">Potential Spork</p>
+          <h1>Festival planner</h1>
+        </div>
 
-      <nav class="app-header__nav">
-        <RouterLink
-          v-for="tab in tabs"
-          :key="tab.to"
-          :to="tab.to"
-          class="app-header__link"
-          :class="{ 'app-header__link--active': route.path === tab.to }"
-        >
-          <span>{{ tab.label }}</span>
-          <small>{{ tab.hint }}</small>
-        </RouterLink>
-      </nav>
+        <nav class="app-header__nav">
+          <RouterLink
+            v-for="tab in tabs"
+            :key="tab.to"
+            :to="tab.to"
+            class="app-header__link"
+            :class="{ 'app-header__link--active': route.path === tab.to }"
+          >
+            <span>{{ tab.label }}</span>
+            <small>{{ tab.hint }}</small>
+          </RouterLink>
+        </nav>
 
-      <div class="app-header__actions">
-        <a class="app-header__export" :href="exportUrl" target="_blank" rel="noopener">Exporter iCal</a>
+        <div class="app-header__actions">
+          <a class="app-header__export" :href="exportUrl" target="_blank" rel="noopener">Exporter iCal</a>
+        </div>
       </div>
     </header>
 
     <main class="main-panel">
-      <RouterView />
+      <div class="main-panel__inner">
+        <RouterView />
+      </div>
     </main>
 
     <nav class="mobile-tabs">

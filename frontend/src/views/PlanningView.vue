@@ -97,6 +97,23 @@ const selectedDayScreenings = computed(() => planningScreenings.value.filter((sc
 
 const selectedAgenda = computed(() => selectedDayScreenings.value.filter((screening) => screening.isSelected))
 
+const selectedFestivalScreenings = computed(() =>
+  planningScreenings.value.filter((screening) => screening.isSelected),
+)
+
+const selectedFestivalByDay = computed(() => {
+  const grouped = new Map<string, PlanningScreening[]>()
+
+  for (const screening of selectedFestivalScreenings.value) {
+    grouped.set(screening.dayKey, [...(grouped.get(screening.dayKey) ?? []), screening])
+  }
+
+  return [...grouped.entries()].map(([day, screenings]) => ({
+    day,
+    screenings: screenings.sort((left, right) => (left.starts_at ?? '').localeCompare(right.starts_at ?? '')),
+  }))
+})
+
 const candidateList = computed(() =>
   selectedDayScreenings.value.filter(
     (screening) =>
@@ -162,6 +179,10 @@ function formatDayLabel(dayKey: string): string {
   return new Intl.DateTimeFormat('fr-CH', { weekday: 'short', day: '2-digit', month: '2-digit' }).format(date)
 }
 
+function selectedCountForDay(dayKey: string): number {
+  return planningScreenings.value.filter((screening) => screening.dayKey === dayKey && screening.isSelected).length
+}
+
 function formatTimeRange(screening: PlanningScreening): string {
   return formatTimeRangeValue(screening.starts_at, screening.ends_at)
 }
@@ -208,58 +229,100 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
       <a class="planning__export" :href="exportUrl" target="_blank" rel="noopener">Exporter iCal</a>
     </header>
 
-    <section class="planning__summary">
-      <article class="planning__summary-card">
-        <strong>{{ summary.films }}</strong>
-        <span>film(s) retenu(s)</span>
-      </article>
-      <article class="planning__summary-card">
-        <strong>{{ summary.selected }}</strong>
-        <span>seance(s) choisie(s)</span>
-      </article>
-      <article class="planning__summary-card">
-        <strong>{{ summary.conflicts }}</strong>
-        <span>conflit(s)</span>
-      </article>
-      <article class="planning__summary-card">
-        <strong>{{ summary.alternatives }}</strong>
-        <span>alternative(s)</span>
-      </article>
-      <article class="planning__summary-card">
-        <strong>{{ summary.gaps }}</strong>
-        <span>creneau(x) dispo</span>
-      </article>
+    <section class="planning__meta-panel">
+      <div class="planning__summary">
+        <article class="planning__summary-card">
+          <strong>{{ summary.films }}</strong>
+          <span>film(s) retenu(s)</span>
+        </article>
+        <article class="planning__summary-card">
+          <strong>{{ summary.selected }}</strong>
+          <span>seance(s) choisie(s)</span>
+        </article>
+        <article class="planning__summary-card">
+          <strong>{{ summary.conflicts }}</strong>
+          <span>conflit(s)</span>
+        </article>
+        <article class="planning__summary-card">
+          <strong>{{ summary.alternatives }}</strong>
+          <span>alternative(s)</span>
+        </article>
+        <article class="planning__summary-card">
+          <strong>{{ summary.gaps }}</strong>
+          <span>creneau(x) dispo</span>
+        </article>
+      </div>
+
+      <section class="planning__controls-panel">
+        <div class="planning__control-group">
+          <p class="eyebrow">Vue</p>
+          <div class="planning__mode-switch" role="tablist" aria-label="Mode planning">
+            <button class="planning__mode-button" :class="{ 'planning__mode-button--active': planningMode === 'plan' }" type="button" @click="planningMode = 'plan'">
+              Plan choisi
+            </button>
+            <button class="planning__mode-button" :class="{ 'planning__mode-button--active': planningMode === 'grid' }" type="button" @click="planningMode = 'grid'">
+              Grille complete
+            </button>
+          </div>
+        </div>
+
+        <div class="planning__control-group">
+          <p class="eyebrow">Jour</p>
+          <div class="planning__day-picker">
+            <button
+              v-for="day in dayKeys"
+              :key="day"
+              class="planning__day-button"
+              :class="{ 'planning__day-button--active': activeDay === day }"
+              type="button"
+              @click="activeDay = day"
+            >
+              {{ formatDayLabel(day) }} · {{ selectedCountForDay(day) }}
+            </button>
+          </div>
+        </div>
+      </section>
     </section>
 
-    <section class="planning__controls">
-      <div class="planning__mode-switch" role="tablist" aria-label="Mode planning">
-        <button class="planning__mode-button" :class="{ 'planning__mode-button--active': planningMode === 'plan' }" type="button" @click="planningMode = 'plan'">
-          Plan choisi
-        </button>
-        <button class="planning__mode-button" :class="{ 'planning__mode-button--active': planningMode === 'grid' }" type="button" @click="planningMode = 'grid'">
-          Grille complete
-        </button>
+    <section class="planning__festival-panel">
+      <header class="planning__panel-header">
+        <div>
+          <p class="eyebrow">Vue festival</p>
+          <h3>Films deja choisis dans l'ensemble du festival</h3>
+        </div>
+        <span>{{ selectedFestivalScreenings.length }} seance(s)</span>
+      </header>
+
+      <div v-if="selectedFestivalByDay.length" class="planning__festival-days">
+        <article v-for="dayGroup in selectedFestivalByDay" :key="dayGroup.day" class="planning__festival-day">
+          <header class="planning__festival-day-header">
+            <strong>{{ formatDayLabel(dayGroup.day) }}</strong>
+            <span>{{ dayGroup.screenings.length }} retenue(s)</span>
+          </header>
+
+          <div class="planning__festival-list">
+            <article v-for="screening in dayGroup.screenings" :key="screening.id" class="planning__festival-item" :class="{ 'planning__festival-item--active': screening.dayKey === activeDay }">
+              <div>
+                <strong>{{ screening.film_title }}</strong>
+                <p>{{ formatTimeRange(screening) }} · {{ screening.venue_name }}</p>
+              </div>
+              <span class="planning__festival-state">{{ screening.selection_status === 'confirmed' ? 'Confirmee' : 'Tentative' }}</span>
+            </article>
+          </div>
+        </article>
       </div>
 
-      <div class="planning__day-picker">
-        <button
-          v-for="day in dayKeys"
-          :key="day"
-          class="planning__day-button"
-          :class="{ 'planning__day-button--active': activeDay === day }"
-          type="button"
-          @click="activeDay = day"
-        >
-          {{ formatDayLabel(day) }}
-        </button>
-      </div>
+      <p v-else class="planning__empty">Aucune seance choisie pour l'ensemble du festival.</p>
     </section>
 
     <section v-if="planningMode === 'plan'" class="planning__layout">
       <div class="planning__main">
         <article class="planning__panel">
           <header class="planning__panel-header">
-            <h3>Plan du jour</h3>
+            <div>
+              <p class="eyebrow">Programme retenu</p>
+              <h3>Plan du jour</h3>
+            </div>
             <span>{{ selectedAgenda.length }} retenue(s)</span>
           </header>
 
@@ -293,12 +356,15 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
             </template>
           </div>
 
-          <p v-else class="planning__empty">Aucune seance choisie sur cette journee pour l'instant.</p>
+          <p v-else class="planning__empty">Aucune seance choisie sur cette journee. Si tu as deja des choix ailleurs dans le festival, ils sont resumes juste au-dessus.</p>
         </article>
 
         <article class="planning__panel">
           <header class="planning__panel-header">
-            <h3>Seances a placer</h3>
+            <div>
+              <p class="eyebrow">A arbitrer</p>
+              <h3>Seances a placer</h3>
+            </div>
             <span>{{ candidateList.length }}</span>
           </header>
 
@@ -321,7 +387,10 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
       <aside class="planning__side">
         <article class="planning__panel">
           <header class="planning__panel-header">
-            <h3>Conflits</h3>
+            <div>
+              <p class="eyebrow">Attention</p>
+              <h3>Conflits</h3>
+            </div>
             <span>{{ conflictList.length }}</span>
           </header>
           <div v-if="conflictList.length" class="planning__stack">
@@ -339,7 +408,10 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
 
         <article class="planning__panel">
           <header class="planning__panel-header">
-            <h3>Alternatives visibles</h3>
+            <div>
+              <p class="eyebrow">Second choix</p>
+              <h3>Alternatives visibles</h3>
+            </div>
             <span>{{ alternativesList.length }}</span>
           </header>
           <div v-if="alternativesList.length" class="planning__stack">
@@ -361,7 +433,10 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
     <section v-else class="planning__grid-view">
       <article class="planning__panel">
         <header class="planning__panel-header">
-          <h3>Vue d'ensemble type grille</h3>
+          <div>
+            <p class="eyebrow">Repere global</p>
+            <h3>Vue d'ensemble type grille</h3>
+          </div>
           <span>{{ activeDay ? formatDayLabel(activeDay) : 'Sans jour' }}</span>
         </header>
 

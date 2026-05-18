@@ -58,6 +58,19 @@ a {
   backdrop-filter: blur(18px);
 }
 
+.app-header__inner,
+.main-panel__inner {
+  width: min(100%, 76rem);
+  margin-inline: auto;
+}
+
+.app-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
 .app-header__brand h1 {
   margin: 0;
   font-size: 1.1rem;
@@ -66,7 +79,7 @@ a {
 .app-header__nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.35rem;
 }
 
 .app-header__link,
@@ -74,23 +87,33 @@ a {
   display: inline-flex;
   flex-direction: column;
   gap: 0.15rem;
-  padding: 0.7rem 0.95rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
 }
 
 .app-header__link--active,
 .app-header__export {
-  border-color: rgba(255, 91, 87, 0.35);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .app-header__link small {
   color: #8d96a8;
 }
 
+.app-header__link span {
+  font-weight: 500;
+}
+
+.app-header__link--active span {
+  color: #ff8d87;
+}
+
 .app-header__export {
   color: #ff8d87;
+  border: 1px solid rgba(255, 91, 87, 0.24);
+  background: rgba(255, 91, 87, 0.06);
 }
 
 .sidebar-copy,
@@ -214,6 +237,12 @@ a {
   border-color: rgba(141, 107, 255, 0.4);
 }
 
+.page-footer {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #8d96a8;
+}
+
 .planning__export {
   display: inline-flex;
   align-items: center;
@@ -237,6 +266,9 @@ a {
   min-height: 2.7rem;
   padding: 0.65rem 0.85rem;
   color: #f4f6fb;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  border-radius: 12px;
 }
 
 .toolbar-input {
@@ -255,6 +287,9 @@ a {
   gap: 0.5rem;
   min-height: 2.7rem;
   padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  border-radius: 12px;
 }
 
 .toolbar-toggle input {
@@ -262,7 +297,10 @@ a {
 }
 
 .cycle-group {
-  padding: 1rem;
+  padding: 1rem 0 1.1rem;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
 }
 
 .cycle-header {
@@ -270,9 +308,40 @@ a {
   justify-content: space-between;
   gap: 1rem;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 3px solid;
+  margin-bottom: 0.9rem;
+  padding: 0 0 0.9rem;
+  border-bottom: 1px solid #232733;
+}
+
+.cycle-header__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.cycle-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.cycle-header__swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.cycle-header__meta {
+  color: #8d96a8;
+}
+
+.cycle-group__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 .cycle-actions,
@@ -283,7 +352,12 @@ a {
 }
 
 .film-card {
-  margin-top: 0.75rem;
+  margin-top: 0;
+  padding: 0.35rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  transition: none;
 }
 
 .film-card-grid {
@@ -355,13 +429,19 @@ a {
   padding: 0.55rem 0.8rem;
   color: #f4f6fb;
   cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  border-radius: 12px;
 }
 
 .priority-select {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  padding: 0.2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
 }
 
 .priority-option {
@@ -378,7 +458,7 @@ a {
 
 .priority-option.active {
   color: #f4f6fb;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .priority-option.active[data-priority='must-see'] {
@@ -449,7 +529,11 @@ a {
   gap: 1rem;
 }
 
-.planning__summary,
+.planning {
+  width: min(100%, 72rem);
+  margin-inline: auto;
+}
+
 .planning__layout,
 .gap-suggestions,
 .gap-hero {
@@ -458,7 +542,23 @@ a {
   gap: 1rem;
 }
 
+.planning__meta-panel,
+.planning__controls-panel,
 .planning__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.planning__meta-panel {
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.planning__summary {
+  display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
@@ -498,6 +598,36 @@ a {
   grid-template-columns: 1fr;
 }
 
+.gap-day-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.gap-day-group__header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gap-day-group__header h3,
+.gap-day-group__header span {
+  margin: 0;
+}
+
+.gap-day-group__header span {
+  color: #b4bdd0;
+}
+
+.gap-day-group__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .planning__controls,
 .planning__mode-switch,
 .planning__day-picker,
@@ -505,6 +635,16 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.planning__control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.planning__control-group .eyebrow {
+  margin-bottom: 0;
 }
 
 .planning__mode-button,
@@ -539,6 +679,56 @@ a {
 .planning__layout {
   grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
   align-items: start;
+}
+
+.planning__festival-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.planning__festival-days,
+.planning__festival-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.planning__festival-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.planning__festival-day-header,
+.planning__festival-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.planning__festival-day-header span,
+.planning__festival-item p,
+.planning__festival-state {
+  margin: 0;
+  color: #b4bdd0;
+}
+
+.planning__festival-item {
+  padding: 0.8rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.planning__festival-item--active {
+  border-color: rgba(255, 91, 87, 0.35);
+  background: rgba(255, 91, 87, 0.08);
 }
 
 .planning__main,
@@ -580,6 +770,10 @@ a {
 .planning__state {
   margin: 0;
   color: #b4bdd0;
+}
+
+.planning__panel-header .eyebrow {
+  margin-bottom: 0.2rem;
 }
 
 .planning__item-actions {
@@ -679,6 +873,12 @@ a {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0.85rem 1rem;
     align-items: start;
+  }
+
+  .app-header__inner,
+  .main-panel__inner,
+  .planning {
+    width: 100%;
   }
 
   .app-header__nav,

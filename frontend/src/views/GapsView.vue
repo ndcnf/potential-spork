@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import { formatMinutes, formatTimeRange, RESERVATION_BUFFER_MINUTES, toMinutes } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
 
 const store = useFestivalStore()
+const ignoredGapKeys = ref(new Set<string>())
 
 const gapMessages = [
   { min: 15, max: 15, label: 'Faudra courir' },
@@ -160,6 +161,23 @@ const gapSections = computed(() => {
   })
 })
 
+const groupedGapSections = computed(() => {
+  const grouped = new Map<string, typeof gapSections.value>()
+
+  for (const gap of gapSections.value) {
+    if (ignoredGapKeys.value.has(gap.key)) {
+      continue
+    }
+
+    grouped.set(gap.day, [...(grouped.get(gap.day) ?? []), gap])
+  }
+
+  return [...grouped.entries()].map(([day, gaps]) => ({
+    day,
+    gaps,
+  }))
+})
+
 function formatDay(day: string): string {
   const date = new Date(`${day}T12:00:00`)
   return new Intl.DateTimeFormat('fr-CH', { weekday: 'long', day: '2-digit', month: '2-digit' }).format(date)
@@ -167,6 +185,10 @@ function formatDay(day: string): string {
 
 function addTentative(screeningId: number): void {
   store.setScreeningSelection(screeningId, 'tentative')
+}
+
+function ignoreGap(gapKey: string): void {
+  ignoredGapKeys.value = new Set([...ignoredGapKeys.value, gapKey])
 }
 </script>
 
@@ -183,32 +205,47 @@ function addTentative(screeningId: number): void {
     </header>
 
     <section class="gap-suggestions gap-suggestions--single">
-      <article v-for="gap in gapSections" :key="gap.key" class="gap-card">
-        <div class="gap-card-main">
-          <div>
-            <p class="eyebrow">{{ formatDay(gap.day) }}</p>
-            <h3>{{ gap.start }} -> {{ gap.end }}</h3>
-          </div>
-          <strong>{{ formatMinutes(gap.durationMinutes) }}</strong>
-        </div>
+      <article v-for="dayGroup in groupedGapSections" :key="dayGroup.day" class="gap-day-group">
+        <header class="gap-day-group__header">
+          <p class="eyebrow">Jour</p>
+          <h3>{{ formatDay(dayGroup.day) }}</h3>
+          <span>{{ dayGroup.gaps.length }} creneau(x)</span>
+        </header>
 
-        <p>{{ gap.message }}</p>
+        <div class="gap-day-group__list">
+          <article v-for="gap in dayGroup.gaps" :key="gap.key" class="gap-card">
+            <div class="gap-card-main">
+              <div>
+                <p class="eyebrow">Creneau</p>
+                <h3>{{ gap.start }} -> {{ gap.end }}</h3>
+              </div>
+              <div class="planning__item-actions">
+                <strong>{{ formatMinutes(gap.durationMinutes) }}</strong>
+                <button type="button" class="planning__action planning__action--ghost" @click="ignoreGap(gap.key)">Ignorer</button>
+              </div>
+            </div>
 
-        <div v-if="gap.candidates.length" class="planning__stack">
-          <article v-for="candidate in gap.candidates" :key="candidate.id" class="planning__mini planning__mini--alternative">
-            <div>
-              <strong>{{ candidate.title }}</strong>
-              <p>{{ candidate.timeRange }} · {{ candidate.venue }}</p>
+            <p>{{ gap.message }}</p>
+
+            <div v-if="gap.candidates.length" class="planning__stack">
+              <article v-for="candidate in gap.candidates" :key="candidate.id" class="planning__mini planning__mini--alternative">
+                <div>
+                  <strong>{{ candidate.title }}</strong>
+                  <p>{{ candidate.timeRange }} · {{ candidate.venue }}</p>
+                </div>
+                <div class="planning__item-actions">
+                  <PriorityBadge :priority="candidate.priority" />
+                  <button type="button" class="planning__action" @click="addTentative(candidate.id)">Ajouter au planning</button>
+                </div>
+              </article>
             </div>
-            <div class="planning__item-actions">
-              <PriorityBadge :priority="candidate.priority" />
-              <button type="button" class="planning__action" @click="addTentative(candidate.id)">Ajouter au planning</button>
-            </div>
+
+            <p v-else class="planning__empty">Aucune seance compatible dans ce creneau pour l'instant.</p>
           </article>
         </div>
-
-        <p v-else class="planning__empty">Aucune seance compatible dans ce creneau pour l'instant.</p>
       </article>
+
+      <p v-if="!groupedGapSections.length" class="planning__empty">Aucun creneau visible pour l'instant.</p>
     </section>
   </section>
 </template>
