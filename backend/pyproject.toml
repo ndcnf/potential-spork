@@ -1,0 +1,19 @@
+[project]
+name = "potential-spork-backend"
+version = "0.1.0"
+description = "Festival planner backend"
+requires-python = ">=3.12"
+dependencies = [
+  "beautifulsoup4>=4.12.3",
+  "fastapi>=0.115.0",
+  "httpx>=0.28.1",
+  "icalendar>=6.1.1",
+  "pydantic-settings>=2.6.1",
+  "requests>=2.32.3",
+  "sqlalchemy>=2.0.36",
+  "uvicorn[standard]>=0.32.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
