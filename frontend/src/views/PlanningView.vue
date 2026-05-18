@@ -1,16 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 
-import { formatMinutes, formatTimeRange as formatTimeRangeValue, RESERVATION_BUFFER_MINUTES, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
+import { formatMinutes, formatTimeRange as formatTimeRangeValue, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
 import type { Film, Screening } from '@/types'
-
-type PlanningGap = {
-  dayKey: string
-  start: string
-  end: string
-  durationMinutes: number
-}
 
 type PlanningScreening = Screening & {
   film: Film | null
@@ -132,34 +125,11 @@ const alternativesList = computed(() =>
   selectedDayScreenings.value.filter((screening) => screening.isAlternative || screening.derived_state === 'disabled'),
 )
 
-const dayGaps = computed<PlanningGap[]>(() => {
-  const selected = [...selectedAgenda.value].sort((left, right) => left.startMinutes - right.startMinutes)
-  const gaps: PlanningGap[] = []
-
-  for (let index = 0; index < selected.length - 1; index += 1) {
-    const current = selected[index]
-    const next = selected[index + 1]
-    const duration = next.startMinutes - current.endMinutes
-
-    if (duration >= RESERVATION_BUFFER_MINUTES) {
-      gaps.push({
-        dayKey: current.dayKey,
-        start: current.ends_at?.slice(11, 16) ?? '--:--',
-        end: next.starts_at?.slice(11, 16) ?? '--:--',
-        durationMinutes: duration,
-      })
-    }
-  }
-
-  return gaps
-})
-
 const summary = computed(() => ({
   films: store.films.filter((film) => isPlanningPriority(film.priority)).length,
   selected: planningScreenings.value.filter((screening) => screening.isSelected).length,
   conflicts: planningScreenings.value.filter((screening) => screening.isSelected && screening.isConflict).length,
   alternatives: planningScreenings.value.filter((screening) => screening.isAlternative || screening.derived_state === 'disabled').length,
-  gaps: dayGaps.value.length,
 }))
 
 const gridVenueNames = computed(() => {
@@ -177,6 +147,17 @@ const gridByVenue = computed(() =>
 function formatDayLabel(dayKey: string): string {
   const date = new Date(`${dayKey}T12:00:00`)
   return new Intl.DateTimeFormat('fr-CH', { weekday: 'short', day: '2-digit', month: '2-digit' }).format(date)
+}
+
+function formatDayChipLabel(dayKey: string): string {
+  const date = new Date(`${dayKey}T12:00:00`)
+  const weekday = new Intl.DateTimeFormat('fr-CH', { weekday: 'short' })
+    .format(date)
+    .replace('.', '')
+    .toLowerCase()
+  const day = new Intl.DateTimeFormat('fr-CH', { day: '2-digit' }).format(date)
+
+  return `${weekday} ${day}`
 }
 
 function selectedCountForDay(dayKey: string): number {
@@ -202,13 +183,6 @@ function screeningReason(screening: PlanningScreening): string {
   return 'Disponible'
 }
 
-function gapLabel(durationMinutes: number): string {
-  if (durationMinutes <= 15) return 'Faudra courir'
-  if (durationMinutes <= 45) return 'Tu peux souffler un peu'
-  if (durationMinutes <= 120) return "T'as pense a manger ?"
-  return "C'est un jour de conge ?"
-}
-
 function setSelection(screeningId: number, status: Screening['selection_status']): void {
   store.setScreeningSelection(screeningId, status)
 }
@@ -220,8 +194,7 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
   <section class="page planning">
     <header class="page-header">
       <div>
-        <p class="eyebrow">Etape 2</p>
-        <h2>Planning visuel</h2>
+        <h2>Planning</h2>
         <p class="page-copy">
           Une vue pour arbitrer le plan choisi, une vue pour retrouver la lecture globale proche de la grille du festival.
         </p>
@@ -246,10 +219,6 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
         <article class="planning__summary-card">
           <strong>{{ summary.alternatives }}</strong>
           <span>alternative(s)</span>
-        </article>
-        <article class="planning__summary-card">
-          <strong>{{ summary.gaps }}</strong>
-          <span>creneau(x) dispo</span>
         </article>
       </div>
 
@@ -277,7 +246,7 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
               type="button"
               @click="activeDay = day"
             >
-              {{ formatDayLabel(day) }} · {{ selectedCountForDay(day) }}
+              {{ formatDayChipLabel(day) }} · {{ selectedCountForDay(day) }}
             </button>
           </div>
         </div>
@@ -321,39 +290,28 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
           <header class="planning__panel-header">
             <div>
               <p class="eyebrow">Programme retenu</p>
-              <h3>Plan du jour</h3>
+              <h3>Seances choisies ce jour</h3>
             </div>
             <span>{{ selectedAgenda.length }} retenue(s)</span>
           </header>
 
           <div v-if="selectedAgenda.length" class="planning__agenda">
-            <template v-for="screening in selectedAgenda" :key="screening.id">
-              <article class="planning__item planning__item--selected" :class="{ 'planning__item--conflict': screening.isConflict }">
-                <div class="planning__item-time">{{ formatTimeRange(screening) }}</div>
-                <div class="planning__item-body">
-                  <strong>{{ screening.film_title }}</strong>
-                  <p>{{ screening.venue_name }}</p>
-                  <p>{{ filmMeta(screening) }}</p>
+            <article v-for="screening in selectedAgenda" :key="screening.id" class="planning__item planning__item--selected" :class="{ 'planning__item--conflict': screening.isConflict }">
+              <div class="planning__item-time">{{ formatTimeRange(screening) }}</div>
+              <div class="planning__item-body">
+                <strong>{{ screening.film_title }}</strong>
+                <p>{{ screening.venue_name }}</p>
+                <p>{{ filmMeta(screening) }}</p>
+              </div>
+              <div class="planning__item-actions">
+                <span class="planning__state">{{ screeningReason(screening) }}</span>
+                <div class="planning__action-group">
+                  <button type="button" class="planning__action planning__action--secondary" @click="setSelection(screening.id, 'tentative')">Tentative</button>
+                  <button type="button" class="planning__action planning__action--primary" @click="setSelection(screening.id, 'confirmed')">Confirmer</button>
+                  <button type="button" class="planning__action planning__action--ghost" @click="setSelection(screening.id, 'none')">Retirer</button>
                 </div>
-                <div class="planning__item-actions">
-                  <span class="planning__state">{{ screeningReason(screening) }}</span>
-                  <div class="planning__action-group">
-                    <button type="button" class="planning__action" @click="setSelection(screening.id, 'tentative')">Tentative</button>
-                    <button type="button" class="planning__action" @click="setSelection(screening.id, 'confirmed')">Confirmer</button>
-                    <button type="button" class="planning__action planning__action--ghost" @click="setSelection(screening.id, 'none')">Retirer</button>
-                  </div>
-                </div>
-              </article>
-
-              <article
-                v-for="gap in dayGaps.filter((entry) => entry.start === (screening.ends_at?.slice(11, 16) ?? ''))"
-                :key="`${gap.dayKey}-${gap.start}-${gap.end}`"
-                class="planning__gap"
-              >
-                <strong>Creneau disponible</strong>
-                <span>{{ gap.start }} -> {{ gap.end }} · {{ formatMinutes(gap.durationMinutes) }} · {{ gapLabel(gap.durationMinutes) }}</span>
-              </article>
-            </template>
+              </div>
+            </article>
           </div>
 
           <p v-else class="planning__empty">Aucune seance choisie sur cette journee. Si tu as deja des choix ailleurs dans le festival, ils sont resumes juste au-dessus.</p>
@@ -374,8 +332,8 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
               <p>{{ formatTimeRange(screening) }} · {{ screening.venue_name }}</p>
               <p>{{ filmMeta(screening) }} · {{ screeningReason(screening) }}</p>
               <div class="planning__action-group">
-                <button type="button" class="planning__action" @click="setSelection(screening.id, 'tentative')">Tentative</button>
-                <button type="button" class="planning__action" @click="setSelection(screening.id, 'confirmed')">Confirmer</button>
+                <button type="button" class="planning__action planning__action--secondary" @click="setSelection(screening.id, 'tentative')">Tentative</button>
+                <button type="button" class="planning__action planning__action--primary" @click="setSelection(screening.id, 'confirmed')">Confirmer</button>
               </div>
             </article>
           </div>
@@ -420,8 +378,8 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
               <p>{{ formatTimeRange(screening) }} · {{ screening.venue_name }}</p>
               <p>{{ screeningReason(screening) }}</p>
               <div class="planning__action-group">
-                <button type="button" class="planning__action" @click="setSelection(screening.id, 'tentative')">Tentative</button>
-                <button type="button" class="planning__action" @click="setSelection(screening.id, 'confirmed')">Confirmer</button>
+                <button type="button" class="planning__action planning__action--secondary" @click="setSelection(screening.id, 'tentative')">Tentative</button>
+                <button type="button" class="planning__action planning__action--primary" @click="setSelection(screening.id, 'confirmed')">Confirmer</button>
               </div>
             </article>
           </div>
