@@ -142,8 +142,9 @@ function toggleCycle(cycleId: number): void {
         <article v-for="film in group.films" :key="film.id" class="film-card">
           <div class="film-card-grid">
             <div class="film-card-primary">
-              <h3>{{ film.title }}</h3>
+              <h3>{{ film.title }} <span class="film-title-year">({{ film.year || 'annee ?' }})</span></h3>
               <p class="film-meta">{{ film.directors || 'Real non renseigne' }}</p>
+              <p v-if="film.cast" class="film-cast film-cast--inline">{{ film.cast }}</p>
             </div>
 
             <div class="film-card-side">
@@ -151,10 +152,8 @@ function toggleCycle(cycleId: number): void {
               <PrioritySelect :model-value="film.priority" dense @update:model-value="store.updateFilmPriority(film.id, $event)" />
             </div>
 
-            <p class="film-meta film-meta--compact">{{ film.year || 'Annee ?' }} · {{ film.countries || 'Pays ?' }} · {{ film.duration_minutes || '?' }} min</p>
-
-            <p v-if="film.cast" class="film-cast film-cast--compact">{{ film.cast }}</p>
-            <p v-else class="film-tagline film-tagline--compact">{{ film.tagline || 'Tagline NIFFF a importer' }}</p>
+            <p class="film-meta film-meta--compact">{{ film.countries || 'Pays ?' }} · {{ film.duration_minutes || '?' }} min</p>
+            <p class="film-tagline film-tagline--compact">{{ film.tagline || 'Tagline NIFFF a importer' }}</p>
           </div>
         </article>
       </div>
