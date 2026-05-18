@@ -1,95 +1,13 @@
 import { defineStore } from 'pinia'
 
+import { buildPreviewDataset } from '@/mock/nifff2025Preview'
 import { api } from '@/services/api'
-import type { Cycle, Film, Screening } from '@/types'
+import type { Cycle, Film, Priority, Screening } from '@/types'
 
-const mockCycles: Cycle[] = [
-  { id: 1, name: 'International Competition', slug: 'international-competition', color: '#ff5b57', priority: 'must-see' },
-  { id: 2, name: 'Take Care', slug: 'take-care', color: '#8d6bff', priority: 'high' },
-  { id: 3, name: 'NIFFF Invasion', slug: 'nifff-invasion', color: '#4d5868', priority: 'ignore' },
-]
-
-const mockFilms: Film[] = [
-  {
-    id: 1,
-    title: 'Alpha',
-    slug: 'alpha',
-    directors: 'Julia Ducournau',
-    year: 2025,
-    countries: 'FR/BE',
-    duration_minutes: 128,
-    tagline: 'Marble-skin Allegory',
-    cast: 'Tahar Rahim, Golshifteh Farahani, Mélissa Boros',
-    synopsis: null,
-    language: 'français / ov sub en',
-    age_rating: '16',
-    priority: 'must-see',
-    cycle_id: 1,
-    cycle_name: 'International Competition',
-    cycle_color: '#ff5b57',
-  },
-  {
-    id: 2,
-    title: 'A Cure for Wellness',
-    slug: 'a-cure-for-wellness',
-    directors: 'Gore Verbinski',
-    year: 2016,
-    countries: 'DE/LU/US',
-    duration_minutes: 146,
-    tagline: 'Eurotrash Wellness Horror',
-    cast: 'Dane DeHaan, Jason Isaacs, Mia Goth',
-    synopsis: null,
-    language: null,
-    age_rating: null,
-    priority: 'high',
-    cycle_id: 2,
-    cycle_name: 'Take Care',
-    cycle_color: '#8d6bff',
-  },
-  {
-    id: 3,
-    title: 'Fantastic Shorts',
-    slug: 'fantastic-shorts',
-    directors: null,
-    year: 2025,
-    countries: 'CH',
-    duration_minutes: 60,
-    tagline: 'Shorts package',
-    cast: null,
-    synopsis: null,
-    language: null,
-    age_rating: null,
-    priority: 'ignore',
-    cycle_id: 3,
-    cycle_name: 'NIFFF Invasion',
-    cycle_color: '#4d5868',
-  },
-]
-
-const mockScreenings: Screening[] = [
-  {
-    id: 1,
-    film_id: 1,
-    film_title: 'Alpha',
-    venue_id: 1,
-    venue_name: 'Théâtre du Passage',
-    starts_at: '2026-07-04T19:00:00',
-    ends_at: '2026-07-04T21:08:00',
-    selection_status: 'tentative',
-    derived_state: 'selected',
-  },
-  {
-    id: 2,
-    film_id: 2,
-    film_title: 'A Cure for Wellness',
-    venue_id: 2,
-    venue_name: 'Rex',
-    starts_at: '2026-07-04T21:45:00',
-    ends_at: '2026-07-05T00:11:00',
-    selection_status: 'none',
-    derived_state: 'available',
-  },
-]
+const previewDataset = buildPreviewDataset()
+const mockCycles: Cycle[] = previewDataset.cycles
+const mockFilms: Film[] = previewDataset.films
+const mockScreenings: Screening[] = previewDataset.screenings
 
 export const useFestivalStore = defineStore('festival', {
   state: () => ({
@@ -116,6 +34,12 @@ export const useFestivalStore = defineStore('festival', {
     visibleScreenings(state) {
       return state.screenings.length ? state.screenings : mockScreenings
     },
+    selectedScreenings(state) {
+      const screenings = state.screenings.length ? state.screenings : mockScreenings
+      return screenings.filter(
+        (screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed',
+      )
+    },
   },
   actions: {
     async bootstrap() {
@@ -126,6 +50,16 @@ export const useFestivalStore = defineStore('festival', {
           api.listFilms(),
           api.listScreenings(),
         ])
+
+        const hasRealData = cycles.length > 0 || films.length > 0 || screenings.length > 0
+        if (!hasRealData) {
+          this.cycles = mockCycles
+          this.films = mockFilms
+          this.screenings = mockScreenings
+          this.usingMocks = true
+          return
+        }
+
         this.cycles = cycles
         this.films = films
         this.screenings = screenings
@@ -137,6 +71,18 @@ export const useFestivalStore = defineStore('festival', {
         this.usingMocks = true
       } finally {
         this.loading = false
+      }
+    },
+    updateFilmPriority(filmId: number, priority: Priority) {
+      const target = this.films.find((film) => film.id === filmId)
+      if (target) {
+        target.priority = priority
+      }
+    },
+    updateCyclePriority(cycleId: number, priority: Priority) {
+      const target = this.cycles.find((cycle) => cycle.id === cycleId)
+      if (target) {
+        target.priority = priority
       }
     },
   },

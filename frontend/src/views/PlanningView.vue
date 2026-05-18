@@ -11,6 +11,8 @@ onMounted(() => {
   }
 })
 
+const hourMarkers = ['10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00', '00:00']
+
 const groupedByDay = computed(() => {
   const map = new Map<string, typeof store.visibleScreenings>()
 
@@ -19,8 +21,29 @@ const groupedByDay = computed(() => {
     map.set(key, [...(map.get(key) ?? []), screening])
   }
 
-  return [...map.entries()]
+  return [...map.entries()].map(([day, screenings]) => ({
+    day,
+    screenings: [...screenings].sort((left, right) => (left.starts_at ?? '').localeCompare(right.starts_at ?? '')),
+  }))
 })
+
+function startLabel(value: string | null): string {
+  return value?.slice(11, 16) ?? '--:--'
+}
+
+function endLabel(value: string | null): string {
+  return value?.slice(11, 16) ?? '--:--'
+}
+
+function screeningOffset(value: string | null): string {
+  if (!value) return '0rem'
+  const hours = Number(value.slice(11, 13))
+  const minutes = Number(value.slice(14, 16))
+  const normalizedHours = hours < 10 ? hours + 24 : hours
+  const totalMinutes = normalizedHours * 60 + minutes
+  const baseline = 10 * 60
+  return `${Math.max(totalMinutes - baseline, 0) / 16}rem`
+}
 </script>
 
 <template>
@@ -35,20 +58,34 @@ const groupedByDay = computed(() => {
       </div>
     </header>
 
-    <section class="planning-grid">
-      <article v-for="[day, screenings] in groupedByDay" :key="day" class="planning-column">
+    <section class="timeline-scale">
+      <span v-for="hour in hourMarkers" :key="hour">{{ hour }}</span>
+    </section>
+
+    <section class="planning-board">
+      <article v-for="group in groupedByDay" :key="group.day" class="planning-day">
         <header class="planning-column-header">
-          <h3>{{ day }}</h3>
-          <span>{{ screenings.length }} seance(s)</span>
+          <h3>{{ group.day }}</h3>
+          <span>{{ group.screenings.length }} seance(s)</span>
         </header>
 
-        <div v-for="screening in screenings" :key="screening.id" class="screening-card" :data-state="screening.derived_state">
-          <div class="screening-head">
-            <strong>{{ screening.film_title }}</strong>
-            <span>{{ screening.selection_status }}</span>
+        <div class="planning-track">
+          <div v-for="hour in hourMarkers" :key="hour" class="planning-hour" />
+
+          <div
+            v-for="screening in group.screenings"
+            :key="screening.id"
+            class="screening-card screening-card--timeline"
+            :data-state="screening.derived_state"
+            :style="{ marginLeft: screeningOffset(screening.starts_at) }"
+          >
+            <div class="screening-head">
+              <strong>{{ screening.film_title }}</strong>
+              <span>{{ screening.selection_status }}</span>
+            </div>
+            <p>{{ startLabel(screening.starts_at) }} - {{ endLabel(screening.ends_at) }}</p>
+            <p>{{ screening.venue_name || 'Salle a definir' }}</p>
           </div>
-          <p>{{ screening.starts_at?.slice(11, 16) }} - {{ screening.ends_at?.slice(11, 16) }}</p>
-          <p>{{ screening.venue_name || 'Salle a definir' }}</p>
         </div>
       </article>
     </section>

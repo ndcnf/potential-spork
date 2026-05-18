@@ -15,6 +15,7 @@ const tabs = [
     <aside class="sidebar">
       <div>
         <p class="eyebrow">Potential Spork</p>
+        <p class="step-indicator">Etape {{ tabs.findIndex((tab) => tab.to === route.path) + 1 }} / 3</p>
         <h1>Festival planner</h1>
         <p class="sidebar-copy">
           Prioriser les films d'abord, visualiser les seances ensuite, combler les trous sans bruit.
@@ -43,5 +44,17 @@ const tabs = [
     <main class="main-panel">
       <RouterView />
     </main>
+
+    <nav class="mobile-tabs">
+      <RouterLink
+        v-for="tab in tabs"
+        :key="tab.to"
+        :to="tab.to"
+        class="mobile-tab"
+        :class="{ active: route.path === tab.to }"
+      >
+        <span>{{ tab.label }}</span>
+      </RouterLink>
+    </nav>
   </div>
 </template>
