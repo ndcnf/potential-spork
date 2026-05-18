@@ -2,7 +2,6 @@
 import { computed, onMounted, reactive } from 'vue'
 
 import { formatTimeRange } from '@/lib/planning'
-import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import PrioritySelect from '@/components/ui/PrioritySelect.vue'
 import { useFestivalStore } from '@/stores/festival'
 import type { Film, Priority, Screening } from '@/types'
@@ -176,20 +175,14 @@ function formatScreeningLabel(screening: Screening): string {
 
       <div v-if="isCycleOpen(group.cycle.id)" class="cycle-group__body">
         <article v-for="film in group.films" :key="film.id" class="film-card">
-          <div class="film-card-grid">
+          <div class="film-card-stack">
             <div class="film-card-primary">
               <h3>{{ film.title }} <span class="film-title-year">({{ film.year || 'annee ?' }})</span></h3>
+              <p class="film-tagline film-tagline--inline">{{ film.tagline || 'Tagline NIFFF a importer' }}</p>
               <p class="film-meta">{{ film.directors || 'Real non renseigne' }}</p>
               <p v-if="film.cast" class="film-cast film-cast--inline">{{ film.cast }}</p>
+              <p class="film-meta film-meta--compact">{{ film.countries || 'Pays ?' }} · {{ film.duration_minutes || '?' }} min</p>
             </div>
-
-            <div class="film-card-side">
-              <PriorityBadge :priority="film.priority" />
-              <PrioritySelect :model-value="film.priority" dense @update:model-value="store.updateFilmPriority(film.id, $event)" />
-            </div>
-
-            <p class="film-meta film-meta--compact">{{ film.countries || 'Pays ?' }} · {{ film.duration_minutes || '?' }} min</p>
-            <p class="film-tagline film-tagline--compact">{{ film.tagline || 'Tagline NIFFF a importer' }}</p>
 
             <div v-if="selectedScreeningByFilmId.get(film.id)" class="film-screenings">
               <span class="film-screenings__item">
@@ -198,6 +191,10 @@ function formatScreeningLabel(screening: Screening): string {
             </div>
             <div v-else-if="shouldWarnMissingScreening(film.priority)" class="film-screenings">
               <span class="film-screenings__item film-screenings__item--warning">pas de seance prevue</span>
+            </div>
+
+            <div class="film-card-status">
+              <PrioritySelect :model-value="film.priority" dense @update:model-value="store.updateFilmPriority(film.id, $event)" />
             </div>
           </div>
         </article>

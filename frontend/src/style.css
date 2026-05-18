@@ -339,13 +339,13 @@ a {
 }
 
 .cycle-group__body {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 32rem));
   gap: 0.6rem;
+  justify-content: start;
 }
 
-.cycle-actions,
-.film-card-side {
+.cycle-actions {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -360,11 +360,10 @@ a {
   transition: none;
 }
 
-.film-card-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.5rem 1rem;
-  align-items: start;
+.film-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .film-card-primary {
@@ -492,14 +491,14 @@ a {
 }
 
 .film-meta--compact,
-.film-tagline--compact {
+.film-tagline--inline {
   margin: 0;
 }
 
-.film-tagline--compact {
-  grid-column: 2;
-  max-width: 28rem;
-  text-align: right;
+.film-tagline--inline {
+  margin-top: 0.15rem;
+  color: #b4bdd0;
+  font-style: italic;
 }
 
 .film-cast--inline {
@@ -508,10 +507,14 @@ a {
 }
 
 .film-screenings {
-  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  padding-top: 0.2rem;
+}
+
+.film-card-status {
+  padding-top: 0.15rem;
 }
 
 .film-screenings__item {
@@ -902,14 +905,9 @@ a {
     flex-direction: column;
   }
 
-  .film-card-grid {
+  .cycle-group__body {
     grid-template-columns: 1fr;
-  }
-
-  .film-card-side,
-  .film-tagline--compact {
-    grid-column: auto;
-    text-align: left;
+    justify-content: stretch;
   }
 
   .planning__summary,
