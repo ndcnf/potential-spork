@@ -13,6 +13,8 @@ type PlanningScreening = Screening & {
   isSelected: boolean
   isConflict: boolean
   isAlternative: boolean
+  isSingleScreening: boolean
+  isMustLock: boolean
 }
 
 const store = useFestivalStore()
@@ -21,6 +23,10 @@ const planningMode = ref<'timeline' | 'venues'>('timeline')
 
 function isPlanningPriority(priority: Film['priority']): boolean {
   return priority === 'medium' || priority === 'high' || priority === 'must-see'
+}
+
+function isHighPriority(priority: Film['priority'] | undefined): boolean {
+  return priority === 'high' || priority === 'must-see'
 }
 
 onMounted(() => {
@@ -43,6 +49,11 @@ const planningScreenings = computed<PlanningScreening[]>(() => {
     (screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed',
   )
   const selectedFilmIds = new Set(selectedScreenings.map((screening) => screening.film_id))
+  const screeningCountByFilmId = new Map<number, number>()
+
+  for (const screening of baseScreenings) {
+    screeningCountByFilmId.set(screening.film_id, (screeningCountByFilmId.get(screening.film_id) ?? 0) + 1)
+  }
 
   return baseScreenings
     .map((screening) => {
@@ -50,16 +61,21 @@ const planningScreenings = computed<PlanningScreening[]>(() => {
       const startMinutes = toMinutes(screening.starts_at)
       const endMinutes = toMinutes(screening.ends_at)
       const isSelected = screening.selection_status === 'tentative' || screening.selection_status === 'confirmed'
+      const film = filmById.value.get(screening.film_id) ?? null
+      const isSingleScreening = (screeningCountByFilmId.get(screening.film_id) ?? 0) === 1
+      const isMustLock = isSingleScreening && isHighPriority(film?.priority) && !isSelected
 
       return {
         ...screening,
-        film: filmById.value.get(screening.film_id) ?? null,
+        film,
         dayKey,
         startMinutes,
         endMinutes,
         isSelected,
         isConflict: selectedScreenings.some((other) => screeningsOverlapWithBuffer(screening, other)),
         isAlternative: selectedFilmIds.has(screening.film_id) && screening.selection_status === 'none',
+        isSingleScreening,
+        isMustLock,
       }
     })
     .sort((left, right) => {
@@ -158,8 +174,10 @@ function filmMeta(screening: PlanningScreening): string {
 
 function screeningReason(screening: PlanningScreening): string {
   if (screening.isSelected && screening.isConflict) return 'Conflit'
+  if (screening.isMustLock) return 'A securiser'
   if (screening.selection_status === 'confirmed') return 'Confirmee'
   if (screening.selection_status === 'tentative') return 'Tentative'
+  if (screening.isSingleScreening) return 'Seance unique'
   if (screening.isAlternative || screening.derived_state === 'disabled') return 'Autre seance deja choisie'
   if (screening.derived_state === 'conflict') return 'Chevauche une seance choisie'
   return 'Disponible'
@@ -167,6 +185,7 @@ function screeningReason(screening: PlanningScreening): string {
 
 function screeningStateClass(screening: PlanningScreening): string {
   if (screening.isSelected && screening.isConflict) return 'planning__timeline-item--conflict'
+  if (screening.isMustLock) return 'planning__timeline-item--must-lock'
   if (screening.selection_status === 'confirmed') return 'planning__timeline-item--confirmed'
   if (screening.selection_status === 'tentative') return 'planning__timeline-item--tentative'
   if (screening.isAlternative || screening.derived_state === 'disabled') return 'planning__timeline-item--disabled'
@@ -214,6 +233,20 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
           <span>seances a arbitrer</span>
         </article>
       </div>
+
+      <section class="legend legend--planning">
+        <div class="legend__group">
+          <span class="legend__label">Etats</span>
+          <div class="legend__items legend__items--compact">
+            <span class="legend__item"><span class="legend__marker legend__marker--confirmed" /> confirmee</span>
+            <span class="legend__item"><span class="legend__marker legend__marker--tentative" /> tentative</span>
+            <span class="legend__item"><span class="legend__marker legend__marker--must-lock" /> a securiser</span>
+            <span class="legend__item"><span class="legend__marker legend__marker--conflict" /> conflit</span>
+            <span class="legend__item"><span class="legend__marker legend__marker--disabled" /> autre seance deja choisie</span>
+            <span class="legend__item"><span class="legend__marker legend__marker--available" /> disponible</span>
+          </div>
+        </div>
+      </section>
 
       <section class="planning__controls-panel">
         <div class="planning__control-group">
@@ -297,6 +330,7 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
             >
               <div class="planning__matrix-time">{{ formatTimeRange(screening) }}</div>
               <strong>{{ screening.film_title }}</strong>
+              <p v-if="screening.isMustLock" class="planning__matrix-note">A securiser</p>
               <p>{{ screening.film?.tagline || 'Genre non renseigne' }}</p>
             </article>
           </div>

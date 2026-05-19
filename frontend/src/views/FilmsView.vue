@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive } from 'vue'
 
 import { formatTimeRange } from '@/lib/planning'
+import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import PrioritySelect from '@/components/ui/PrioritySelect.vue'
 import { useFestivalStore } from '@/stores/festival'
 import type { Film, Priority, Screening } from '@/types'
@@ -67,6 +68,16 @@ const selectedScreeningByFilmId = computed(() => {
   return selected
 })
 
+const screeningCountByFilmId = computed(() => {
+  const counts = new Map<number, number>()
+
+  for (const screening of store.visibleScreenings) {
+    counts.set(screening.film_id, (counts.get(screening.film_id) ?? 0) + 1)
+  }
+
+  return counts
+})
+
 function sortFilms(left: Film, right: Film, mode: string): number {
   if (mode === 'priority') {
     return priorityRank(right.priority) - priorityRank(left.priority) || left.title.localeCompare(right.title)
@@ -115,6 +126,36 @@ function formatScreeningLabel(screening: Screening): string {
 
   return `${dayLabel} ${day}.${month} ${timeRange}`
 }
+
+function cycleScreeningLabel(films: Film[]): string | null {
+  const counts = films
+    .map((film) => screeningCountByFilmId.value.get(film.id) ?? 0)
+    .filter((count) => count > 0)
+
+  if (!counts.length) {
+    return null
+  }
+
+  const uniqueCounts = [...new Set(counts)].sort((left, right) => left - right)
+  if (uniqueCounts.length === 1) {
+    const count = uniqueCounts[0]
+    return `${count} ${count > 1 ? 'seances' : 'seance'} par film`
+  }
+
+  return `${uniqueCounts[0]} a ${uniqueCounts.at(-1)} seances par film`
+}
+
+function cycleFocusCount(films: Film[]): number {
+  return films.filter((film) => film.priority === 'medium' || film.priority === 'high' || film.priority === 'must-see').length
+}
+
+function cyclePriorityAccessibilityLabel(films: Film[]): string {
+  return `${cycleFocusCount(films)} films moyen ou plus sur ${films.length} dans ce cycle`
+}
+
+function sortPriorityForCycle(left: Film, right: Film): number {
+  return priorityRank(right.priority) - priorityRank(left.priority) || left.title.localeCompare(right.title)
+}
 </script>
 
 <template>
@@ -152,6 +193,34 @@ function formatScreeningLabel(screening: Screening): string {
       </label>
     </section>
 
+    <section class="legend">
+      <div class="legend__group">
+        <span class="legend__label">Cycles</span>
+        <div class="legend__items">
+          <span class="legend__item"><span class="legend__swatch" /> pastille couleur = cycle du film</span>
+        </div>
+      </div>
+
+      <div class="legend__group">
+        <span class="legend__label">Priorites</span>
+        <div class="legend__items">
+          <PriorityBadge priority="ignore" />
+          <PriorityBadge priority="low" />
+          <PriorityBadge priority="medium" />
+          <PriorityBadge priority="high" />
+          <PriorityBadge priority="must-see" />
+        </div>
+      </div>
+
+      <div class="legend__group">
+        <span class="legend__label">Seance</span>
+        <div class="legend__items">
+          <span class="film-screenings__item">ven 04.07 18h30-21h00 = seance choisie</span>
+          <span class="film-screenings__item film-screenings__item--warning">pas de seance prevue = film prioritaire sans choix</span>
+        </div>
+      </div>
+    </section>
+
     <section v-for="group in filteredGroups" :key="group.cycle.id" class="cycle-group">
       <header class="cycle-header" :style="{ borderColor: group.cycle.color ?? '#3a3a3a' }">
         <div class="cycle-header__main">
@@ -160,8 +229,18 @@ function formatScreeningLabel(screening: Screening): string {
             <p class="cycle-title">{{ group.cycle.name }}</p>
           </div>
           <small class="cycle-header__meta">
-            {{ group.films.length }} film(s) ·
-            {{ group.films.filter((film) => film.priority === 'must-see' || film.priority === 'high').length }} fort+
+            <template v-if="cycleScreeningLabel(group.films)">
+              <span>{{ cycleScreeningLabel(group.films) }}</span>
+              <span class="cycle-header__separator" aria-hidden="true">·</span>
+            </template>
+            <span class="cycle-header__priority-dots" :aria-label="cyclePriorityAccessibilityLabel(group.films)" role="img">
+              <span
+                v-for="film in [...group.films].sort(sortPriorityForCycle)"
+                :key="film.id"
+                class="cycle-header__priority-dot"
+                :data-priority="film.priority"
+              />
+            </span>
           </small>
         </div>
 
