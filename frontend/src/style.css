@@ -706,6 +706,98 @@ a {
   gap: 2rem;
 }
 
+.planning__panel--day {
+  gap: 1rem;
+}
+
+.planning__timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.planning__timeline-item {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.planning__timeline-time {
+  color: #b4bdd0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  padding-top: 0.15rem;
+}
+
+.planning__timeline-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: 0.9rem;
+  padding-bottom: 0.9rem;
+}
+
+.planning__timeline-track::before {
+  content: '';
+  position: absolute;
+  left: 0.46rem;
+  top: 0.1rem;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.planning__timeline-marker {
+  position: relative;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-top: 0.1rem;
+  border-radius: 999px;
+  background: #7f889c;
+}
+
+.planning__timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.planning__timeline-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.planning__timeline-content p,
+.planning__timeline-header strong {
+  margin: 0;
+}
+
+.planning__timeline-item--confirmed .planning__timeline-marker {
+  background: #ff5b57;
+}
+
+.planning__timeline-item--tentative .planning__timeline-marker {
+  background: #8d6bff;
+}
+
+.planning__timeline-item--conflict .planning__timeline-marker,
+.planning__matrix-item.planning__timeline-item--conflict {
+  background: #ffd66f;
+}
+
+.planning__timeline-item--disabled {
+  opacity: 0.5;
+}
+
+.planning__timeline-item--blocked .planning__timeline-marker {
+  background: #ffb454;
+}
+
 .planning__festival-panel {
   display: flex;
   flex-direction: column;
@@ -931,7 +1023,10 @@ a {
   .planning__panel-header,
   .planning__item,
   .planning__mini,
-  .planning__gap {
+  .planning__gap,
+  .planning__timeline-header,
+  .planning__festival-day-header,
+  .planning__festival-item {
     flex-direction: column;
   }
 
@@ -941,10 +1036,18 @@ a {
   }
 
   .planning__summary,
-  .planning__layout,
   .gap-suggestions,
   .gap-hero {
     grid-template-columns: 1fr;
+  }
+
+  .planning__timeline-item {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .planning__timeline-track {
+    grid-template-columns: 0.9rem minmax(0, 1fr);
   }
 
   .planning__item-time,
