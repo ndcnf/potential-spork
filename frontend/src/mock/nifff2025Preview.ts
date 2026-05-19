@@ -22,6 +22,7 @@ type PreviewScreening = {
   date: string
   venue_slug: string
   start_time: string
+  ticket_url?: string | null
 }
 
 const cyclesSource: PreviewCycle[] = [
@@ -157,6 +158,10 @@ function computeEnd(start: string, duration: number | null): string {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`
 }
 
+function buildFestivalFilmUrl(slug: string): string {
+  return `https://nifff.ch/prog/2025/film/${slug}`
+}
+
 export function buildPreviewDataset(): { cycles: Cycle[]; films: Film[]; screenings: Screening[] } {
   const cycles: Cycle[] = cyclesSource.map((cycle, index) => ({
     id: index + 1,
@@ -185,6 +190,8 @@ export function buildPreviewDataset(): { cycles: Cycle[]; films: Film[]; screeni
       synopsis: null,
       language: null,
       age_rating: null,
+      festival_url: film.status === 'not_found_in_wayback_capture' ? null : buildFestivalFilmUrl(film.slug),
+      imdb_url: null,
       priority: filmPriorities[film.slug] ?? 'medium',
       cycle_id: cycle?.id ?? null,
       cycle_name: cycle?.name ?? null,
@@ -207,6 +214,7 @@ export function buildPreviewDataset(): { cycles: Cycle[]; films: Film[]; screeni
       venue_name: venues[screening.venue_slug as keyof typeof venues] ?? screening.venue_slug,
       starts_at: startsAt,
       ends_at: computeEnd(startsAt, film?.duration_minutes ?? null),
+      ticket_url: screening.ticket_url ?? null,
       selection_status: status,
       derived_state: 'available',
     }

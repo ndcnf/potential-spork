@@ -178,8 +178,34 @@ function screeningReason(screening: PlanningScreening): string {
   if (screening.selection_status === 'confirmed') return 'Confirmee'
   if (screening.selection_status === 'tentative') return 'Tentative'
   if (screening.isSingleScreening) return 'Seance unique'
-  if (screening.isAlternative || screening.derived_state === 'disabled') return 'Autre seance deja choisie'
-  if (screening.derived_state === 'conflict') return 'Chevauche une seance choisie'
+  if (screening.isAlternative || screening.derived_state === 'disabled') {
+    const selectedSibling = planningScreenings.value.find(
+      (other) =>
+        other.film_id === screening.film_id &&
+        other.id !== screening.id &&
+        (other.selection_status === 'tentative' || other.selection_status === 'confirmed'),
+    )
+
+    if (selectedSibling?.starts_at) {
+      return `Seance prevue ${formatDayChipLabel(selectedSibling.dayKey)} a ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}`
+    }
+
+    return 'Autre seance deja choisie'
+  }
+  if (screening.derived_state === 'conflict') {
+    const conflictingSelected = planningScreenings.value.find(
+      (other) =>
+        other.id !== screening.id &&
+        (other.selection_status === 'tentative' || other.selection_status === 'confirmed') &&
+        screeningsOverlapWithBuffer(screening, other),
+    )
+
+    if (conflictingSelected?.starts_at) {
+      return `Conflit avec ${conflictingSelected.film_title}, prevu ${formatDayChipLabel(conflictingSelected.dayKey)} a ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}`
+    }
+
+    return 'Conflit avec une seance deja choisie'
+  }
   return 'Disponible'
 }
 
@@ -199,6 +225,10 @@ function selectedCountForDay(dayKey: string): number {
 
 function setSelection(screeningId: number, status: Screening['selection_status']): void {
   store.setScreeningSelection(screeningId, status)
+}
+
+function jumpToDay(dayKey: string): void {
+  activeDay.value = dayKey
 }
 
 const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
@@ -300,11 +330,21 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
             <div class="planning__timeline-marker" />
             <div class="planning__timeline-content">
               <div class="planning__timeline-header">
-                <strong>{{ screening.film_title }}</strong>
+                <strong>
+                  <a v-if="screening.film?.festival_url" :href="screening.film.festival_url" target="_blank" rel="noopener">
+                    {{ screening.film_title }}
+                  </a>
+                  <template v-else>{{ screening.film_title }}</template>
+                </strong>
                 <span class="planning__state">{{ screeningReason(screening) }}</span>
               </div>
               <p>{{ screening.venue_name }}</p>
               <p>{{ filmMeta(screening) }}</p>
+              <div v-if="screening.film?.festival_url || screening.film?.imdb_url || screening.ticket_url" class="planning__links">
+                <a v-if="screening.film?.festival_url" :href="screening.film.festival_url" target="_blank" rel="noopener">Fiche NIFFF</a>
+                <a v-if="screening.film?.imdb_url" :href="screening.film.imdb_url" target="_blank" rel="noopener">IMDb</a>
+                <a v-if="screening.ticket_url" :href="screening.ticket_url" target="_blank" rel="noopener">Billetterie</a>
+              </div>
               <div class="planning__action-group">
                 <button type="button" class="planning__action planning__action--secondary" @click="setSelection(screening.id, 'tentative')">Tentative</button>
                 <button type="button" class="planning__action planning__action--primary" @click="setSelection(screening.id, 'confirmed')">Confirmer</button>
@@ -359,7 +399,9 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
           <div class="planning__festival-list">
             <article v-for="screening in dayGroup.screenings" :key="screening.id" class="planning__festival-item" :class="{ 'planning__festival-item--active': screening.dayKey === activeDay }">
               <div>
-                <strong>{{ screening.film_title }}</strong>
+                <strong>
+                  <button type="button" class="planning__jump" @click="jumpToDay(screening.dayKey)">{{ screening.film_title }}</button>
+                </strong>
                 <p>{{ formatTimeRange(screening) }} · {{ screening.venue_name }}</p>
               </div>
               <span class="planning__festival-state">{{ screening.selection_status === 'confirmed' ? 'Confirmee' : 'Tentative' }}</span>

@@ -21,6 +21,8 @@ export interface Film {
   synopsis: string | null
   language: string | null
   age_rating: string | null
+  festival_url?: string | null
+  imdb_url?: string | null
   priority: Priority
   cycle_id: number | null
   cycle_name: string | null
@@ -35,6 +37,7 @@ export interface Screening {
   venue_name: string | null
   starts_at: string | null
   ends_at: string | null
+  ticket_url?: string | null
   selection_status: 'none' | 'tentative' | 'confirmed'
   derived_state: 'available' | 'selected' | 'disabled' | 'conflict' | 'past'
 }

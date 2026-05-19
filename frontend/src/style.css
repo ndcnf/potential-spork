@@ -902,6 +902,30 @@ a {
   margin: 0;
 }
 
+.planning__timeline-header a,
+.planning__links a,
+.planning__jump {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.18);
+  text-underline-offset: 0.15em;
+}
+
+.planning__jump {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.planning__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  font-size: 0.88rem;
+}
+
 .planning__timeline-item--confirmed .planning__timeline-marker {
   background: #ff5b57;
 }

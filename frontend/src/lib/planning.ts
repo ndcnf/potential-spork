@@ -2,6 +2,11 @@ import type { Screening } from '@/types'
 
 export const RESERVATION_BUFFER_MINUTES = 15
 
+function toTimestamp(value: string | null): number {
+  if (!value) return 0
+  return new Date(value).getTime()
+}
+
 export function toMinutes(value: string | null): number {
   if (!value) return 0
   const hours = Number(value.slice(11, 13))
@@ -18,8 +23,13 @@ export function screeningsOverlapWithBuffer(
   if (!left.starts_at || !left.ends_at || !right.starts_at || !right.ends_at || left.id === right.id) {
     return false
   }
+  const bufferMs = bufferMinutes * 60 * 1000
+  const leftStart = toTimestamp(left.starts_at)
+  const leftEnd = toTimestamp(left.ends_at)
+  const rightStart = toTimestamp(right.starts_at)
+  const rightEnd = toTimestamp(right.ends_at)
 
-  return toMinutes(left.starts_at) < toMinutes(right.ends_at) + bufferMinutes && toMinutes(right.starts_at) < toMinutes(left.ends_at) + bufferMinutes
+  return leftStart < rightEnd + bufferMs && rightStart < leftEnd + bufferMs
 }
 
 export function formatMinutes(minutes: number | null | undefined): string {
