@@ -7,6 +7,7 @@ const tabs = [
   { label: 'Films', to: '/films', hint: 'Selection initiale' },
   { label: 'Planning', to: '/planning', hint: 'Assemblage visuel' },
   { label: 'Creneaux libres', to: '/gaps', hint: 'Remplissage cible' },
+  { label: 'Parametres', to: '/settings', hint: 'Preferences perso' },
 ]
 
 const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'

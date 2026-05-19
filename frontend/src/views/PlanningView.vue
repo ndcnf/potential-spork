@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import { formatMinutes, formatTimeRange as formatTimeRangeValue, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
+import { useSettingsStore } from '@/stores/settings'
 import type { Film, Screening } from '@/types'
 
 type PlanningScreening = Screening & {
@@ -17,20 +18,15 @@ type PlanningScreening = Screening & {
   isMustLock: boolean
   isRecommended: boolean
   recommendationNote: string | null
+  recommendationReasons: string[]
 }
 
 const store = useFestivalStore()
+const settingsStore = useSettingsStore()
 const activeDay = ref('')
 const planningMode = ref<'timeline' | 'venues'>('timeline')
 const detailScreeningId = ref<number | null>(null)
-
-const venueComfortScores: Record<string, number> = {
-  'Passage 1': 2,
-  Arcades: 1,
-  Studio: 1,
-  Rex: 0,
-  'Open Air': -1,
-}
+const FESTIVAL_VIEW_KEY = '__festival__'
 
 function isPlanningPriority(priority: Film['priority']): boolean {
   return priority === 'medium' || priority === 'high' || priority === 'must-see'
@@ -40,29 +36,53 @@ function isHighPriority(priority: Film['priority'] | undefined): boolean {
   return priority === 'high' || priority === 'must-see'
 }
 
-function screeningRecommendationScore(screening: Screening, selectedScreenings: Screening[], candidateCount: number): { score: number; note: string } {
+function screeningRecommendationScore(screening: Screening, selectedScreenings: Screening[], candidateCount: number): { score: number; note: string; reasons: string[] } {
+  const settings = settingsStore.recommendationSettings
   const conflictPenalty = selectedScreenings.some((other) => screeningsOverlapWithBuffer(screening, other)) ? -100 : 0
   const rarityBonus = candidateCount === 1 ? 40 : candidateCount === 2 ? 20 : 0
-  const comfortBonus = venueComfortScores[screening.venue_name ?? ''] ?? 0
+  const comfortBonus = settings.preferredVenueScores[screening.venue_name ?? ''] ?? 0
   const startMinutes = toMinutes(screening.starts_at)
-  const dayPlacementBonus = startMinutes >= 12 * 60 && startMinutes <= 21 * 60 ? 4 : 0
-  const latenessPenalty = startMinutes >= 23 * 60 || startMinutes < 10 * 60 ? -3 : 0
-  const total = conflictPenalty + rarityBonus + comfortBonus + dayPlacementBonus + latenessPenalty
+  const latenessPenalty = settings.avoidAfterMinutes !== null && startMinutes >= settings.avoidAfterMinutes ? -1 : 0
+  const earlyPenalty = settings.avoidBeforeMinutes !== null && startMinutes < settings.avoidBeforeMinutes ? -1 : 0
+  const total = conflictPenalty + rarityBonus + comfortBonus + latenessPenalty + earlyPenalty
+  const reasons: string[] = []
+
+  if (candidateCount === 1) {
+    reasons.push('derniere option viable pour ce film')
+  } else if (candidateCount === 2) {
+    reasons.push('peu d alternatives restantes')
+  }
+
+  if (comfortBonus > 0) {
+    reasons.push('salle notee plus confortable')
+  }
+
+  if (settings.avoidBeforeMinutes !== null && startMinutes < settings.avoidBeforeMinutes) {
+    reasons.push('un peu avant ta plage preferee')
+  }
+
+  if (settings.avoidAfterMinutes !== null && startMinutes >= settings.avoidAfterMinutes) {
+    reasons.push('un peu apres ta plage preferee')
+  }
 
   if (conflictPenalty < 0) {
-    return { score: total, note: 'conflit evite si possible' }
+    return { score: total, note: 'conflit evite si possible', reasons: ['entre en conflit avec une seance deja choisie'] }
   }
   if (candidateCount === 1) {
-    return { score: total, note: 'derniere option viable' }
+    return { score: total, note: 'derniere option viable', reasons }
   }
   if (comfortBonus > 0) {
-    return { score: total, note: 'salle plus confortable' }
+    return { score: total, note: 'salle plus confortable', reasons }
+  }
+  if (latenessPenalty < 0 || earlyPenalty < 0) {
+    return { score: total, note: 'un peu hors preference horaire', reasons }
   }
 
-  return { score: total, note: 'meilleur compromis actuel' }
+  return { score: total, note: 'meilleur compromis actuel', reasons: reasons.length ? reasons : ['pas de conflit detecte', 'ordre chronologique favorable'] }
 }
 
 onMounted(() => {
+  settingsStore.load()
   if (!store.cycles.length && !store.loading) {
     store.bootstrap()
   }
@@ -85,6 +105,7 @@ const planningScreenings = computed<PlanningScreening[]>(() => {
   const validScreeningCountByFilmId = new Map<number, number>()
   const recommendationByFilmId = new Map<number, number>()
   const recommendationNoteByScreeningId = new Map<number, string>()
+  const recommendationReasonsByScreeningId = new Map<number, string[]>()
 
   for (const screening of baseScreenings) {
     if (screening.selection_status !== 'rejected') {
@@ -106,16 +127,19 @@ const planningScreenings = computed<PlanningScreening[]>(() => {
       continue
     }
 
-    const scored = [...screenings]
-      .map((screening) => ({
-        screening,
-        ...screeningRecommendationScore(screening, selectedScreenings, screenings.length),
-      }))
-      .sort((left, right) => right.score - left.score || (left.screening.starts_at ?? '').localeCompare(right.screening.starts_at ?? ''))
+    if (settingsStore.recommendationMode === 'personalized') {
+      const scored = [...screenings]
+        .map((screening) => ({
+          screening,
+          ...screeningRecommendationScore(screening, selectedScreenings, screenings.length),
+        }))
+        .sort((left, right) => right.score - left.score || (left.screening.starts_at ?? '').localeCompare(right.screening.starts_at ?? ''))
 
-    if (scored[0]) {
-      recommendationByFilmId.set(filmId, scored[0].screening.id)
-      recommendationNoteByScreeningId.set(scored[0].screening.id, scored[0].note)
+      if (scored[0]) {
+        recommendationByFilmId.set(filmId, scored[0].screening.id)
+        recommendationNoteByScreeningId.set(scored[0].screening.id, scored[0].note)
+        recommendationReasonsByScreeningId.set(scored[0].screening.id, scored[0].reasons)
+      }
     }
   }
 
@@ -130,6 +154,7 @@ const planningScreenings = computed<PlanningScreening[]>(() => {
       const isMustLock = isSingleScreening && isHighPriority(film?.priority) && !isSelected
       const isRecommended = recommendationByFilmId.get(screening.film_id) === screening.id && !isSelected
       const recommendationNote = recommendationNoteByScreeningId.get(screening.id) ?? null
+      const recommendationReasons = recommendationReasonsByScreeningId.get(screening.id) ?? []
 
       return {
         ...screening,
@@ -144,6 +169,7 @@ const planningScreenings = computed<PlanningScreening[]>(() => {
         isMustLock,
         isRecommended,
         recommendationNote,
+        recommendationReasons,
       }
     })
     .sort((left, right) => {
@@ -154,6 +180,7 @@ const planningScreenings = computed<PlanningScreening[]>(() => {
 })
 
 const dayKeys = computed(() => [...new Set(planningScreenings.value.map((screening) => screening.dayKey))])
+const dayOptions = computed(() => [FESTIVAL_VIEW_KEY, ...dayKeys.value])
 
 watch(
   dayKeys,
@@ -162,7 +189,7 @@ watch(
       activeDay.value = ''
       return
     }
-    if (!days.includes(activeDay.value)) {
+    if (activeDay.value !== FESTIVAL_VIEW_KEY && !days.includes(activeDay.value)) {
       activeDay.value = days[0]
     }
   },
@@ -170,23 +197,24 @@ watch(
 )
 
 const dayScreenings = computed(() =>
-  planningScreenings.value.filter((screening) => screening.dayKey === activeDay.value),
+  activeDay.value === FESTIVAL_VIEW_KEY
+    ? planningScreenings.value
+    : planningScreenings.value.filter((screening) => screening.dayKey === activeDay.value),
 )
 
-const selectedFestivalScreenings = computed(() =>
-  planningScreenings.value.filter((screening) => screening.isSelected),
-)
+const timelineGroups = computed(() => {
+  if (activeDay.value !== FESTIVAL_VIEW_KEY) {
+    return [{ dayKey: activeDay.value, screenings: dayScreenings.value }]
+  }
 
-const selectedFestivalByDay = computed(() => {
   const grouped = new Map<string, PlanningScreening[]>()
-
-  for (const screening of selectedFestivalScreenings.value) {
+  for (const screening of dayScreenings.value) {
     grouped.set(screening.dayKey, [...(grouped.get(screening.dayKey) ?? []), screening])
   }
 
-  return [...grouped.entries()].map(([day, screenings]) => ({
-    day,
-    screenings: screenings.sort((left, right) => (left.starts_at ?? '').localeCompare(right.starts_at ?? '')),
+  return [...grouped.entries()].map(([dayKey, screenings]) => ({
+    dayKey,
+    screenings,
   }))
 })
 
@@ -209,7 +237,7 @@ const daySummary = computed(() => ({
 
 const gridVenueNames = computed(() => {
   const names = dayScreenings.value.map((screening) => screening.venue_name || 'Salle inconnue')
-  return [...new Set(names)]
+  return [...new Set(names)].sort((left, right) => left.localeCompare(right))
 })
 
 const gridByVenue = computed(() =>
@@ -296,7 +324,14 @@ function screeningStateClass(screening: PlanningScreening): string {
 }
 
 function selectedCountForDay(dayKey: string): number {
+  if (dayKey === FESTIVAL_VIEW_KEY) {
+    return planningScreenings.value.filter((screening) => screening.isSelected).length
+  }
   return planningScreenings.value.filter((screening) => screening.dayKey === dayKey && screening.isSelected).length
+}
+
+function dayChipLabel(dayKey: string): string {
+  return dayKey === FESTIVAL_VIEW_KEY ? 'Festival entier' : formatDayChipLabel(dayKey)
 }
 
 function setSelection(screeningId: number, status: Screening['selection_status']): void {
@@ -375,18 +410,27 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
       </section>
 
       <section class="planning__controls-panel">
+        <div class="planning__control-group planning__control-group--status">
+          <p class="eyebrow">Recommandations</p>
+          <p class="planning__status-note">
+            <template v-if="settingsStore.recommendationMode === 'off'">Desactivees. Le planning reste manuel.</template>
+            <template v-else-if="settingsStore.recommendationMode === 'neutral'">Actives, mais sans preference definie : l'app reste neutre.</template>
+            <template v-else>Personnalisees selon tes parametres.</template>
+          </p>
+        </div>
+
         <div class="planning__control-group">
           <p class="eyebrow">Jour</p>
           <div class="planning__day-picker">
             <button
-              v-for="day in dayKeys"
+              v-for="day in dayOptions"
               :key="day"
               class="planning__day-button"
               :class="{ 'planning__day-button--active': activeDay === day }"
               type="button"
               @click="activeDay = day"
             >
-              {{ formatDayChipLabel(day) }} · {{ selectedCountForDay(day) }}
+              {{ dayChipLabel(day) }} · {{ selectedCountForDay(day) }}
             </button>
           </div>
         </div>
@@ -410,64 +454,71 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
         <header class="planning__panel-header">
           <div>
             <p class="eyebrow">Jour courant</p>
-            <h3>{{ activeDay ? formatDayLabel(activeDay) : 'Aucun jour' }}</h3>
+            <h3>{{ activeDay === FESTIVAL_VIEW_KEY ? 'Festival entier' : activeDay ? formatDayLabel(activeDay) : 'Aucun jour' }}</h3>
           </div>
           <span>{{ daySummary.selected }} choisi(es) · {{ daySummary.conflicts }} conflit(s) · {{ daySummary.total }} seance(s)</span>
         </header>
 
         <div v-if="planningMode === 'timeline' && dayScreenings.length" class="planning__timeline">
-          <article
-            v-for="screening in dayScreenings"
-            :key="screening.id"
-            class="planning__timeline-item"
-            :class="screeningStateClass(screening)"
-          >
-            <div class="planning__timeline-time">{{ formatTimeRange(screening) }}</div>
-            <div class="planning__timeline-track">
-              <div class="planning__timeline-marker" />
-              <div class="planning__timeline-content">
-                <div class="planning__timeline-header">
-                  <strong>
-                    <button type="button" class="planning__detail-trigger" @click="openDetailPanel(screening.id)">
-                      {{ screening.film_title }}
+          <template v-for="group in timelineGroups" :key="group.dayKey || 'empty'">
+            <header v-if="activeDay === FESTIVAL_VIEW_KEY" class="planning__timeline-day-header">
+              <strong>{{ formatDayLabel(group.dayKey) }}</strong>
+              <span>{{ group.screenings.filter((screening) => screening.isSelected).length }} retenue(s)</span>
+            </header>
+
+            <article
+              v-for="screening in group.screenings"
+              :key="screening.id"
+              class="planning__timeline-item"
+              :class="screeningStateClass(screening)"
+            >
+              <div class="planning__timeline-time">{{ formatTimeRange(screening) }}</div>
+              <div class="planning__timeline-track">
+                <div class="planning__timeline-marker" />
+                <div class="planning__timeline-content">
+                  <div class="planning__timeline-header">
+                    <strong>
+                      <button type="button" class="planning__detail-trigger" @click="openDetailPanel(screening.id)">
+                        {{ screening.film_title }}
+                      </button>
+                    </strong>
+                    <span class="planning__state">{{ screeningReason(screening) }}</span>
+                  </div>
+                  <p>{{ screening.venue_name }}</p>
+                  <p>{{ filmMeta(screening) }}</p>
+                  <div class="planning__selection-toggle" role="radiogroup" aria-label="Statut de la seance">
+                    <button
+                      type="button"
+                      class="planning__selection-option"
+                      :class="{ 'planning__selection-option--active': screening.selection_status === 'tentative' }"
+                      :aria-pressed="screening.selection_status === 'tentative'"
+                      @click="toggleScreeningSelection(screening.id, 'tentative')"
+                    >
+                      Tentative
                     </button>
-                  </strong>
-                  <span class="planning__state">{{ screeningReason(screening) }}</span>
-                </div>
-                <p>{{ screening.venue_name }}</p>
-                <p>{{ filmMeta(screening) }}</p>
-                <div class="planning__selection-toggle" role="radiogroup" aria-label="Statut de la seance">
-                  <button
-                    type="button"
-                    class="planning__selection-option"
-                    :class="{ 'planning__selection-option--active': screening.selection_status === 'tentative' }"
-                    :aria-pressed="screening.selection_status === 'tentative'"
-                    @click="toggleScreeningSelection(screening.id, 'tentative')"
-                  >
-                    Tentative
-                  </button>
-                  <button
-                    type="button"
-                    class="planning__selection-option"
-                    :class="{ 'planning__selection-option--active': screening.selection_status === 'confirmed' }"
-                    :aria-pressed="screening.selection_status === 'confirmed'"
-                    @click="toggleScreeningSelection(screening.id, 'confirmed')"
-                  >
-                    Confirmee
-                  </button>
-                  <button
-                    type="button"
-                    class="planning__selection-option"
-                    :class="{ 'planning__selection-option--active': screening.selection_status === 'rejected' }"
-                    :aria-pressed="screening.selection_status === 'rejected'"
-                    @click="toggleScreeningSelection(screening.id, 'rejected')"
-                  >
-                    Ignoree
-                  </button>
+                    <button
+                      type="button"
+                      class="planning__selection-option"
+                      :class="{ 'planning__selection-option--active': screening.selection_status === 'confirmed' }"
+                      :aria-pressed="screening.selection_status === 'confirmed'"
+                      @click="toggleScreeningSelection(screening.id, 'confirmed')"
+                    >
+                      Confirmee
+                    </button>
+                    <button
+                      type="button"
+                      class="planning__selection-option"
+                      :class="{ 'planning__selection-option--active': screening.selection_status === 'rejected' }"
+                      :aria-pressed="screening.selection_status === 'rejected'"
+                      @click="toggleScreeningSelection(screening.id, 'rejected')"
+                    >
+                      Ignoree
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </article>
+            </article>
+          </template>
         </div>
 
         <div v-else-if="planningMode === 'venues' && gridByVenue.length" class="planning__matrix">
@@ -532,6 +583,14 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
           </div>
         </div>
 
+        <div v-if="detailScreening.isRecommended || detailScreening.isMustLock" class="planning__detail-copy">
+          <p class="planning__detail-copy-title">Pourquoi cette seance ressort</p>
+          <ul class="planning__detail-list">
+            <li v-if="detailScreening.isMustLock">il ne reste qu une seule seance valable pour ce film prioritaire</li>
+            <li v-for="reason in detailScreening.recommendationReasons" :key="reason">{{ reason }}</li>
+          </ul>
+        </div>
+
         <div v-if="detailScreening.film?.synopsis" class="planning__detail-copy">
           <p class="planning__detail-copy-title">Synopsis</p>
           <p>{{ detailScreening.film.synopsis }}</p>
@@ -550,37 +609,5 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
       </aside>
     </section>
 
-    <section class="planning__festival-panel">
-      <header class="planning__panel-header">
-        <div>
-          <p class="eyebrow">Festival entier</p>
-          <h3>Seances deja choisies</h3>
-        </div>
-        <span>{{ selectedFestivalScreenings.length }} au total</span>
-      </header>
-
-      <div v-if="selectedFestivalByDay.length" class="planning__festival-days">
-        <article v-for="dayGroup in selectedFestivalByDay" :key="dayGroup.day" class="planning__festival-day">
-          <header class="planning__festival-day-header">
-            <strong>{{ formatDayLabel(dayGroup.day) }}</strong>
-            <span>{{ dayGroup.screenings.length }} retenue(s)</span>
-          </header>
-
-          <div class="planning__festival-list">
-            <article v-for="screening in dayGroup.screenings" :key="screening.id" class="planning__festival-item" :class="{ 'planning__festival-item--active': screening.dayKey === activeDay }">
-              <div>
-                <strong>
-                  <button type="button" class="planning__jump" @click="jumpToDay(screening.dayKey)">{{ screening.film_title }}</button>
-                </strong>
-                <p>{{ formatTimeRange(screening) }} · {{ screening.venue_name }}</p>
-              </div>
-              <span class="planning__festival-state">{{ screening.selection_status === 'confirmed' ? 'Confirmee' : 'Tentative' }}</span>
-            </article>
-          </div>
-        </article>
-      </div>
-
-      <p v-else class="planning__empty">Aucune seance choisie pour l'ensemble du festival.</p>
-    </section>
   </section>
 </template>

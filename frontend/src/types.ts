@@ -1,5 +1,12 @@
 export type Priority = 'ignore' | 'low' | 'medium' | 'high' | 'must-see'
 
+export interface RecommendationSettings {
+  enabled: boolean
+  preferredVenueScores: Record<string, number>
+  avoidBeforeMinutes: number | null
+  avoidAfterMinutes: number | null
+}
+
 export interface Cycle {
   id: number
   name: string
