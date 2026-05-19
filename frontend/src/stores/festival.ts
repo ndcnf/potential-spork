@@ -16,6 +16,10 @@ function recomputeScreeningStates(screenings: Screening[]): Screening[] {
       return { ...screening, derived_state: 'selected' }
     }
 
+    if (screening.selection_status === 'rejected') {
+      return { ...screening, derived_state: 'rejected' }
+    }
+
     const siblingSelected = screenings.find(
       (other) =>
         other.film_id === screening.film_id &&
@@ -140,12 +144,15 @@ export const useFestivalStore = defineStore('festival', {
         return
       }
 
-      if (status === 'none') {
+      if (status === 'none' || status === 'rejected') {
         target.selection_status = 'none'
+        if (status === 'rejected') {
+          target.selection_status = 'rejected'
+        }
       } else {
         target.selection_status = status
         for (const sibling of this.screenings) {
-          if (sibling.film_id === target.film_id && sibling.id !== target.id) {
+          if (sibling.film_id === target.film_id && sibling.id !== target.id && sibling.selection_status !== 'rejected') {
             sibling.selection_status = 'none'
           }
         }

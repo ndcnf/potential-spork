@@ -17,10 +17,13 @@ export interface Film {
   countries: string | null
   duration_minutes: number | null
   tagline: string | null
+  premiere_label?: string | null
+  short_description?: string | null
   cast: string | null
   synopsis: string | null
   language: string | null
   age_rating: string | null
+  poster_url?: string | null
   festival_url?: string | null
   imdb_url?: string | null
   priority: Priority
@@ -38,6 +41,6 @@ export interface Screening {
   starts_at: string | null
   ends_at: string | null
   ticket_url?: string | null
-  selection_status: 'none' | 'tentative' | 'confirmed'
-  derived_state: 'available' | 'selected' | 'disabled' | 'conflict' | 'past'
+  selection_status: 'none' | 'rejected' | 'tentative' | 'confirmed'
+  derived_state: 'available' | 'selected' | 'disabled' | 'conflict' | 'rejected' | 'past'
 }

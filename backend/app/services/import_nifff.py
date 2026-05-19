@@ -28,10 +28,13 @@ class ParsedFilm:
     countries: str | None = None
     duration_minutes: int | None = None
     tagline: str | None = None
+    premiere_label: str | None = None
+    short_description: str | None = None
     cast: str | None = None
     synopsis: str | None = None
     language: str | None = None
     age_rating: str | None = None
+    poster_url: str | None = None
 
 
 def _session() -> requests.Session:
@@ -74,6 +77,62 @@ def _field_after_heading(soup: BeautifulSoup, heading: str) -> str | None:
     while sibling is not None and getattr(sibling, "name", None) is None:
         sibling = sibling.find_next_sibling()
     return _clean_text(sibling) if sibling else None
+
+
+def _extract_table_value(soup: BeautifulSoup, heading: str) -> str | None:
+    for header in soup.select('table th'):
+        if header.get_text(' ', strip=True).lower() != heading.lower():
+            continue
+
+        row = header.find_parent('tr')
+        next_row = row.find_next_sibling('tr') if row else None
+        value_cell = next_row.find('td') if next_row else None
+        return _clean_text(value_cell)
+
+    return None
+
+
+def _extract_poster_url(soup: BeautifulSoup, base_url: str) -> str | None:
+    header_image = soup.select_one('.header-page__image img[data-src], .header-page__image img[src], .ratio-16-9 img[data-src], .ratio-16-9 img[src]')
+    if header_image is not None:
+        src = header_image.get('data-src') or header_image.get('src')
+        if src:
+            return urljoin(base_url, src)
+
+    meta = soup.find("meta", property="og:image")
+    if meta is not None and meta.get("content"):
+        return urljoin(base_url, meta["content"])
+
+    image = soup.select_one("img[src]")
+    if image is not None and image.get("src"):
+        return urljoin(base_url, image["src"])
+
+    return None
+
+
+def _extract_premiere_label(soup: BeautifulSoup) -> str | None:
+    title = soup.select_one('.header-page h1')
+    if title is None:
+        return None
+
+    labels = title.select('small')
+    if len(labels) >= 2:
+        text = _clean_text(labels[1])
+        return text or None
+
+    return None
+
+
+def _extract_short_description(soup: BeautifulSoup) -> str | None:
+    paragraph = soup.select_one('.header-page .row.mb-eighth p, .header-page .row.mb-lg-third p')
+    if paragraph is not None:
+        return _clean_text(paragraph)
+
+    meta = soup.find('meta', attrs={'name': 'description'})
+    if meta is not None and meta.get('content'):
+        return meta['content'].strip()
+
+    return None
 
 
 def _extract_archive_cards(soup: BeautifulSoup, year: int) -> list[Tag]:
@@ -139,10 +198,13 @@ def _enrich_from_detail(session: requests.Session, parsed: ParsedFilm) -> Parsed
         countries=_field_after_heading(soup, "Pays") or parsed.countries,
         duration_minutes=_extract_runtime(_field_after_heading(soup, "Durée")) or parsed.duration_minutes,
         tagline=_field_after_heading(soup, "Genre") or parsed.tagline,
-        cast=_field_after_heading(soup, "Distribution"),
+        premiere_label=_extract_premiere_label(soup),
+        short_description=_extract_short_description(soup),
+        cast=_extract_table_value(soup, "Distribution") or _field_after_heading(soup, "Distribution"),
         synopsis=_field_after_heading(soup, "Film"),
         language=_field_after_heading(soup, "Langue"),
         age_rating=_field_after_heading(soup, "Âge"),
+        poster_url=_extract_poster_url(soup, parsed.source_url),
     )
 
 
@@ -191,10 +253,13 @@ def import_nifff_catalog(db: Session, year: int, schedule_url: str | None = None
         film.countries = parsed.countries
         film.duration_minutes = parsed.duration_minutes
         film.tagline = parsed.tagline
+        film.premiere_label = parsed.premiere_label
+        film.short_description = parsed.short_description
         film.cast = parsed.cast
         film.synopsis = parsed.synopsis
         film.language = parsed.language
         film.age_rating = parsed.age_rating
+        film.poster_url = parsed.poster_url
         film.source_url = parsed.source_url
         film.cycle_id = cycle.id if cycle else None
 

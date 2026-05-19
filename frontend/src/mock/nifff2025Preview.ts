@@ -129,6 +129,207 @@ const selectedScreenings = new Map<string, 'tentative' | 'confirmed'>([
   ['the-home|2025-07-06|14:00', 'tentative'],
 ])
 
+const filmDetails: Record<string, { language: string | null; age: string | null; synopsis: string | null; posterUrl: string | null }> = {
+  alpha: {
+    language: 'français ov sub en',
+    age: '16',
+    synopsis:
+      'France, années 80. Alpha, 13 ans, rentre d’une fête avec un tatouage maison. Sa mère flippe : un virus étrange circule, transformant ses victimes en statues de marbre. Pendant que la tension monte, l’oncle Amin, toxicomane et malade, débarque à la maison. Un récit fiévreux sur l’adolescence, la peur, les mutations silencieuses.',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1117436/accessories/1781729.jpeg',
+  },
+  'a-cure-for-wellness': {
+    language: 'English, German ov sub en',
+    age: '16',
+    synopsis: null,
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1084397/accessories/1784372.jpeg',
+  },
+  'dangerous-animals': {
+    language: 'anglais ov sub fr',
+    age: '16',
+    synopsis:
+      "Une surfeuse est enlevée par un tueur aux méthodes peu orthodoxes : il enferme ses victimes sur son chalutier pour les donner en pâture aux squales affamés de la côte australienne sous l'œil de sa caméra. Débute alors pour la jeune femme une lutte pour survivre… Une relecture du sous-genre horrifique du film de requins qui fait le choix audacieux de le croiser avec la figure du tueur en série et met en scène une héroïne dure à cuire dans la pure tradition du slasher.",
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1099498/accessories/1783912.jpeg',
+  },
+  'clown-in-a-cornfield': {
+    language: 'English ov',
+    age: '16',
+    synopsis:
+      'Quinn vient d’emménager à Kettle Springs, où elle découvre une communauté troublée par le récent incendie d’une usine locale. Mais au cœur des tensions, un danger plus inquiétant encore surgit d’un champ de maïs : le clown Frendo. Dans la plus pure tradition du slasher 80’s, CLOWN IN A CORNFIELD se réapproprie le motif du clown tueur dans un jeu de massacre sanglant, reflet d’une Amérique toujours plus recroquevillée sur ses propres peurs.',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1090561/accessories/1783906.jpeg',
+  },
+  cloud: {
+    language: 'japonais ov sub fr/en',
+    age: '16',
+    synopsis:
+      'Coincé dans un travail qu’il abhorre, Yoshii comble ses fins de mois en faisant de la vente en ligne, devenant de plus en plus appâté par le gain. Son avarice va pourtant le rattraper, quand il se trouve pris dans une toile avec des ennemis bien réels. Une plongée des plus sombres de l’autre côté du miroir noir. Déjà à l’honneur du NIFFF en 2005, et après plusieurs sélections, le grand cinéaste japonais revient avec un objet cinématographique aussi intrigant que glaçant.',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1057067/accessories/1783364.jpeg',
+  },
+  eddington: {
+    language: 'anglais ov sub fr',
+    age: '16',
+    synopsis:
+      'Mai 2020, Nouveau-Mexique. En pleine pandémie, un shérif conspirationniste affronte un maire progressiste sur fond de masques, fake news, tension raciale et violence latente. À travers cette fable grinçante, Ari Aster dresse le portrait d’une Amérique fracturée, en crise d’identité, de confiance et de vérité. EDDINGTON détourne les codes du western et du thriller politique pour en faire un huis clos à ciel ouvert, abrasif et visionnaire, sur l’implosion sanglante d’un pays.',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1117435/accessories/1785515.jpeg',
+  },
+  'dead-talents-society': {
+    language: 'min nan chinese, mandarin ov sub en',
+    age: '16',
+    synopsis:
+      'Dans cette comédie horrifique, une femme fraîchement débarquée dans le monde des morts découvre le dur fonctionnement de ce dernier : les fantômes doivent exceller dans l’exercice de terroriser les vivants, sous peine d’être définitivement oubliés. Sur les conseils de Makoto, un agent pour spectres, elle s’associe à Catherine, une star de l’au-delà sur le déclin, pour donner un nouveau souffle à l’ambiance de l’hôtel qu’elles sont supposées hanter.',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1058904/accessories/1783913.jpeg',
+  },
+  dogtooth: {
+    language: 'grec ov sub fr',
+    age: '16',
+    synopsis:
+      'Une maison bordée d’une haute clôture. Coupée du monde extérieur, la vie de trois adolescent·es est rythmée par le modèle imposé par leurs parents : protection ou maltraitance ?',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1084420/accessories/1784379.jpeg',
+  },
+  gatillero: {
+    language: 'espagnol ov sub fr/en',
+    age: '16',
+    synopsis:
+      'Libéré, un ancien taulard rêve de revoir sa fille. Mais le job de trop vire à la course-poursuite façon JOHN WICK sous tequila. Piégé dans un barrio en flammes, il enchaîne bastons, trahisons et règlements de comptes. GATILLERO, c’est le western urbain que Tarantino aurait tourné avec une GoPro et un shot de mezcal.',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1089314/accessories/1783876.jpeg',
+  },
+  'hallow-road': {
+    language: 'anglais ov sub fr',
+    age: '16',
+    synopsis:
+      'Un coup de fil en pleine nuit : leur fille a fauché une inconnue sur une route paumée au milieu des bois. Les parents débarquent pour gérer le chaos… mais ce qui devait être un plan de crise vire au cauchemar. Entre forêt hantée, décisions foireuses et secrets familiaux, HALLOW ROAD embarque dans un thriller nocturne tendu, où rien ne se passe comme prévu.',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1107246/accessories/1786069.jpeg',
+  },
+  'jimmy-and-stiggs': {
+    language: 'anglais ov',
+    age: '16',
+    synopsis:
+      'Jimmy, un cinéaste alcoolique et toxicomane au chômage, se terre dans son appartement de Los Angeles et sombre peu à peu dans une incontrôlable crise de nerfs. Convaincu d’avoir été enlevé par des extraterrestres et craignant leur retour, il demande à son vieil ami Stiggs de lui prêter main forte dans les préparatifs d’une guerre à venir. Une jouissive comédie horrifique dans la lignée des EVIL DEAD de Sam Raimi ou du BAD TASTE de Peter Jackson.',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1062992/accessories/1783916.jpeg',
+  },
+  'monkey-shines': {
+    language: 'anglais ov sub fr',
+    age: '16',
+    synopsis: null,
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1129853/accessories/1784385.jpeg',
+  },
+  'the-home': {
+    language: 'suédois ov sub fr/en',
+    age: '16',
+    synopsis:
+      'Des années après avoir quitté sa ville natale, Joel revient au bercail pour s’occuper de sa mère. Celle-ci a récemment frôlé la mort et doit emménager dans une résidence pour personnes âgées. Logeant dans la maison de son enfance le temps d’y faire du tri, le jeune homme va devoir affronter de sombres souvenirs, dont celui de son père violent… Entre drame familial et film de fantômes, un récit fantastique aussi terrifiant que déchirant.',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1091270/accessories/1781737.jpeg',
+  },
+  'the-rule-of-jenny-pen': {
+    language: 'English ov sub fr',
+    age: '16',
+    synopsis:
+      'Bientôt à la retraite, le juge Stefan Mortensen est victime d’un AVC en plein tribunal. Diminué, il emménage temporairement dans une maison de repos. Il y fait la connaissance de Dave Crealy, un résident qui prend un malin plaisir à persécuter ses congénères à l’aide d’une poupée nommée Jenny Pen... Face à un Geoffrey Rush impeccable, John Lithgow s’en donne à cœur joie en vieux psychopathe, dans un thriller horrifique des plus glaçants !',
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1062957/accessories/1783904.jpeg',
+  },
+  'the-ugly-stepsister': {
+    language: 'norvégien ov sub fr/en',
+    age: '16',
+    synopsis:
+      "Dans un royaume régi par la beauté, Elvira a recours aux méthodes les plus extrêmes pour remporter le cœur du prince. Dans ce premier long-métrage inspiré de CENDRILLON, la réalisatrice norvégienne Emilie Blichfeldt livre par le prisme du body horror une réflexion sur la féminité dans laquelle l'automutilation devient un moyen de prendre soin de soi et de son image. Fun et grotesque.",
+    posterUrl: 'https://files.eventival.com/357/editions/2589/films/1082635/accessories/1781740.jpeg',
+  },
+}
+
+const filmHeaderDetails: Record<string, { premiereLabel: string | null; shortDescription: string | null }> = {
+  alpha: {
+    premiereLabel: 'International Premiere',
+    shortDescription:
+      'Années 80. Alpha, 13 ans, rentre d’une fête avec un tatouage maison. Sa mère panique : un virus mystérieux rôde. Un trouble s’installe entre parano, mutation et fièvre adolescente.',
+  },
+  'a-cure-for-wellness': {
+    premiereLabel: null,
+    shortDescription:
+      'Dans un centre de bien-être isolé dans les Alpes, un jeune cadre croit venir chercher la santé… mais trouve le délire. Une plongée hypnotique entre thriller clinique et fièvre gothique.',
+  },
+  'dangerous-animals': {
+    premiereLabel: 'Swiss Premiere',
+    shortDescription:
+      'Une surfeuse est enlevée par un tueur en série sanguinaire qui donne ses victimes en pâture à des requins depuis son chalutier. Débute alors pour la jeune femme une lutte pour survivre.',
+  },
+  'clown-in-a-cornfield': {
+    premiereLabel: 'Swiss Premiere',
+    shortDescription:
+      'À Kettle Springs, petite ville plongée dans une atmosphère pesante à la suite d’un incendie suspect, un clown tueur commence à sévir… Du slasher old school sur fond d’Amérique rurale.',
+  },
+  cloud: {
+    premiereLabel: 'Romandie Premiere',
+    shortDescription:
+      'Un ouvrier plaque tout pour devenir revendeur en ligne, se retrouvant plongé dans un monde qu’il ne contrôle pas. Le danger n’est plus derrière l’écran, il est partout.',
+  },
+  eddington: {
+    premiereLabel: 'Swiss Premiere',
+    shortDescription:
+      'Nouveau-Mexique, 2020. Masques, tensions raciales, complotisme et virus. EDDINGTON ausculte l’Amérique en crise, entre western crépusculaire et satire toxique de la peur contemporaine.',
+  },
+  'dead-talents-society': {
+    premiereLabel: 'Swiss Premiere',
+    shortDescription:
+      'Grâce à un agent pour fantômes, une femme fraîchement débarquée dans le monde des morts s’associe à une star de l’au-delà sur le déclin pour exceller dans l’art de terrifier les vivants.',
+  },
+  dogtooth: {
+    premiereLabel: null,
+    shortDescription: null,
+  },
+  gatillero: {
+    premiereLabel: 'Swiss Premiere',
+    shortDescription:
+      'Sorti de taule, "El Galgo" veut juste revoir sa gamine. Mais un plan à la BREAKING BAD tourne NARCOS version cauchemar : trahi, accusé, traqué… et armé jusqu’aux dents.',
+  },
+  'hallow-road': {
+    premiereLabel: 'Swiss Premiere',
+    shortDescription:
+      '2h du matin. Leur fille a renversé quelqu’un sur une route paumée. Ils foncent pour la couvrir, mais tout dérape. Une virée nocturne tendue entre secrets, peur et mauvais karma.',
+  },
+  'jimmy-and-stiggs': {
+    premiereLabel: 'Swiss Premiere',
+    shortDescription:
+      'Dans cette comédie horrifique aux accents fluo, un cinéaste au chômage convaincu d’avoir été enlevé par des extraterrestres appelle un vieil ami à la rescousse pour préparer la guerre depuis son appartement.',
+  },
+  'monkey-shines': {
+    premiereLabel: null,
+    shortDescription:
+      'Paralysé après un accident, un homme reçoit l’aide d’un singe dressé… qui développe un lien télépathique et une soif meurtrière. Un thriller cruel où la dépendance vire au cauchemar.',
+  },
+  'the-home': {
+    premiereLabel: 'Swiss Premiere',
+    shortDescription:
+      'De retour dans sa ville natale pour accompagner l’emménagement de sa mère dans une maison de retraite, Joel va devoir affronter de sombres souvenirs, dont celui de son père violent.',
+  },
+  'the-rule-of-jenny-pen': {
+    premiereLabel: 'Swiss Premiere',
+    shortDescription:
+      "À la suite d'un AVC, un vieux juge emménage dans une maison de repos, où un résident psychopathe prend un malin plaisir à persécuter ses congénères à l’aide d’une étrange poupée.",
+  },
+  'the-ugly-stepsister': {
+    premiereLabel: 'Swiss Premiere',
+    shortDescription:
+      'Dans cette relecture de Cendrillon à la sauce body horror, la demi-soeur jalouse recourt aux extrêmes pour gagner la course à la perfection et le coeur du prince. Haut-le-coeur garantis.',
+  },
+}
+
+const filmCast: Record<string, string | null> = {
+  alpha: 'Tahar Rahim, Golshifteh Farahani, Mélissa Boros',
+  'a-cure-for-wellness': 'Dane DeHaan, Jason Isaacs, Mia Goth',
+  'dangerous-animals': 'Hassie Harrison, Josh Heuston, Jai Courtney',
+  'clown-in-a-cornfield': 'Katie Douglas, Aaron Abrams, Carson MacCormac',
+  cloud: 'Masaki Suda, Kotone Furukawa, Daiken Okudaira',
+  eddington: 'Joaquin Phoenix, Pedro Pascal, Emma Stone, Austin Butler',
+  'dead-talents-society': 'Gingle Wang, Sandrine Pinna, Chen Bolin',
+  dogtooth: 'Christos Stergioglou, Michele Valley, Angeliki Papoulia',
+  gatillero: 'Sergio Podelei, Julieta Díaz, Ramiro Blas',
+  'hallow-road': 'Rosamund Pike, Matthew Rhys',
+  'jimmy-and-stiggs': 'Joe Begos, Matt Mercer, Riley Dandy',
+  'monkey-shines': 'Jason Beghe, John Pankow, Kate McNeil',
+  'the-home': 'Philip Oros, Gizem Erdogan, Anki Lidén, Bengt Cw Carlsson',
+  'the-rule-of-jenny-pen': 'John Lithgow, Geoffrey Rush, Nikki MacDonnell, Maaka Pohatu',
+  'the-ugly-stepsister': 'Lea Myren, Thea Sofie Loch Naess, Ane Dahl Torp',
+}
+
 function parseDetails(details: string | null): { countries: string | null; year: number | null; duration: number | null } {
   if (!details) {
     return { countries: null, year: null, duration: null }
@@ -176,6 +377,8 @@ export function buildPreviewDataset(): { cycles: Cycle[]; films: Film[]; screeni
   const films: Film[] = filmSource.map((film, index) => {
     const cycle = film.cycle ? cycleBySlug.get(film.cycle) ?? null : null
     const parsed = parseDetails(film.details)
+    const detail = filmDetails[film.slug] ?? { language: null, age: null, synopsis: null, posterUrl: null }
+    const headerDetail = filmHeaderDetails[film.slug] ?? { premiereLabel: null, shortDescription: null }
 
     return {
       id: index + 1,
@@ -186,10 +389,13 @@ export function buildPreviewDataset(): { cycles: Cycle[]; films: Film[]; screeni
       countries: parsed.countries,
       duration_minutes: parsed.duration,
       tagline: film.tagline,
-      cast: film.status === 'not_found_in_wayback_capture' ? 'Absent de la capture Wayback croisee' : null,
-      synopsis: null,
-      language: null,
-      age_rating: null,
+      premiere_label: headerDetail.premiereLabel,
+      short_description: headerDetail.shortDescription,
+      cast: film.status === 'not_found_in_wayback_capture' ? 'Absent de la capture Wayback croisee' : (filmCast[film.slug] ?? null),
+      synopsis: detail.synopsis,
+      language: detail.language,
+      age_rating: detail.age,
+      poster_url: detail.posterUrl,
       festival_url: film.status === 'not_found_in_wayback_capture' ? null : buildFestivalFilmUrl(film.slug),
       imdb_url: null,
       priority: filmPriorities[film.slug] ?? 'medium',

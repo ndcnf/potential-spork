@@ -316,6 +316,10 @@ a {
   background: #8bcfff;
 }
 
+.legend__marker--recommended {
+  background: #7bdcb5;
+}
+
 .legend__marker--conflict {
   background: #ffd66f;
 }
@@ -323,6 +327,11 @@ a {
 .legend__marker--disabled {
   background: #7f889c;
   opacity: 0.55;
+}
+
+.legend__marker--rejected {
+  background: transparent;
+  border: 1px solid rgba(127, 136, 156, 0.75);
 }
 
 .legend__marker--available {
@@ -831,6 +840,17 @@ a {
   gap: 2rem;
 }
 
+.planning__focus-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.planning__focus-layout--with-panel {
+  grid-template-columns: minmax(0, 1fr) 25rem;
+}
+
 .planning__panel--day {
   gap: 1rem;
 }
@@ -902,7 +922,6 @@ a {
   margin: 0;
 }
 
-.planning__timeline-header a,
 .planning__links a,
 .planning__jump {
   color: inherit;
@@ -919,11 +938,110 @@ a {
   cursor: pointer;
 }
 
+.planning__detail-trigger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.18);
+  text-underline-offset: 0.15em;
+}
+
 .planning__links {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 0.9rem;
   font-size: 0.88rem;
+}
+
+.planning__selection-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  width: fit-content;
+}
+
+.planning__selection-option {
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #b4bdd0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.planning__selection-option--active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f6fb;
+}
+
+.planning__detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  position: sticky;
+  top: 1rem;
+  padding: 0 0 0 1.25rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.planning__detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1.5rem;
+}
+
+.planning__detail-kicker {
+  margin: 0.2rem 0 0;
+  color: #ff8d87;
+}
+
+.planning__detail-line {
+  margin: 0;
+  color: #b4bdd0;
+}
+
+.planning__detail-line strong {
+  color: #f4f6fb;
+  margin-right: 0.45rem;
+}
+
+.planning__detail-media {
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.planning__detail-media img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  max-height: 26rem;
+}
+
+.planning__detail-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.planning__detail-copy-title,
+.planning__detail-copy p {
+  margin: 0;
+}
+
+.planning__detail-copy-title {
+  color: #f4f6fb;
 }
 
 .planning__timeline-item--confirmed .planning__timeline-marker {
@@ -938,6 +1056,10 @@ a {
   background: #8bcfff;
 }
 
+.planning__timeline-item--recommended .planning__timeline-marker {
+  background: #7bdcb5;
+}
+
 .planning__timeline-item--conflict .planning__timeline-marker,
 .planning__matrix-item.planning__timeline-item--conflict {
   background: #ffd66f;
@@ -947,12 +1069,29 @@ a {
   opacity: 0.5;
 }
 
+.planning__timeline-item--rejected {
+  opacity: 0.55;
+}
+
+.planning__timeline-item--rejected .planning__timeline-marker {
+  background: transparent;
+  border: 1px solid rgba(127, 136, 156, 0.75);
+}
+
 .planning__timeline-item--blocked .planning__timeline-marker {
   background: #ffb454;
 }
 
 .planning__timeline-item--must-lock .planning__timeline-content {
   border-bottom-color: rgba(139, 207, 255, 0.28);
+}
+
+.planning__timeline-item--recommended .planning__timeline-content {
+  border-bottom-color: rgba(123, 220, 181, 0.28);
+}
+
+.planning__timeline-item--rejected .planning__timeline-content {
+  border-bottom-color: rgba(127, 136, 156, 0.18);
 }
 
 .planning__festival-panel {
@@ -1203,6 +1342,12 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .planning__focus-layout,
+  .planning__focus-layout--with-panel,
+  .planning__detail-grid {
+    grid-template-columns: 1fr;
+  }
+
   .planning__timeline-item {
     grid-template-columns: 1fr;
     gap: 0.35rem;
@@ -1224,6 +1369,13 @@ a {
 
   .planning__matrix-venue {
     padding-top: 0;
+  }
+
+  .planning__detail-panel {
+    position: static;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .mobile-tabs {

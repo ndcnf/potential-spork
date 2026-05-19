@@ -12,10 +12,13 @@ class FilmRead(BaseModel):
     countries: str | None
     duration_minutes: int | None
     tagline: str | None
+    premiere_label: str | None
+    short_description: str | None
     cast: str | None
     synopsis: str | None
     language: str | None
     age_rating: str | None
+    poster_url: str | None
     priority: Priority
     cycle_id: int | None
     cycle_name: str | None = None
