@@ -115,13 +115,14 @@ function formatScreeningLabel(screening: Screening): string {
     return 'Horaire inconnu'
   }
 
-  const date = new Date(`${screening.starts_at.slice(0, 10)}T12:00:00`)
+  const dateKey = screening.starts_at.slice(0, 10)
+  const date = new Date(`${dateKey}T12:00:00`)
   const dayLabel = new Intl.DateTimeFormat('fr-CH', { weekday: 'short' })
     .format(date)
     .replace('.', '')
     .toLowerCase()
-  const day = screening.starts_at.slice(8, 10)
-  const month = screening.starts_at.slice(5, 7)
+  const day = dateKey.slice(8, 10)
+  const month = dateKey.slice(5, 7)
   const timeRange = formatTimeRange(screening.starts_at, screening.ends_at).replace(/:/g, 'h').replace(' - ', '-')
 
   return `${dayLabel} ${day}.${month} ${timeRange}`

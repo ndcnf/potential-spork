@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { formatMinutes, formatTimeRange as formatTimeRangeValue, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
@@ -19,14 +19,22 @@ type PlanningScreening = Screening & {
   isRecommended: boolean
   recommendationNote: string | null
   recommendationReasons: string[]
+  visualRowStart?: number
+  visualRowSpan?: number
 }
 
 const store = useFestivalStore()
 const settingsStore = useSettingsStore()
 const activeDay = ref('')
-const planningMode = ref<'timeline' | 'venues'>('timeline')
+const planningMode = ref<'timeline' | 'venues' | 'visualization'>('timeline')
 const detailScreeningId = ref<number | null>(null)
 const FESTIVAL_VIEW_KEY = '__festival__'
+const isMobile = ref(false)
+let mobileMedia: MediaQueryList | null = null
+
+const syncMobileMode = () => {
+  isMobile.value = mobileMedia?.matches ?? false
+}
 
 function isPlanningPriority(priority: Film['priority']): boolean {
   return priority === 'medium' || priority === 'high' || priority === 'must-see'
@@ -82,11 +90,23 @@ function screeningRecommendationScore(screening: Screening, selectedScreenings: 
 }
 
 onMounted(() => {
+  if (typeof window !== 'undefined') {
+    mobileMedia = window.matchMedia('(max-width: 960px)')
+    syncMobileMode()
+    mobileMedia.addEventListener('change', syncMobileMode)
+  }
+
   settingsStore.load()
   if (!store.cycles.length && !store.loading) {
     store.bootstrap()
   }
 })
+
+onBeforeUnmount(() => {
+  mobileMedia?.removeEventListener('change', syncMobileMode)
+})
+
+const effectivePlanningMode = computed(() => (isMobile.value && planningMode.value === 'visualization' ? 'timeline' : planningMode.value))
 
 const filmById = computed(() => new Map(store.films.map((film) => [film.id, film])))
 
@@ -189,8 +209,8 @@ watch(
       activeDay.value = ''
       return
     }
-    if (activeDay.value !== FESTIVAL_VIEW_KEY && !days.includes(activeDay.value)) {
-      activeDay.value = days[0]
+    if (!activeDay.value || (activeDay.value !== FESTIVAL_VIEW_KEY && !days.includes(activeDay.value))) {
+      activeDay.value = FESTIVAL_VIEW_KEY
     }
   },
   { immediate: true },
@@ -246,6 +266,80 @@ const gridByVenue = computed(() =>
     screenings: dayScreenings.value.filter((screening) => (screening.venue_name || 'Salle inconnue') === venueName),
   })),
 )
+
+const venueGroups = computed(() => {
+  if (activeDay.value !== FESTIVAL_VIEW_KEY) {
+    return [{ dayKey: activeDay.value, venues: gridByVenue.value }]
+  }
+
+  return timelineGroups.value.map((group) => {
+    const venueNames = [...new Set(group.screenings.map((screening) => screening.venue_name || 'Salle inconnue'))].sort((left, right) => left.localeCompare(right))
+    return {
+      dayKey: group.dayKey,
+      venues: venueNames.map((venueName) => ({
+        venueName,
+        screenings: group.screenings.filter((screening) => (screening.venue_name || 'Salle inconnue') === venueName),
+      })),
+    }
+  })
+})
+
+const visualizationGroups = computed(() => {
+  const sourceGroups = activeDay.value === FESTIVAL_VIEW_KEY ? timelineGroups.value : [{ dayKey: activeDay.value, screenings: dayScreenings.value }]
+
+  return sourceGroups.map((group) => {
+    const allScreenings = group.screenings
+    if (!allScreenings.length) {
+      return {
+        dayKey: group.dayKey,
+        bucketLabels: [] as string[],
+        lanes: [] as Array<{ venueName: string; blocks: PlanningScreening[] }>,
+      }
+    }
+
+    const minMinutes = Math.min(...allScreenings.map((screening) => screening.startMinutes))
+    const maxMinutes = Math.max(...allScreenings.map((screening) => screening.endMinutes))
+    const dayStart = Math.floor(minMinutes / 15) * 15
+    const dayEnd = Math.ceil(maxMinutes / 15) * 15
+    const bucketCount = Math.max(1, (dayEnd - dayStart) / 15)
+
+    const bucketLabels = Array.from({ length: bucketCount + 1 }, (_, index) => {
+      const totalMinutes = dayStart + index * 15
+      const hours = Math.floor(totalMinutes / 60) % 24
+      const minutes = totalMinutes % 60
+      return `${String(hours).padStart(2, '0')}h${String(minutes).padStart(2, '0')}`
+    })
+
+    const venueNames = [...new Set(allScreenings.map((screening) => screening.venue_name || 'Salle inconnue'))].sort((left, right) => left.localeCompare(right))
+
+    return {
+      dayKey: group.dayKey,
+      bucketLabels,
+      bucketCount,
+      dayStart,
+      lanes: venueNames.map((venueName) => ({
+        venueName,
+        blocks: allScreenings
+          .filter((screening) => (screening.venue_name || 'Salle inconnue') === venueName)
+          .map((screening) => ({
+            ...screening,
+            visualRowStart: Math.floor((screening.startMinutes - dayStart) / 15) + 1,
+            visualRowSpan: Math.max(1, Math.ceil((screening.endMinutes - screening.startMinutes) / 15)),
+            })),
+      })),
+    }
+  })
+})
+
+watch([activeDay, detailScreening], ([day, screening]) => {
+  if (!screening) {
+    return
+  }
+
+  if (day !== FESTIVAL_VIEW_KEY && screening.dayKey !== day) {
+    detailScreeningId.value = null
+  }
+})
 
 function formatDayLabel(dayKey: string): string {
   const date = new Date(`${dayKey}T12:00:00`)
@@ -321,6 +415,44 @@ function screeningStateClass(screening: PlanningScreening): string {
   if (screening.isAlternative || screening.derived_state === 'disabled') return 'planning__timeline-item--disabled'
   if (screening.derived_state === 'conflict') return 'planning__timeline-item--blocked'
   return 'planning__timeline-item--available'
+}
+
+function visualizationBlockClass(screening: PlanningScreening): string {
+  if (screening.isSelected && screening.isConflict) {
+    return screening.selection_status === 'confirmed'
+      ? 'planning__visual-block--confirmed-conflict'
+      : 'planning__visual-block--tentative-conflict'
+  }
+
+  if (screening.selection_status === 'confirmed') {
+    return 'planning__visual-block--confirmed'
+  }
+
+  if (screening.selection_status === 'tentative') {
+    return 'planning__visual-block--tentative'
+  }
+
+  if (screening.selection_status === 'rejected') {
+    return 'planning__visual-block--rejected'
+  }
+
+  if (screening.isAlternative || screening.derived_state === 'disabled') {
+    return 'planning__visual-block--disabled'
+  }
+
+  if (screening.isMustLock) {
+    return 'planning__visual-block--must-lock'
+  }
+
+  if (screening.isRecommended) {
+    return 'planning__visual-block--recommended'
+  }
+
+  if (screening.derived_state === 'conflict' || screening.isConflict) {
+    return 'planning__visual-block--conflict'
+  }
+
+  return 'planning__visual-block--available'
 }
 
 function selectedCountForDay(dayKey: string): number {
@@ -444,7 +576,11 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
             <button class="planning__mode-button" :class="{ 'planning__mode-button--active': planningMode === 'venues' }" type="button" @click="planningMode = 'venues'">
               Par salle
             </button>
+            <button class="planning__mode-button" :class="{ 'planning__mode-button--active': planningMode === 'visualization' }" type="button" @click="planningMode = 'visualization'">
+              Visualisation
+            </button>
           </div>
+          <p v-if="isMobile && planningMode === 'visualization'" class="planning__status-note">Visualisation simplifiee indisponible sur mobile : affichage automatique en timeline.</p>
         </div>
       </section>
     </section>
@@ -459,7 +595,7 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
           <span>{{ daySummary.selected }} choisi(es) · {{ daySummary.conflicts }} conflit(s) · {{ daySummary.total }} seance(s)</span>
         </header>
 
-        <div v-if="planningMode === 'timeline' && dayScreenings.length" class="planning__timeline">
+        <div v-if="effectivePlanningMode === 'timeline' && dayScreenings.length" class="planning__timeline">
           <template v-for="group in timelineGroups" :key="group.dayKey || 'empty'">
             <header v-if="activeDay === FESTIVAL_VIEW_KEY" class="planning__timeline-day-header">
               <strong>{{ formatDayLabel(group.dayKey) }}</strong>
@@ -521,29 +657,84 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
           </template>
         </div>
 
-        <div v-else-if="planningMode === 'venues' && gridByVenue.length" class="planning__matrix">
-          <div class="planning__matrix-head">Salle</div>
-          <div class="planning__matrix-head">Programme</div>
+        <div v-else-if="effectivePlanningMode === 'venues' && venueGroups.length" class="planning__venues-view">
+          <template v-for="group in venueGroups" :key="group.dayKey || 'venues-empty'">
+            <header v-if="activeDay === FESTIVAL_VIEW_KEY" class="planning__timeline-day-header">
+              <strong>{{ formatDayLabel(group.dayKey) }}</strong>
+              <span>{{ group.venues.length }} salle(s)</span>
+            </header>
 
-          <template v-for="row in gridByVenue" :key="row.venueName">
-            <div class="planning__matrix-venue">{{ row.venueName }}</div>
-            <div class="planning__matrix-cell">
-              <article
-                v-for="screening in row.screenings"
-                :key="screening.id"
-                class="planning__matrix-item"
-                :class="screeningStateClass(screening)"
-              >
-                <div class="planning__matrix-time">{{ formatTimeRange(screening) }}</div>
-                <strong>
-                  <button type="button" class="planning__detail-trigger" @click="openDetailPanel(screening.id)">
-                    {{ screening.film_title }}
-                  </button>
-                </strong>
-                <p v-if="screening.isMustLock" class="planning__matrix-note">A securiser</p>
-                <p>{{ screening.film?.tagline || 'Genre non renseigne' }}</p>
-              </article>
+            <div class="planning__matrix">
+              <div class="planning__matrix-head">Salle</div>
+              <div class="planning__matrix-head">Programme</div>
+
+              <template v-for="row in group.venues" :key="`${group.dayKey}-${row.venueName}`">
+                <div class="planning__matrix-venue">{{ row.venueName }}</div>
+                <div class="planning__matrix-cell">
+                  <article
+                    v-for="screening in row.screenings"
+                    :key="screening.id"
+                    class="planning__matrix-item"
+                    :class="screeningStateClass(screening)"
+                  >
+                    <div class="planning__matrix-time">{{ formatTimeRange(screening) }}</div>
+                    <strong>
+                      <button type="button" class="planning__detail-trigger" @click="openDetailPanel(screening.id)">
+                        {{ screening.film_title }}
+                      </button>
+                    </strong>
+                    <p v-if="screening.isMustLock" class="planning__matrix-note">A securiser</p>
+                    <p>{{ screening.film?.tagline || 'Genre non renseigne' }}</p>
+                  </article>
+                </div>
+              </template>
             </div>
+          </template>
+        </div>
+
+        <div v-else-if="effectivePlanningMode === 'visualization' && visualizationGroups.length" class="planning__visualization-view">
+          <template v-for="group in visualizationGroups" :key="group.dayKey || 'visual-empty'">
+            <header v-if="activeDay === FESTIVAL_VIEW_KEY" class="planning__timeline-day-header">
+              <strong>{{ formatDayLabel(group.dayKey) }}</strong>
+              <span>{{ group.lanes.length }} salle(s)</span>
+            </header>
+
+            <div v-if="group.lanes.length" class="planning__visual-grid" :style="{ '--planning-buckets': String(group.bucketCount), '--planning-venues': String(group.lanes.length) }">
+              <div class="planning__visual-header">
+                <div class="planning__visual-corner" />
+                <div class="planning__visual-venue-headers">
+                  <div v-for="lane in group.lanes" :key="`${group.dayKey}-${lane.venueName}-header`" class="planning__visual-venue-header">
+                    {{ lane.venueName }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="planning__visual-body">
+                <div class="planning__visual-scale">
+                  <span v-for="(label, index) in group.bucketLabels" :key="`${group.dayKey}-${index}`" class="planning__visual-scale-label">
+                    <template v-if="index < group.bucketLabels.length - 1 && index % 4 === 0">{{ label }}</template>
+                  </span>
+                </div>
+
+                <div class="planning__visual-lanes">
+                  <div v-for="lane in group.lanes" :key="`${group.dayKey}-${lane.venueName}`" class="planning__visual-lane">
+                    <div class="planning__visual-track">
+                  <div
+                    v-for="block in lane.blocks"
+                    :key="block.id"
+                    class="planning__visual-block"
+                    :class="visualizationBlockClass(block)"
+                    :style="{ gridRow: `${block.visualRowStart} / span ${block.visualRowSpan}` }"
+                    :title="`${block.film_title} · ${formatTimeRange(block)}`"
+                    @click="openDetailPanel(block.id)"
+                  />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p v-else class="planning__empty">Aucune seance choisie a visualiser pour cette plage.</p>
           </template>
         </div>
 
