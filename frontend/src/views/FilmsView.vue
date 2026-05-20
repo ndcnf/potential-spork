@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive } from 'vue'
 
-import { formatTimeRange } from '@/lib/planning'
+import { formatTimeRange, getFestivalDayKey } from '@/lib/planning'
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import PrioritySelect from '@/components/ui/PrioritySelect.vue'
 import { useFestivalStore } from '@/stores/festival'
@@ -115,7 +115,7 @@ function formatScreeningLabel(screening: Screening): string {
     return 'Horaire inconnu'
   }
 
-  const dateKey = screening.starts_at.slice(0, 10)
+  const dateKey = getFestivalDayKey(screening.starts_at)
   const date = new Date(`${dateKey}T12:00:00`)
   const dayLabel = new Intl.DateTimeFormat('fr-CH', { weekday: 'short' })
     .format(date)

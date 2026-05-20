@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import { formatMinutes, formatTimeRange as formatTimeRangeValue, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
+import { formatMinutes, formatTimeRange as formatTimeRangeValue, getFestivalDayKey, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
 import { useSettingsStore } from '@/stores/settings'
 import type { Film, Screening } from '@/types'
@@ -165,7 +165,7 @@ const planningScreenings = computed<PlanningScreening[]>(() => {
 
   return baseScreenings
     .map((screening) => {
-      const dayKey = screening.starts_at?.slice(0, 10) ?? 'Sans date'
+      const dayKey = getFestivalDayKey(screening.starts_at)
       const startMinutes = toMinutes(screening.starts_at)
       const endMinutes = toMinutes(screening.ends_at)
       const isSelected = screening.selection_status === 'tentative' || screening.selection_status === 'confirmed'
@@ -193,9 +193,7 @@ const planningScreenings = computed<PlanningScreening[]>(() => {
       }
     })
     .sort((left, right) => {
-      const leftStartsAt = left.starts_at ?? ''
-      const rightStartsAt = right.starts_at ?? ''
-      return leftStartsAt.localeCompare(rightStartsAt) || left.film_title.localeCompare(right.film_title)
+      return left.dayKey.localeCompare(right.dayKey) || left.startMinutes - right.startMinutes || left.film_title.localeCompare(right.film_title)
     })
 })
 

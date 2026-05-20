@@ -1,18 +1,38 @@
 import type { Screening } from '@/types'
 
 export const RESERVATION_BUFFER_MINUTES = 15
+export const FESTIVAL_DAY_CUTOFF_HOUR = 6
+
+function normalizeFestivalDate(value: string | null): Date | null {
+  if (!value) return null
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  if (date.getHours() < FESTIVAL_DAY_CUTOFF_HOUR) {
+    date.setDate(date.getDate() + 1)
+  }
+
+  return date
+}
 
 function toTimestamp(value: string | null): number {
   if (!value) return 0
-  return new Date(value).getTime()
+  return normalizeFestivalDate(value)?.getTime() ?? new Date(value).getTime()
 }
 
 export function toMinutes(value: string | null): number {
   if (!value) return 0
   const hours = Number(value.slice(11, 13))
   const minutes = Number(value.slice(14, 16))
-  const normalizedHours = hours < 6 ? hours + 24 : hours
+  const normalizedHours = hours < FESTIVAL_DAY_CUTOFF_HOUR ? hours + 24 : hours
   return normalizedHours * 60 + minutes
+}
+
+export function getFestivalDayKey(value: string | null): string {
+  return value?.slice(0, 10) ?? 'Sans date'
 }
 
 export function screeningsOverlapWithBuffer(
