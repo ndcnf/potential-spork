@@ -5,6 +5,7 @@ export interface RecommendationSettings {
   preferredVenueScores: Record<string, number>
   avoidBeforeMinutes: number | null
   avoidAfterMinutes: number | null
+  minGapMinutes: number
 }
 
 export interface Cycle {

@@ -1,6 +1,6 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import { formatMinutes, formatTimeRange as formatTimeRangeValue, getFestivalDayKey, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
+import { formatMinutes, formatTimeRange as formatTimeRangeValue, getFestivalDisplayInfo, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
 import { useSettingsStore } from '@/stores/settings'
 import type { Film, Screening } from '@/types'
@@ -92,7 +92,8 @@ export function usePlanningModel() {
 
   onMounted(() => {
     if (typeof window !== 'undefined') {
-      mobileMedia = window.matchMedia('(max-width: 960px)')
+      const breakpoint = getComputedStyle(document.documentElement).getPropertyValue('--breakpoint-mobile').trim() || '960px'
+      mobileMedia = window.matchMedia(`(max-width: ${breakpoint})`)
       syncMobileMode()
       mobileMedia.addEventListener('change', syncMobileMode)
     }
@@ -153,9 +154,8 @@ export function usePlanningModel() {
 
     return baseScreenings
       .map((screening) => {
-        const dayKey = getFestivalDayKey(screening.starts_at)
-        const startMinutes = toMinutes(screening.starts_at)
-        const endMinutes = toMinutes(screening.ends_at)
+        const startInfo = getFestivalDisplayInfo(screening.starts_at)
+        const endInfo = getFestivalDisplayInfo(screening.ends_at)
         const isSelected = screening.selection_status === 'tentative' || screening.selection_status === 'confirmed'
         const film = filmById.value.get(screening.film_id) ?? null
         const isSingleScreening = (validScreeningCountByFilmId.get(screening.film_id) ?? 0) === 1
@@ -165,9 +165,9 @@ export function usePlanningModel() {
         return {
           ...screening,
           film,
-          dayKey,
-          startMinutes,
-          endMinutes,
+          dayKey: startInfo.displayDayKey,
+          startMinutes: startInfo.displayMinutes,
+          endMinutes: endInfo.displayMinutes,
           isSelected,
           isConflict: selectedScreenings.some((other) => screeningsOverlapWithBuffer(screening, other)),
           isAlternative: selectedFilmIds.has(screening.film_id) && screening.selection_status === 'none',

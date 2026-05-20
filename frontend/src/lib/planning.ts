@@ -3,24 +3,25 @@ import type { Screening } from '@/types'
 export const RESERVATION_BUFFER_MINUTES = 15
 export const FESTIVAL_DAY_CUTOFF_HOUR = 6
 
-function normalizeFestivalDate(value: string | null): Date | null {
+export type FestivalDisplayInfo = {
+  displayDayKey: string
+  displayMinutes: number
+  realTimestamp: number
+}
+
+function parseDate(value: string | null): Date | null {
   if (!value) return null
 
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
     return null
   }
-
-  if (date.getHours() < FESTIVAL_DAY_CUTOFF_HOUR) {
-    date.setDate(date.getDate() + 1)
-  }
-
   return date
 }
 
-function toTimestamp(value: string | null): number {
+function toRealTimestamp(value: string | null): number {
   if (!value) return 0
-  return normalizeFestivalDate(value)?.getTime() ?? new Date(value).getTime()
+  return parseDate(value)?.getTime() ?? new Date(value).getTime()
 }
 
 export function toMinutes(value: string | null): number {
@@ -32,7 +33,29 @@ export function toMinutes(value: string | null): number {
 }
 
 export function getFestivalDayKey(value: string | null): string {
-  return value?.slice(0, 10) ?? 'Sans date'
+  if (!value) return 'Sans date'
+
+  const date = parseDate(value)
+  if (!date) {
+    return value.slice(0, 10)
+  }
+
+  if (date.getHours() < FESTIVAL_DAY_CUTOFF_HOUR) {
+    date.setDate(date.getDate() - 1)
+  }
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+export function getFestivalDisplayInfo(value: string | null): FestivalDisplayInfo {
+  return {
+    displayDayKey: getFestivalDayKey(value),
+    displayMinutes: toMinutes(value),
+    realTimestamp: toRealTimestamp(value),
+  }
 }
 
 export function screeningsOverlapWithBuffer(
@@ -44,10 +67,10 @@ export function screeningsOverlapWithBuffer(
     return false
   }
   const bufferMs = bufferMinutes * 60 * 1000
-  const leftStart = toTimestamp(left.starts_at)
-  const leftEnd = toTimestamp(left.ends_at)
-  const rightStart = toTimestamp(right.starts_at)
-  const rightEnd = toTimestamp(right.ends_at)
+  const leftStart = toRealTimestamp(left.starts_at)
+  const leftEnd = toRealTimestamp(left.ends_at)
+  const rightStart = toRealTimestamp(right.starts_at)
+  const rightEnd = toRealTimestamp(right.ends_at)
 
   return leftStart < rightEnd + bufferMs && rightStart < leftEnd + bufferMs
 }

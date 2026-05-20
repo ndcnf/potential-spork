@@ -1,4 +1,4 @@
-import { screeningsOverlapWithBuffer } from '@/lib/planning'
+import { FESTIVAL_DAY_CUTOFF_HOUR, screeningsOverlapWithBuffer } from '@/lib/planning'
 import type { Cycle, Film, Priority, Screening } from '@/types'
 
 type PreviewCycle = {
@@ -359,6 +359,23 @@ function computeEnd(start: string, duration: number | null): string {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`
 }
 
+function buildRealStart(dateLabel: string, startTime: string): string {
+  const [year, month, day] = dateLabel.split('-').map(Number)
+  const [hours, minutes] = startTime.split(':').map(Number)
+  const realDate = new Date(year, month - 1, day, hours, minutes, 0)
+
+  if (hours < FESTIVAL_DAY_CUTOFF_HOUR) {
+    realDate.setDate(realDate.getDate() + 1)
+  }
+
+  const realYear = realDate.getFullYear()
+  const realMonth = String(realDate.getMonth() + 1).padStart(2, '0')
+  const realDay = String(realDate.getDate()).padStart(2, '0')
+  const realHours = String(realDate.getHours()).padStart(2, '0')
+  const realMinutes = String(realDate.getMinutes()).padStart(2, '0')
+  return `${realYear}-${realMonth}-${realDay}T${realHours}:${realMinutes}:00`
+}
+
 function buildFestivalFilmUrl(slug: string): string {
   return `https://nifff.ch/prog/2025/film/${slug}`
 }
@@ -409,7 +426,7 @@ export function buildPreviewDataset(): { cycles: Cycle[]; films: Film[]; screeni
 
   const screeningsBase: Screening[] = screeningSource.map((screening, index) => {
     const film = filmBySlug.get(screening.film_slug)
-    const startsAt = `${screening.date}T${screening.start_time}:00`
+    const startsAt = buildRealStart(screening.date, screening.start_time)
     const status = selectedScreenings.get(`${screening.film_slug}|${screening.date}|${screening.start_time}`) ?? 'none'
 
     return {

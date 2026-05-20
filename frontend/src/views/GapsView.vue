@@ -4,8 +4,10 @@ import { computed, onMounted, ref } from 'vue'
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import { formatMinutes, formatTimeRange, RESERVATION_BUFFER_MINUTES, toMinutes } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
+import { useSettingsStore } from '@/stores/settings'
 
 const store = useFestivalStore()
+const settingsStore = useSettingsStore()
 const ignoredGapKeys = ref(new Set<string>())
 
 const gapMessages = [
@@ -16,6 +18,7 @@ const gapMessages = [
 ]
 
 onMounted(() => {
+  settingsStore.load()
   if (!store.cycles.length && !store.loading) {
     store.bootstrap()
   }
@@ -120,7 +123,8 @@ const gapSections = computed(() => {
 
     return windows.flatMap((window) => {
       const gapDuration = window.endMinutes - window.startMinutes
-      if (gapDuration < RESERVATION_BUFFER_MINUTES) {
+      const minimumGapMinutes = Math.max(RESERVATION_BUFFER_MINUTES, settingsStore.recommendationSettings.minGapMinutes)
+      if (gapDuration < minimumGapMinutes) {
         return []
       }
 
@@ -132,7 +136,11 @@ const gapSections = computed(() => {
         .filter((screening) => {
           const screeningStart = toMinutes(screening.starts_at)
           const screeningEnd = toMinutes(screening.ends_at)
+          const startsTooEarly = settingsStore.recommendationSettings.avoidBeforeMinutes !== null && screeningStart < settingsStore.recommendationSettings.avoidBeforeMinutes
+          const startsTooLate = settingsStore.recommendationSettings.avoidAfterMinutes !== null && screeningStart >= settingsStore.recommendationSettings.avoidAfterMinutes
           return (
+            !startsTooEarly &&
+            !startsTooLate &&
             screeningStart >= window.startMinutes + RESERVATION_BUFFER_MINUTES &&
             screeningEnd <= window.endMinutes - RESERVATION_BUFFER_MINUTES
           )
