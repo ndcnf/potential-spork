@@ -12,9 +12,10 @@ const {
   timelineGroups,
   detailScreening,
   relatedFilmScreenings,
+  conflictingSelectedScreenings,
+  arbitrableScreenings,
   summary,
   daySummary,
-  venueGroups,
   visualizationGroups,
   formatDayLabel,
   formatTimeRange,
@@ -28,6 +29,8 @@ const {
   dayChipLabel,
   toggleScreeningSelection,
   openDetailPanel,
+  focusFirstConflict,
+  focusFirstArbitration,
   closeDetailPanel,
   exportUrl,
   FESTIVAL_VIEW_KEY,
@@ -55,14 +58,14 @@ const {
           <strong>{{ summary.selected }}</strong>
           <span>seances choisies</span>
         </article>
-        <article class="planning__summary-card">
+        <button type="button" class="planning__summary-card planning__summary-card--action" :disabled="!conflictingSelectedScreenings.length" @click="focusFirstConflict">
           <strong>{{ summary.conflicts }}</strong>
-          <span>conflits reels</span>
-        </article>
-        <article class="planning__summary-card">
+          <span>conflits a regler</span>
+        </button>
+        <button type="button" class="planning__summary-card planning__summary-card--action" :disabled="!arbitrableScreenings.length" @click="focusFirstArbitration">
           <strong>{{ summary.toPlace }}</strong>
           <span>seances a arbitrer</span>
-        </article>
+        </button>
       </div>
 
       <section class="legend legend--planning">
@@ -112,9 +115,6 @@ const {
           <div class="planning__mode-switch" role="tablist" aria-label="Affichage planning">
             <button class="planning__mode-button" :class="{ 'planning__mode-button--active': planningMode === 'timeline' }" type="button" @click="planningMode = 'timeline'">
               Timeline
-            </button>
-            <button class="planning__mode-button" :class="{ 'planning__mode-button--active': planningMode === 'venues' }" type="button" @click="planningMode = 'venues'">
-              Par salle
             </button>
             <button class="planning__mode-button" :class="{ 'planning__mode-button--active': planningMode === 'visualization' }" type="button" @click="planningMode = 'visualization'">
               Visualisation
@@ -195,42 +195,6 @@ const {
                 </div>
               </div>
             </article>
-          </template>
-        </div>
-
-        <div v-else-if="effectivePlanningMode === 'venues' && venueGroups.length" class="planning__venues-view">
-          <template v-for="group in venueGroups" :key="group.dayKey || 'venues-empty'">
-            <header v-if="activeDay === FESTIVAL_VIEW_KEY" class="planning__timeline-day-header">
-              <strong>{{ formatDayLabel(group.dayKey) }}</strong>
-              <span>{{ group.venues.length }} salle(s)</span>
-            </header>
-
-            <div class="planning__matrix">
-              <div class="planning__matrix-head">Salle</div>
-              <div class="planning__matrix-head">Programme</div>
-
-              <template v-for="row in group.venues" :key="`${group.dayKey}-${row.venueName}`">
-                <div class="planning__matrix-venue">{{ row.venueName }}</div>
-                <div class="planning__matrix-cell">
-                  <article
-                    v-for="screening in row.screenings"
-                    :key="screening.id"
-                    class="planning__matrix-item"
-                    :class="screeningStateClass(screening)"
-                  >
-                    <div class="planning__matrix-time">{{ formatTimeRange(screening) }}</div>
-                     <strong>
-                       <button type="button" class="planning__detail-trigger" @click="openDetailPanel(screening.id)">
-                         {{ screening.film_title }}
-                       </button>
-                     </strong>
-                     <PriorityBadge v-if="screening.film" :priority="screening.film.priority" />
-                     <p v-if="screening.isMustLock" class="planning__matrix-note">A securiser</p>
-                     <p>{{ screening.film?.tagline || 'Genre non renseigne' }}</p>
-                   </article>
-                </div>
-              </template>
-            </div>
           </template>
         </div>
 
@@ -317,8 +281,8 @@ const {
           </div>
         </div>
 
-        <div v-if="relatedFilmScreenings.length > 1" class="planning__detail-copy">
-          <p class="planning__detail-copy-title">Comparer les seances de ce film</p>
+        <div v-if="relatedFilmScreenings.length" class="planning__detail-copy">
+          <p class="planning__detail-copy-title">{{ relatedFilmScreenings.length > 1 ? 'Comparer les seances de ce film' : 'Seance de ce film' }}</p>
           <div class="planning__detail-screenings">
             <article
               v-for="option in relatedFilmScreenings"
@@ -369,18 +333,6 @@ const {
               </div>
             </article>
           </div>
-        </div>
-
-        <div v-if="detailScreening.isRecommended || detailScreening.isMustLock || detailScreening.recommendationRank !== null" class="planning__detail-copy">
-          <p class="planning__detail-copy-title">Aide a la decision</p>
-          <ul class="planning__detail-list">
-            <li v-if="settingsStore.recommendationMode === 'personalized' && detailScreening.recommendationRank !== null && detailScreening.recommendationTotalOptions !== null && detailScreening.recommendationTotalOptions > 1">
-              option {{ detailScreening.recommendationRank }} sur {{ detailScreening.recommendationTotalOptions }} pour ce film selon tes parametres
-            </li>
-            <li v-if="detailScreening.isSingleScreening">c est la seule seance programmee pour ce film</li>
-            <li v-else-if="detailScreening.isMustLock">il ne reste qu une seule seance valable pour ce film prioritaire</li>
-            <li v-for="reason in detailScreening.recommendationReasons" :key="reason">{{ reason }}</li>
-          </ul>
         </div>
 
         <div v-if="detailScreening.film?.synopsis" class="planning__detail-copy">

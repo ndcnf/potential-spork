@@ -31,7 +31,7 @@ export function usePlanningModel() {
   const store = useFestivalStore()
   const settingsStore = useSettingsStore()
   const activeDay = ref('')
-  const planningMode = ref<'timeline' | 'venues' | 'visualization'>('timeline')
+  const planningMode = ref<'timeline' | 'visualization'>('timeline')
   const detailScreeningId = ref<number | null>(null)
   const isMobile = ref(false)
   let mobileMedia: MediaQueryList | null = null
@@ -57,40 +57,12 @@ export function usePlanningModel() {
     const latenessPenalty = settings.avoidAfterMinutes !== null && startMinutes >= settings.avoidAfterMinutes ? -1 : 0
     const earlyPenalty = settings.avoidBeforeMinutes !== null && startMinutes < settings.avoidBeforeMinutes ? -1 : 0
     const total = conflictPenalty + rarityBonus + comfortBonus + latenessPenalty + earlyPenalty
-    const reasons: string[] = []
-
-    if (candidateCount === 1) {
-      reasons.push('derniere option viable pour ce film')
-    } else if (candidateCount === 2) {
-      reasons.push('peu d alternatives restantes')
-    }
-
-    if (comfortBonus > 0) {
-      reasons.push('salle notee plus confortable')
-    }
-
-    if (settings.avoidBeforeMinutes !== null && startMinutes < settings.avoidBeforeMinutes) {
-      reasons.push('un peu avant ta plage preferee')
-    }
-
-    if (settings.avoidAfterMinutes !== null && startMinutes >= settings.avoidAfterMinutes) {
-      reasons.push('un peu apres ta plage preferee')
-    }
 
     if (conflictPenalty < 0) {
-      return { score: total, note: 'conflit evite si possible', reasons: ['entre en conflit avec une seance deja choisie'] }
-    }
-    if (candidateCount === 1) {
-      return { score: total, note: 'derniere option viable', reasons }
-    }
-    if (comfortBonus > 0) {
-      return { score: total, note: 'salle plus confortable', reasons }
-    }
-    if (latenessPenalty < 0 || earlyPenalty < 0) {
-      return { score: total, note: 'un peu hors preference horaire', reasons }
+      return { score: total, note: 'moins favorable: conflit', reasons: [] }
     }
 
-    return { score: total, note: 'meilleur compromis actuel', reasons: reasons.length ? reasons : ['pas de conflit detecte', 'ordre chronologique favorable'] }
+    return { score: total, note: 'meilleure option selon tes parametres', reasons: [] }
   }
 
   function countConflictPairs(screenings: Screening[]): number {
@@ -253,6 +225,10 @@ export function usePlanningModel() {
       .sort((left, right) => left.dayKey.localeCompare(right.dayKey) || left.startMinutes - right.startMinutes)
   })
 
+  const conflictingSelectedScreenings = computed(() => planningScreenings.value.filter((screening) => screening.isSelected && screening.isConflict))
+
+  const arbitrableScreenings = computed(() => planningScreenings.value.filter((screening) => !screening.isSelected && !screening.isAlternative && screening.selection_status !== 'rejected'))
+
   const selectedConflictCount = computed(() => {
     const selected = planningScreenings.value.filter((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')
     return countConflictPairs(selected)
@@ -270,30 +246,6 @@ export function usePlanningModel() {
     selected: dayScreenings.value.filter((screening) => screening.isSelected).length,
     conflicts: countConflictPairs(dayScreenings.value.filter((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')),
   }))
-
-  const gridVenueNames = computed(() => [...new Set(dayScreenings.value.map((screening) => screening.venue_name || 'Salle inconnue'))].sort((left, right) => left.localeCompare(right)))
-
-  const gridByVenue = computed(() => gridVenueNames.value.map((venueName) => ({
-    venueName,
-    screenings: dayScreenings.value.filter((screening) => (screening.venue_name || 'Salle inconnue') === venueName),
-  })))
-
-  const venueGroups = computed(() => {
-    if (activeDay.value !== FESTIVAL_VIEW_KEY) {
-      return [{ dayKey: activeDay.value, venues: gridByVenue.value }]
-    }
-
-    return timelineGroups.value.map((group) => {
-      const venueNames = [...new Set(group.screenings.map((screening) => screening.venue_name || 'Salle inconnue'))].sort((left, right) => left.localeCompare(right))
-      return {
-        dayKey: group.dayKey,
-        venues: venueNames.map((venueName) => ({
-          venueName,
-          screenings: group.screenings.filter((screening) => (screening.venue_name || 'Salle inconnue') === venueName),
-        })),
-      }
-    })
-  })
 
   const visualizationGroups = computed(() => {
     const sourceGroups = activeDay.value === FESTIVAL_VIEW_KEY ? timelineGroups.value : [{ dayKey: activeDay.value, screenings: dayScreenings.value }]
@@ -448,36 +400,25 @@ export function usePlanningModel() {
     const hints: string[] = []
     const conflictingSelected = findConflictingSelectedOtherFilm(screening)
 
-    if (settingsStore.recommendationMode === 'personalized' && screening.recommendationRank !== null && screening.recommendationTotalOptions !== null && screening.recommendationTotalOptions > 1) {
-      hints.push(`Option ${screening.recommendationRank}/${screening.recommendationTotalOptions}`)
-    }
-
-    if (screening.isSingleScreening) {
-      hints.push('Seule seance programmee pour ce film')
-    } else if (screening.isMustLock) {
-      hints.push('Derniere seance viable')
-    }
-
     if (screening.isAlternative || screening.derived_state === 'disabled') {
       const selectedSibling = findSelectedSibling(screening)
       if (selectedSibling?.starts_at) {
         hints.push(`Tu as deja retenu ${formatDayChipLabel(selectedSibling.dayKey)} a ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}`)
       }
-    } else if (screening.isSelected && !screening.isConflict) {
-      hints.push('Sans conflit actuel')
     } else if (conflictingSelected?.starts_at) {
-      hints.push(`Conflit avec ${conflictingSelected.film_title}`)
+      hints.push(`Conflit avec ${conflictingSelected.film_title}, ${formatDayChipLabel(conflictingSelected.dayKey)} ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}`)
     }
 
-    for (const reason of screening.recommendationReasons) {
-      if (hints.length >= 2) break
-      if (!hints.includes(reason)) {
-        hints.push(reason)
-      }
-    }
-
-    if (!hints.length && !screening.isConflict && screening.selection_status === 'none' && !screening.isAlternative) {
-      hints.push('Sans conflit actuel')
+    if (
+      settingsStore.recommendationMode === 'personalized' &&
+      screening.isRecommended &&
+      screening.recommendationTotalOptions !== null &&
+      screening.recommendationTotalOptions > 1 &&
+      !screening.isAlternative &&
+      screening.selection_status === 'none' &&
+      !conflictingSelected
+    ) {
+      hints.push('Meilleure option selon tes parametres')
     }
 
     return hints.slice(0, 2)
@@ -519,6 +460,21 @@ export function usePlanningModel() {
     activeDay.value = dayKey
   }
 
+  function focusScreening(screening: PlanningScreening | null | undefined): void {
+    if (!screening) return
+    planningMode.value = 'timeline'
+    activeDay.value = screening.dayKey
+    detailScreeningId.value = screening.id
+  }
+
+  function focusFirstConflict(): void {
+    focusScreening(conflictingSelectedScreenings.value[0])
+  }
+
+  function focusFirstArbitration(): void {
+    focusScreening(arbitrableScreenings.value[0])
+  }
+
   function openDetailPanel(screeningId: number): void {
     detailScreeningId.value = screeningId
   }
@@ -544,9 +500,10 @@ export function usePlanningModel() {
     timelineGroups,
     detailScreening,
     relatedFilmScreenings,
+    conflictingSelectedScreenings,
+    arbitrableScreenings,
     summary,
     daySummary,
-    venueGroups,
     visualizationGroups,
     formatDayLabel,
     formatTimeRange,
@@ -560,6 +517,8 @@ export function usePlanningModel() {
     dayChipLabel,
     toggleScreeningSelection,
     jumpToDay,
+    focusFirstConflict,
+    focusFirstArbitration,
     openDetailPanel,
     closeDetailPanel,
     exportUrl,

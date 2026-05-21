@@ -68,6 +68,23 @@
   border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.planning__summary-card--action {
+  text-align: left;
+  cursor: pointer;
+}
+
+.planning__summary-card--action:not(:disabled):hover span,
+.planning__summary-card--action:not(:disabled):focus-visible span,
+.planning__summary-card--action:not(:disabled):hover strong,
+.planning__summary-card--action:not(:disabled):focus-visible strong {
+  color: var(--color-accent);
+}
+
+.planning__summary-card--action:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
 .planning__summary-card:last-child {
   border-right: 0;
 }
