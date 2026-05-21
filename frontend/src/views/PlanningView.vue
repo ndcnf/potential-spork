@@ -10,6 +10,7 @@ const {
   dayScreenings,
   timelineGroups,
   detailScreening,
+  relatedFilmScreenings,
   summary,
   daySummary,
   venueGroups,
@@ -307,6 +308,53 @@ const {
             <p class="planning__detail-line"><strong>Genre</strong> {{ detailScreening.film?.tagline || 'Non renseigne' }}</p>
             <p class="planning__detail-line"><strong>Langue</strong> {{ detailScreening.film?.language || 'Non renseignee' }}</p>
             <p class="planning__detail-line"><strong>Age</strong> {{ detailScreening.film?.age_rating || 'Non renseigne' }}</p>
+          </div>
+        </div>
+
+        <div v-if="relatedFilmScreenings.length > 1" class="planning__detail-copy">
+          <p class="planning__detail-copy-title">Comparer les seances de ce film</p>
+          <div class="planning__detail-screenings">
+            <article
+              v-for="option in relatedFilmScreenings"
+              :key="option.id"
+              class="planning__detail-screening"
+              :class="screeningStateClass(option)"
+            >
+              <div class="planning__detail-screening-main">
+                <strong>{{ formatTimeRange(option) }}</strong>
+                <span>{{ option.venue_name }}</span>
+              </div>
+              <p class="planning__detail-screening-note">{{ screeningReason(option) }}</p>
+              <div class="planning__selection-toggle" role="radiogroup" aria-label="Statut de la seance du film">
+                <button
+                  type="button"
+                  class="planning__selection-option"
+                  :class="{ 'planning__selection-option--active': option.selection_status === 'tentative' }"
+                  :aria-pressed="option.selection_status === 'tentative'"
+                  @click="toggleScreeningSelection(option.id, 'tentative')"
+                >
+                  Tentative
+                </button>
+                <button
+                  type="button"
+                  class="planning__selection-option"
+                  :class="{ 'planning__selection-option--active': option.selection_status === 'confirmed' }"
+                  :aria-pressed="option.selection_status === 'confirmed'"
+                  @click="toggleScreeningSelection(option.id, 'confirmed')"
+                >
+                  Confirmee
+                </button>
+                <button
+                  type="button"
+                  class="planning__selection-option"
+                  :class="{ 'planning__selection-option--active': option.selection_status === 'rejected' }"
+                  :aria-pressed="option.selection_status === 'rejected'"
+                  @click="toggleScreeningSelection(option.id, 'rejected')"
+                >
+                  Ignoree
+                </button>
+              </div>
+            </article>
           </div>
         </div>
 

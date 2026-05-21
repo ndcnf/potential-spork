@@ -427,6 +427,38 @@
 .planning__detail-list { margin: 0; padding-left: 1rem; color: #b4bdd0; }
 .planning__detail-list li + li { margin-top: 0.3rem; }
 
+.planning__detail-screenings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.planning__detail-screening {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.planning__detail-screening-main {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  align-items: baseline;
+}
+
+.planning__detail-screening-main strong,
+.planning__detail-screening-main span,
+.planning__detail-screening-note {
+  margin: 0;
+}
+
+.planning__detail-screening-main span,
+.planning__detail-screening-note {
+  color: var(--color-text-muted);
+}
+
 .planning__timeline-item--confirmed .planning__timeline-marker { background: var(--color-state-confirmed); }
 .planning__timeline-item--tentative .planning__timeline-marker { background: var(--color-priority-high); }
 .planning__timeline-item--must-lock .planning__timeline-marker { background: var(--color-state-must-lock); }

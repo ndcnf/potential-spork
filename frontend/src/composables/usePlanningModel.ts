@@ -225,6 +225,16 @@ export function usePlanningModel() {
 
   const detailScreening = computed(() => planningScreenings.value.find((screening) => screening.id === detailScreeningId.value) ?? null)
 
+  const relatedFilmScreenings = computed(() => {
+    if (!detailScreening.value) {
+      return [] as PlanningScreening[]
+    }
+
+    return planningScreenings.value
+      .filter((screening) => screening.film_id === detailScreening.value?.film_id)
+      .sort((left, right) => left.startMinutes - right.startMinutes)
+  })
+
   const selectedConflictCount = computed(() => {
     const selected = planningScreenings.value.filter((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')
     return countConflictPairs(selected)
@@ -441,6 +451,7 @@ export function usePlanningModel() {
     dayScreenings,
     timelineGroups,
     detailScreening,
+    relatedFilmScreenings,
     summary,
     daySummary,
     venueGroups,
