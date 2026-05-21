@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import { useIcalExport } from '@/composables/useIcalExport'
 import { usePlanningModel } from '@/composables/usePlanningModel'
 
-const { exportHref, exportIcal } = useIcalExport()
+const { exportHref, exportIcal, exportScreeningIcal } = useIcalExport()
 
 const {
   settingsStore,
   activeDay,
   planningMode,
+  screeningFilter,
   effectivePlanningMode,
   dayOptions,
   dayScreenings,
@@ -22,8 +22,10 @@ const {
   visualizationGroups,
   formatDayLabel,
   formatTimeRange,
+  filmPriorityDots,
   filmMeta,
   screeningReason,
+  screeningStatusTone,
   screeningComparisonStatus,
   screeningStateClass,
   screeningComparisonHints,
@@ -77,7 +79,6 @@ const {
             <span class="legend__item"><span class="legend__marker legend__marker--confirmed" /> confirmee</span>
             <span class="legend__item"><span class="legend__marker legend__marker--tentative" /> tentative</span>
             <span class="legend__item"><span class="legend__marker legend__marker--must-lock" /> a securiser</span>
-            <span class="legend__item"><span class="legend__marker legend__marker--recommended" /> recommandee</span>
             <span class="legend__item"><span class="legend__marker legend__marker--conflict" /> conflit</span>
             <span class="legend__item"><span class="legend__marker legend__marker--disabled" /> autre seance deja choisie</span>
             <span class="legend__item"><span class="legend__marker legend__marker--rejected" /> seance ecartee</span>
@@ -124,6 +125,18 @@ const {
           </div>
           <p v-if="isMobile && planningMode === 'visualization'" class="planning__status-note">Visualisation simplifiee indisponible sur mobile : affichage automatique en timeline.</p>
         </div>
+
+        <div class="planning__control-group">
+          <p class="eyebrow">Filtre</p>
+          <div class="planning__mode-switch" role="tablist" aria-label="Filtre des seances">
+            <button class="planning__mode-button" :class="{ 'planning__mode-button--active': screeningFilter === 'all' }" type="button" @click="screeningFilter = 'all'">
+              Toutes
+            </button>
+            <button class="planning__mode-button" :class="{ 'planning__mode-button--active': screeningFilter === 'confirmed' }" type="button" @click="screeningFilter = 'confirmed'">
+              Confirmees uniquement
+            </button>
+          </div>
+        </div>
       </section>
     </section>
 
@@ -155,42 +168,56 @@ const {
                 <div class="planning__timeline-marker" />
                 <div class="planning__timeline-content">
                   <div class="planning__timeline-header">
-                    <strong>
-                      <button type="button" class="planning__detail-trigger" @click="openDetailPanel(screening.id)">
-                        {{ screening.film_title }}
-                      </button>
-                    </strong>
-                    <PriorityBadge v-if="screening.film" :priority="screening.film.priority" />
-                    <span class="planning__state">{{ screeningReason(screening) }}</span>
+                    <div class="planning__film-heading">
+                      <strong>
+                        <button type="button" class="planning__detail-trigger" @click="openDetailPanel(screening.id)">
+                          {{ screening.film_title }}
+                        </button>
+                      </strong>
+                      <span v-if="filmPriorityDots(screening.film?.priority)" class="planning__film-priority" aria-hidden="true">
+                        <span v-for="dot in filmPriorityDots(screening.film?.priority)" :key="dot" class="planning__film-priority-dot" />
+                      </span>
+                    </div>
+                    <span class="planning__status-pill" :class="`planning__status-pill--${screeningStatusTone(screening)}`">
+                      <span class="planning__status-pill-dot" />
+                      {{ screeningReason(screening) }}
+                    </span>
                   </div>
                   <p>{{ screening.venue_name }}</p>
                   <p>{{ filmMeta(screening) }}</p>
-                  <div class="planning__selection-toggle" role="radiogroup" aria-label="Statut de la seance">
+                  <div class="planning__session-links">
+                    <a v-if="screening.ticket_url" :href="screening.ticket_url" target="_blank" rel="noopener">billetterie</a>
+                    <a href="#" @click="exportScreeningIcal(screening, $event)">agenda</a>
+                  </div>
+                  <div class="planning__selection-pills" aria-label="Statut de la seance">
                     <button
                       type="button"
-                      class="planning__selection-option"
-                      :class="{ 'planning__selection-option--active': screening.selection_status === 'tentative' }"
+                      class="planning__selection-pill"
+                      :class="{ 'planning__selection-pill--active': screening.selection_status === 'tentative', 'planning__selection-pill--tentative': screening.selection_status === 'tentative' }"
                       :aria-pressed="screening.selection_status === 'tentative'"
                       @click="toggleScreeningSelection(screening.id, 'tentative')"
                     >
+                      <span class="planning__selection-pill-dot" />
                       Tentative
                     </button>
                     <button
                       type="button"
-                      class="planning__selection-option"
-                      :class="{ 'planning__selection-option--active': screening.selection_status === 'confirmed' }"
+                      class="planning__selection-pill"
+                      :class="{ 'planning__selection-pill--active': screening.selection_status === 'confirmed', 'planning__selection-pill--confirmed': screening.selection_status === 'confirmed' }"
                       :aria-pressed="screening.selection_status === 'confirmed'"
                       @click="toggleScreeningSelection(screening.id, 'confirmed')"
                     >
+                      <span class="planning__selection-pill-dot" />
                       Confirmee
                     </button>
                     <button
                       type="button"
-                      class="planning__selection-option"
-                      :class="{ 'planning__selection-option--active': screening.selection_status === 'rejected' }"
+                      class="planning__selection-pill"
+                      :class="{ 'planning__selection-pill--active': screening.selection_status === 'rejected', 'planning__selection-pill--rejected': screening.selection_status === 'rejected' }"
                       :aria-pressed="screening.selection_status === 'rejected'"
                       @click="toggleScreeningSelection(screening.id, 'rejected')"
                     >
+                      <span class="planning__selection-pill-dot" />
                       Ignoree
                     </button>
                   </div>
@@ -253,7 +280,12 @@ const {
         <header class="planning__panel-header">
           <div>
             <p class="eyebrow">Detail film</p>
-            <h3>{{ detailScreening.film_title }}</h3>
+            <h3 class="planning__detail-title">
+              <span>{{ detailScreening.film_title }}</span>
+              <span v-if="filmPriorityDots(detailScreening.film?.priority)" class="planning__film-priority" aria-hidden="true">
+                <span v-for="dot in filmPriorityDots(detailScreening.film?.priority)" :key="dot" class="planning__film-priority-dot" />
+              </span>
+            </h3>
             <p v-if="detailScreening.film?.premiere_label" class="planning__detail-kicker">{{ detailScreening.film.premiere_label }}</p>
           </div>
           <button type="button" class="planning__action planning__action--ghost" @click="closeDetailPanel">Fermer</button>
@@ -271,8 +303,13 @@ const {
           <div>
             <p class="planning__detail-line"><strong>Horaire</strong> {{ formatTimeRange(detailScreening) }}</p>
             <p class="planning__detail-line"><strong>Salle</strong> {{ detailScreening.venue_name || 'Salle inconnue' }}</p>
-            <p class="planning__detail-line"><strong>Statut de selection</strong> {{ screeningReason(detailScreening) }}</p>
-            <p v-if="detailScreening.film" class="planning__detail-line planning__detail-line--priority"><strong>Niveau d attente</strong> <PriorityBadge :priority="detailScreening.film.priority" /></p>
+            <p class="planning__detail-line planning__detail-line--status">
+              <strong>Statut</strong>
+              <span class="planning__status-pill" :class="`planning__status-pill--${screeningStatusTone(detailScreening)}`">
+                <span class="planning__status-pill-dot" />
+                {{ screeningReason(detailScreening) }}
+              </span>
+            </p>
           </div>
           <div>
             <p class="planning__detail-line"><strong>Rea</strong> {{ detailScreening.film?.directors || 'Non renseigne' }}</p>
@@ -293,43 +330,55 @@ const {
               :class="screeningStateClass(option)"
             >
               <div class="planning__detail-screening-main">
-                <strong>
-                  <button type="button" class="planning__detail-trigger" @click="openDetailPanel(option.id)">
-                    {{ formatDayLabel(option.dayKey) }} · {{ formatTimeRange(option) }}
-                  </button>
-                </strong>
-                <span>{{ option.venue_name }}</span>
+                <div>
+                  <strong>
+                    <button type="button" class="planning__detail-trigger" @click="openDetailPanel(option.id)">
+                      {{ formatDayLabel(option.dayKey) }} · {{ formatTimeRange(option) }}
+                    </button>
+                  </strong>
+                  <span>{{ option.venue_name }}</span>
+                </div>
+                <span class="planning__status-pill" :class="`planning__status-pill--${screeningStatusTone(option)}`">
+                  <span class="planning__status-pill-dot" />
+                  {{ screeningComparisonStatus(option) }}
+                </span>
               </div>
-              <p class="planning__detail-screening-note">{{ screeningComparisonStatus(option) }}</p>
               <div v-if="screeningComparisonHints(option).length" class="planning__detail-hints">
                 <span v-for="hint in screeningComparisonHints(option)" :key="hint" class="planning__detail-hint">{{ hint }}</span>
               </div>
-              <div class="planning__selection-toggle" aria-label="Statut de la seance du film">
+              <div class="planning__session-links">
+                <a v-if="option.ticket_url" :href="option.ticket_url" target="_blank" rel="noopener">billetterie</a>
+                <a href="#" @click="exportScreeningIcal(option, $event)">agenda</a>
+              </div>
+              <div class="planning__selection-pills" aria-label="Statut de la seance du film">
                 <button
                   type="button"
-                  class="planning__selection-option"
-                  :class="{ 'planning__selection-option--active': option.selection_status === 'tentative' }"
+                  class="planning__selection-pill"
+                  :class="{ 'planning__selection-pill--active': option.selection_status === 'tentative', 'planning__selection-pill--tentative': option.selection_status === 'tentative' }"
                   :aria-pressed="option.selection_status === 'tentative'"
                   @click="toggleScreeningSelection(option.id, 'tentative')"
                 >
+                  <span class="planning__selection-pill-dot" />
                   Tentative
                 </button>
                 <button
                   type="button"
-                  class="planning__selection-option"
-                  :class="{ 'planning__selection-option--active': option.selection_status === 'confirmed' }"
+                  class="planning__selection-pill"
+                  :class="{ 'planning__selection-pill--active': option.selection_status === 'confirmed', 'planning__selection-pill--confirmed': option.selection_status === 'confirmed' }"
                   :aria-pressed="option.selection_status === 'confirmed'"
                   @click="toggleScreeningSelection(option.id, 'confirmed')"
                 >
+                  <span class="planning__selection-pill-dot" />
                   Confirmee
                 </button>
                 <button
                   type="button"
-                  class="planning__selection-option"
-                  :class="{ 'planning__selection-option--active': option.selection_status === 'rejected' }"
+                  class="planning__selection-pill"
+                  :class="{ 'planning__selection-pill--active': option.selection_status === 'rejected', 'planning__selection-pill--rejected': option.selection_status === 'rejected' }"
                   :aria-pressed="option.selection_status === 'rejected'"
                   @click="toggleScreeningSelection(option.id, 'rejected')"
                 >
+                  <span class="planning__selection-pill-dot" />
                   Ignoree
                 </button>
               </div>
@@ -347,10 +396,11 @@ const {
           <p>{{ detailScreening.film.cast }}</p>
         </div>
 
-        <div v-if="detailScreening.film?.festival_url || detailScreening.film?.imdb_url || detailScreening.ticket_url" class="planning__links">
+        <div class="planning__links">
+          <a href="#" @click="exportScreeningIcal(detailScreening, $event)">Ajouter cette seance a l agenda</a>
+          <a v-if="detailScreening.ticket_url" :href="detailScreening.ticket_url" target="_blank" rel="noopener">Billetterie</a>
           <a v-if="detailScreening.film?.festival_url" :href="detailScreening.film.festival_url" target="_blank" rel="noopener">Ouvrir la fiche NIFFF</a>
           <a v-if="detailScreening.film?.imdb_url" :href="detailScreening.film.imdb_url" target="_blank" rel="noopener">IMDb</a>
-          <a v-if="detailScreening.ticket_url" :href="detailScreening.ticket_url" target="_blank" rel="noopener">Billetterie</a>
         </div>
       </aside>
     </section>

@@ -1,6 +1,7 @@
 import { computed } from 'vue'
 
 import { useFestivalStore } from '@/stores/festival'
+import type { Screening } from '@/types'
 
 const BACKEND_EXPORT_URL = 'http://localhost:8000/api/exports/confirmed.ics'
 
@@ -16,7 +17,7 @@ function toIcsDateTime(value: string | null): string | null {
   return `${year}${month}${day}T${hours}${minutes}${seconds ?? '00'}`
 }
 
-function buildLocalCalendar(screenings: ReturnType<typeof useFestivalStore>['visibleScreenings']): string {
+function buildLocalCalendar(screenings: Screening[]): string {
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Potential Spork//Festival Planner//FR']
 
   for (const screening of screenings) {
@@ -40,6 +41,16 @@ function buildLocalCalendar(screenings: ReturnType<typeof useFestivalStore>['vis
   return `${lines.join('\r\n')}\r\n`
 }
 
+function downloadCalendar(calendar: string, filename: string): void {
+  const blob = new Blob([calendar], { type: 'text/calendar;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
 export function useIcalExport() {
   const store = useFestivalStore()
 
@@ -51,19 +62,17 @@ export function useIcalExport() {
     }
 
     event?.preventDefault()
+    downloadCalendar(buildLocalCalendar(store.visibleScreenings.filter((screening) => screening.selection_status === 'confirmed')), 'potential-spork-confirmed.ics')
+  }
 
-    const calendar = buildLocalCalendar(store.visibleScreenings)
-    const blob = new Blob([calendar], { type: 'text/calendar;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'potential-spork-confirmed.ics'
-    link.click()
-    URL.revokeObjectURL(url)
+  function exportScreeningIcal(screening: Screening, event?: Event): void {
+    event?.preventDefault()
+    downloadCalendar(buildLocalCalendar([screening]), `screening-${screening.id}.ics`)
   }
 
   return {
     exportHref,
     exportIcal,
+    exportScreeningIcal,
   }
 }

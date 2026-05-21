@@ -32,6 +32,7 @@ export function usePlanningModel() {
   const settingsStore = useSettingsStore()
   const activeDay = ref('')
   const planningMode = ref<'timeline' | 'visualization'>('timeline')
+  const screeningFilter = ref<'all' | 'confirmed'>('all')
   const detailScreeningId = ref<number | null>(null)
   const isMobile = ref(false)
   let mobileMedia: MediaQueryList | null = null
@@ -62,7 +63,7 @@ export function usePlanningModel() {
       return { score: total, note: 'moins favorable: conflit', reasons: [] }
     }
 
-    return { score: total, note: 'meilleure option selon tes parametres', reasons: [] }
+    return { score: total, note: 'option favorable', reasons: [] }
   }
 
   function countConflictPairs(screenings: Screening[]): number {
@@ -198,7 +199,15 @@ export function usePlanningModel() {
     }
   }, { immediate: true })
 
-  const dayScreenings = computed(() => activeDay.value === FESTIVAL_VIEW_KEY ? planningScreenings.value : planningScreenings.value.filter((screening) => screening.dayKey === activeDay.value))
+  const filteredScreenings = computed(() => {
+    if (screeningFilter.value === 'confirmed') {
+      return planningScreenings.value.filter((screening) => screening.selection_status === 'confirmed')
+    }
+
+    return planningScreenings.value
+  })
+
+  const dayScreenings = computed(() => activeDay.value === FESTIVAL_VIEW_KEY ? filteredScreenings.value : filteredScreenings.value.filter((screening) => screening.dayKey === activeDay.value))
 
   const timelineGroups = computed(() => {
     if (activeDay.value !== FESTIVAL_VIEW_KEY) {
@@ -220,7 +229,7 @@ export function usePlanningModel() {
       return [] as PlanningScreening[]
     }
 
-    return planningScreenings.value
+    return filteredScreenings.value
       .filter((screening) => screening.film_id === detailScreening.value?.film_id)
       .sort((left, right) => left.dayKey.localeCompare(right.dayKey) || left.startMinutes - right.startMinutes)
   })
@@ -313,6 +322,13 @@ export function usePlanningModel() {
     return formatTimeRangeValue(screening.starts_at, screening.ends_at)
   }
 
+  function filmPriorityDots(priority: Film['priority'] | undefined): number {
+    if (priority === 'must-see') return 3
+    if (priority === 'high') return 2
+    if (priority === 'medium') return 1
+    return 0
+  }
+
   function filmMeta(screening: PlanningScreening): string {
     const countries = screening.film?.countries ?? 'Pays ?'
     const duration = screening.film?.duration_minutes
@@ -339,48 +355,26 @@ export function usePlanningModel() {
   }
 
   function screeningReason(screening: PlanningScreening): string {
-    if (screening.isSelected && screening.isConflict) {
-      const conflictingSelected = findConflictingSelectedOtherFilm(screening)
-      const statusLabel = screening.selection_status === 'confirmed' ? 'Confirmee' : 'Tentative'
-
-      if (conflictingSelected?.starts_at) {
-        return `${statusLabel} · conflit avec ${conflictingSelected.film_title}, prevu ${formatDayChipLabel(conflictingSelected.dayKey)} a ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}`
-      }
-
-      return `${statusLabel} · en conflit`
-    }
-    if (screening.isSingleScreening) return 'Seance unique'
-    if (screening.isMustLock) return 'Derniere option viable'
+    if (screening.selection_status === 'rejected') return 'Ignoree'
+    if (screening.isConflict || screening.derived_state === 'conflict') return 'Conflit'
     if (screening.selection_status === 'confirmed') return 'Confirmee'
     if (screening.selection_status === 'tentative') return 'Tentative'
-    if (screening.selection_status === 'rejected') return 'Ignoree'
+    if (screening.isSingleScreening) return 'Seance unique'
+    if (screening.isMustLock) return 'A securiser'
     if (screening.isAlternative || screening.derived_state === 'disabled') {
-      const selectedSibling = findSelectedSibling(screening)
-      if (selectedSibling?.starts_at) {
-        return `Seance prevue ${formatDayChipLabel(selectedSibling.dayKey)} a ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}`
-      }
-      return 'Autre seance deja choisie'
-    }
-    if (screening.isRecommended) return screening.recommendationNote ? `Recommandee · ${screening.recommendationNote}` : 'Recommandee'
-    if (screening.isLastViableOption) return 'Derniere option viable'
-    if (screening.derived_state === 'conflict') {
-      const conflictingSelected = findConflictingSelectedOtherFilm(screening)
-      if (conflictingSelected?.starts_at) {
-        return `Conflit avec ${conflictingSelected.film_title}, prevu ${formatDayChipLabel(conflictingSelected.dayKey)} a ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}`
-      }
-      return 'Conflit avec une seance deja choisie'
+      return 'Autre seance choisie'
     }
     return 'Disponible'
   }
 
   function screeningComparisonStatus(screening: PlanningScreening): string {
+    if (screening.selection_status === 'rejected') return 'Ignoree'
+    if (screening.isConflict || screening.derived_state === 'conflict') return 'Conflit'
     if (screening.selection_status === 'confirmed') return 'Confirmee'
     if (screening.selection_status === 'tentative') return 'Tentative'
-    if (screening.selection_status === 'rejected') return 'Ignoree'
     if (screening.isSingleScreening) return 'Seance unique'
-    if (screening.isMustLock) return 'Derniere option viable'
+    if (screening.isMustLock) return 'A securiser'
     if (screening.isAlternative || screening.derived_state === 'disabled') return 'Autre seance du film deja prevue'
-    if (screening.derived_state === 'conflict') return 'Disponible, mais en conflit'
     return 'Disponible'
   }
 
@@ -390,7 +384,6 @@ export function usePlanningModel() {
     if (screening.selection_status === 'confirmed') return 'planning__timeline-item--confirmed'
     if (screening.selection_status === 'tentative') return 'planning__timeline-item--tentative'
     if (screening.selection_status === 'rejected') return 'planning__timeline-item--rejected'
-    if (screening.isRecommended) return 'planning__timeline-item--recommended'
     if (screening.isAlternative || screening.derived_state === 'disabled') return 'planning__timeline-item--disabled'
     if (screening.derived_state === 'conflict') return 'planning__timeline-item--blocked'
     return 'planning__timeline-item--available'
@@ -409,19 +402,18 @@ export function usePlanningModel() {
       hints.push(`Conflit avec ${conflictingSelected.film_title}, ${formatDayChipLabel(conflictingSelected.dayKey)} ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}`)
     }
 
-    if (
-      settingsStore.recommendationMode === 'personalized' &&
-      screening.isRecommended &&
-      screening.recommendationTotalOptions !== null &&
-      screening.recommendationTotalOptions > 1 &&
-      !screening.isAlternative &&
-      screening.selection_status === 'none' &&
-      !conflictingSelected
-    ) {
-      hints.push('Meilleure option selon tes parametres')
-    }
-
     return hints.slice(0, 2)
+  }
+
+  function screeningStatusTone(screening: PlanningScreening): string {
+    if (screening.selection_status === 'rejected') return 'rejected'
+    if (screening.isConflict || screening.derived_state === 'conflict') return 'conflict'
+    if (screening.selection_status === 'confirmed') return 'confirmed'
+    if (screening.selection_status === 'tentative') return 'tentative'
+    if (screening.isSingleScreening) return 'single'
+    if (screening.isMustLock) return 'must-lock'
+    if (screening.isAlternative || screening.derived_state === 'disabled') return 'disabled'
+    return 'available'
   }
 
   function visualizationBlockClass(screening: PlanningScreening): string {
@@ -433,7 +425,6 @@ export function usePlanningModel() {
     if (screening.selection_status === 'rejected') return 'planning__visual-block--rejected'
     if (screening.isAlternative || screening.derived_state === 'disabled') return 'planning__visual-block--disabled'
     if (screening.isMustLock) return 'planning__visual-block--must-lock'
-    if (screening.isRecommended) return 'planning__visual-block--recommended'
     if (screening.derived_state === 'conflict' || screening.isConflict) return 'planning__visual-block--conflict'
     return 'planning__visual-block--available'
   }
@@ -488,6 +479,7 @@ export function usePlanningModel() {
     settingsStore,
     activeDay,
     planningMode,
+    screeningFilter,
     detailScreeningId,
     isMobile,
     effectivePlanningMode,
@@ -505,8 +497,10 @@ export function usePlanningModel() {
     visualizationGroups,
     formatDayLabel,
     formatTimeRange,
+    filmPriorityDots,
     filmMeta,
     screeningReason,
+    screeningStatusTone,
     screeningComparisonStatus,
     screeningStateClass,
     screeningComparisonHints,
