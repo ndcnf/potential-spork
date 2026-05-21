@@ -14,8 +14,11 @@ export type PlanningScreening = Screening & {
   isConflict: boolean
   isAlternative: boolean
   isSingleScreening: boolean
+  isLastViableOption: boolean
   isMustLock: boolean
   isRecommended: boolean
+  recommendationRank: number | null
+  recommendationTotalOptions: number | null
   recommendationNote: string | null
   recommendationReasons: string[]
   visualRowStart?: number
@@ -47,7 +50,7 @@ export function usePlanningModel() {
 
   function screeningRecommendationScore(screening: Screening, selectedScreenings: Screening[], candidateCount: number): { score: number; note: string; reasons: string[] } {
     const settings = settingsStore.recommendationSettings
-    const conflictPenalty = selectedScreenings.some((other) => screeningsOverlapWithBuffer(screening, other)) ? -100 : 0
+    const conflictPenalty = selectedScreenings.some((other) => other.id !== screening.id && other.film_id !== screening.film_id && screeningsOverlapWithBuffer(screening, other)) ? -100 : 0
     const rarityBonus = candidateCount === 1 ? 40 : candidateCount === 2 ? 20 : 0
     const comfortBonus = settings.preferredVenueScores[screening.venue_name ?? ''] ?? 0
     const startMinutes = toMinutes(screening.starts_at)
@@ -132,12 +135,17 @@ export function usePlanningModel() {
     const baseScreenings = store.visibleScreenings.filter((screening) => screening.starts_at && screening.ends_at && plannableFilmIds.value.has(screening.film_id))
     const selectedScreenings = baseScreenings.filter((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')
     const selectedFilmIds = new Set(selectedScreenings.map((screening) => screening.film_id))
+    const totalScreeningCountByFilmId = new Map<number, number>()
     const validScreeningCountByFilmId = new Map<number, number>()
     const recommendationByFilmId = new Map<number, number>()
+    const recommendationRankByScreeningId = new Map<number, number>()
+    const recommendationTotalByScreeningId = new Map<number, number>()
     const recommendationNoteByScreeningId = new Map<number, string>()
     const recommendationReasonsByScreeningId = new Map<number, string[]>()
 
     for (const screening of baseScreenings) {
+      totalScreeningCountByFilmId.set(screening.film_id, (totalScreeningCountByFilmId.get(screening.film_id) ?? 0) + 1)
+
       if (screening.selection_status !== 'rejected') {
         validScreeningCountByFilmId.set(screening.film_id, (validScreeningCountByFilmId.get(screening.film_id) ?? 0) + 1)
       }
@@ -150,18 +158,22 @@ export function usePlanningModel() {
     }
 
     for (const [filmId, screenings] of candidatesByFilmId.entries()) {
-      const hasSelected = screenings.some((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')
-      if (hasSelected) continue
-
       if (settingsStore.recommendationMode === 'personalized') {
+        const hasSelected = screenings.some((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')
+        const selectedOtherFilmScreenings = selectedScreenings.filter((screening) => screening.film_id !== filmId)
         const scored = [...screenings]
-          .map((screening) => ({ screening, ...screeningRecommendationScore(screening, selectedScreenings, screenings.length) }))
+          .map((screening) => ({ screening, ...screeningRecommendationScore(screening, selectedOtherFilmScreenings, screenings.length) }))
           .sort((left, right) => right.score - left.score || (left.screening.starts_at ?? '').localeCompare(right.screening.starts_at ?? ''))
 
-        if (scored[0]) {
+        scored.forEach((entry, index) => {
+          recommendationRankByScreeningId.set(entry.screening.id, index + 1)
+          recommendationTotalByScreeningId.set(entry.screening.id, scored.length)
+          recommendationNoteByScreeningId.set(entry.screening.id, entry.note)
+          recommendationReasonsByScreeningId.set(entry.screening.id, entry.reasons)
+        })
+
+        if (!hasSelected && scored[0]) {
           recommendationByFilmId.set(filmId, scored[0].screening.id)
-          recommendationNoteByScreeningId.set(scored[0].screening.id, scored[0].note)
-          recommendationReasonsByScreeningId.set(scored[0].screening.id, scored[0].reasons)
         }
       }
     }
@@ -172,8 +184,11 @@ export function usePlanningModel() {
         const endInfo = getFestivalDisplayInfo(screening.ends_at)
         const isSelected = screening.selection_status === 'tentative' || screening.selection_status === 'confirmed'
         const film = filmById.value.get(screening.film_id) ?? null
-        const isSingleScreening = (validScreeningCountByFilmId.get(screening.film_id) ?? 0) === 1
-        const isMustLock = isSingleScreening && isHighPriority(film?.priority) && !isSelected
+        const totalScreeningCount = totalScreeningCountByFilmId.get(screening.film_id) ?? 0
+        const validScreeningCount = validScreeningCountByFilmId.get(screening.film_id) ?? 0
+        const isSingleScreening = totalScreeningCount === 1
+        const isLastViableOption = totalScreeningCount > 1 && validScreeningCount === 1
+        const isMustLock = isLastViableOption && isHighPriority(film?.priority) && !isSelected
         const isRecommended = recommendationByFilmId.get(screening.film_id) === screening.id && !isSelected
 
         return {
@@ -186,8 +201,11 @@ export function usePlanningModel() {
           isConflict: selectedScreenings.some((other) => screeningsOverlapWithBuffer(screening, other)),
           isAlternative: selectedFilmIds.has(screening.film_id) && screening.selection_status === 'none',
           isSingleScreening,
+          isLastViableOption,
           isMustLock,
           isRecommended,
+          recommendationRank: recommendationRankByScreeningId.get(screening.id) ?? null,
+          recommendationTotalOptions: recommendationTotalByScreeningId.get(screening.id) ?? null,
           recommendationNote: recommendationNoteByScreeningId.get(screening.id) ?? null,
           recommendationReasons: recommendationReasonsByScreeningId.get(screening.id) ?? [],
         }
@@ -232,7 +250,7 @@ export function usePlanningModel() {
 
     return planningScreenings.value
       .filter((screening) => screening.film_id === detailScreening.value?.film_id)
-      .sort((left, right) => left.startMinutes - right.startMinutes)
+      .sort((left, right) => left.dayKey.localeCompare(right.dayKey) || left.startMinutes - right.startMinutes)
   })
 
   const selectedConflictCount = computed(() => {
@@ -349,33 +367,68 @@ export function usePlanningModel() {
     return `${countries} · ${formatMinutes(duration)}`
   }
 
+  function findSelectedSibling(screening: PlanningScreening): PlanningScreening | undefined {
+    return planningScreenings.value.find(
+      (other) =>
+        other.film_id === screening.film_id &&
+        other.id !== screening.id &&
+        (other.selection_status === 'tentative' || other.selection_status === 'confirmed'),
+    )
+  }
+
+  function findConflictingSelectedOtherFilm(screening: PlanningScreening): PlanningScreening | undefined {
+    return planningScreenings.value.find(
+      (other) =>
+        other.id !== screening.id &&
+        other.film_id !== screening.film_id &&
+        (other.selection_status === 'tentative' || other.selection_status === 'confirmed') &&
+        screeningsOverlapWithBuffer(screening, other),
+    )
+  }
+
   function screeningReason(screening: PlanningScreening): string {
-    if (screening.isSelected && screening.isConflict) return 'Conflit'
-    if (screening.isMustLock) return 'A securiser'
+    if (screening.isSelected && screening.isConflict) {
+      const conflictingSelected = findConflictingSelectedOtherFilm(screening)
+      const statusLabel = screening.selection_status === 'confirmed' ? 'Confirmee' : 'Tentative'
+
+      if (conflictingSelected?.starts_at) {
+        return `${statusLabel} · conflit avec ${conflictingSelected.film_title}, prevu ${formatDayChipLabel(conflictingSelected.dayKey)} a ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}`
+      }
+
+      return `${statusLabel} · en conflit`
+    }
+    if (screening.isSingleScreening) return 'Seance unique'
+    if (screening.isMustLock) return 'Derniere option viable'
     if (screening.selection_status === 'confirmed') return 'Confirmee'
     if (screening.selection_status === 'tentative') return 'Tentative'
     if (screening.selection_status === 'rejected') return 'Ignoree'
-    if (screening.isRecommended) return screening.recommendationNote ? `Recommandee · ${screening.recommendationNote}` : 'Recommandee'
-    if (screening.isSingleScreening) return 'Seance unique'
     if (screening.isAlternative || screening.derived_state === 'disabled') {
-      const selectedSibling = planningScreenings.value.find(
-        (other) =>
-          other.film_id === screening.film_id &&
-          other.id !== screening.id &&
-          (other.selection_status === 'tentative' || other.selection_status === 'confirmed'),
-      )
+      const selectedSibling = findSelectedSibling(screening)
       if (selectedSibling?.starts_at) {
         return `Seance prevue ${formatDayChipLabel(selectedSibling.dayKey)} a ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}`
       }
       return 'Autre seance deja choisie'
     }
+    if (screening.isRecommended) return screening.recommendationNote ? `Recommandee · ${screening.recommendationNote}` : 'Recommandee'
+    if (screening.isLastViableOption) return 'Derniere option viable'
     if (screening.derived_state === 'conflict') {
-      const conflictingSelected = planningScreenings.value.find((other) => other.id !== screening.id && (other.selection_status === 'tentative' || other.selection_status === 'confirmed') && screeningsOverlapWithBuffer(screening, other))
+      const conflictingSelected = findConflictingSelectedOtherFilm(screening)
       if (conflictingSelected?.starts_at) {
         return `Conflit avec ${conflictingSelected.film_title}, prevu ${formatDayChipLabel(conflictingSelected.dayKey)} a ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}`
       }
       return 'Conflit avec une seance deja choisie'
     }
+    return 'Disponible'
+  }
+
+  function screeningComparisonStatus(screening: PlanningScreening): string {
+    if (screening.selection_status === 'confirmed') return 'Confirmee'
+    if (screening.selection_status === 'tentative') return 'Tentative'
+    if (screening.selection_status === 'rejected') return 'Ignoree'
+    if (screening.isSingleScreening) return 'Seance unique'
+    if (screening.isMustLock) return 'Derniere option viable'
+    if (screening.isAlternative || screening.derived_state === 'disabled') return 'Autre seance du film deja prevue'
+    if (screening.derived_state === 'conflict') return 'Disponible, mais en conflit'
     return 'Disponible'
   }
 
@@ -389,6 +442,45 @@ export function usePlanningModel() {
     if (screening.isAlternative || screening.derived_state === 'disabled') return 'planning__timeline-item--disabled'
     if (screening.derived_state === 'conflict') return 'planning__timeline-item--blocked'
     return 'planning__timeline-item--available'
+  }
+
+  function screeningComparisonHints(screening: PlanningScreening): string[] {
+    const hints: string[] = []
+    const conflictingSelected = findConflictingSelectedOtherFilm(screening)
+
+    if (settingsStore.recommendationMode === 'personalized' && screening.recommendationRank !== null && screening.recommendationTotalOptions !== null && screening.recommendationTotalOptions > 1) {
+      hints.push(`Option ${screening.recommendationRank}/${screening.recommendationTotalOptions}`)
+    }
+
+    if (screening.isSingleScreening) {
+      hints.push('Seule seance programmee pour ce film')
+    } else if (screening.isMustLock) {
+      hints.push('Derniere seance viable')
+    }
+
+    if (screening.isAlternative || screening.derived_state === 'disabled') {
+      const selectedSibling = findSelectedSibling(screening)
+      if (selectedSibling?.starts_at) {
+        hints.push(`Tu as deja retenu ${formatDayChipLabel(selectedSibling.dayKey)} a ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}`)
+      }
+    } else if (screening.isSelected && !screening.isConflict) {
+      hints.push('Sans conflit actuel')
+    } else if (conflictingSelected?.starts_at) {
+      hints.push(`Conflit avec ${conflictingSelected.film_title}`)
+    }
+
+    for (const reason of screening.recommendationReasons) {
+      if (hints.length >= 2) break
+      if (!hints.includes(reason)) {
+        hints.push(reason)
+      }
+    }
+
+    if (!hints.length && !screening.isConflict && screening.selection_status === 'none' && !screening.isAlternative) {
+      hints.push('Sans conflit actuel')
+    }
+
+    return hints.slice(0, 2)
   }
 
   function visualizationBlockClass(screening: PlanningScreening): string {
@@ -460,7 +552,9 @@ export function usePlanningModel() {
     formatTimeRange,
     filmMeta,
     screeningReason,
+    screeningComparisonStatus,
     screeningStateClass,
+    screeningComparisonHints,
     visualizationBlockClass,
     selectedCountForDay,
     dayChipLabel,

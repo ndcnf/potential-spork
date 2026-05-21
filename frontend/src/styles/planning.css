@@ -417,6 +417,7 @@
 
 .planning__detail-kicker { margin: 0.2rem 0 0; color: var(--color-accent); }
 .planning__detail-line { margin: 0; color: #b4bdd0; }
+.planning__detail-line--priority { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
 .planning__detail-line strong { color: #f4f6fb; margin-right: 0.45rem; }
 .planning__detail-media { overflow: hidden; border-radius: 14px; background: rgba(255, 255, 255, 0.02); }
 .planning__detail-media img { width: 100%; display: block; object-fit: cover; max-height: 26rem; }
@@ -457,6 +458,24 @@
 .planning__detail-screening-main span,
 .planning__detail-screening-note {
   color: var(--color-text-muted);
+}
+
+.planning__detail-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.planning__detail-hint {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: #cdd3df;
+  font-size: 0.78rem;
+  line-height: 1.2;
 }
 
 .planning__timeline-item--confirmed .planning__timeline-marker { background: var(--color-state-confirmed); }

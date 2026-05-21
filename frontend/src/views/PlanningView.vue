@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import { usePlanningModel } from '@/composables/usePlanningModel'
 
 const {
@@ -19,7 +20,9 @@ const {
   formatTimeRange,
   filmMeta,
   screeningReason,
+  screeningComparisonStatus,
   screeningStateClass,
+  screeningComparisonHints,
   visualizationBlockClass,
   selectedCountForDay,
   dayChipLabel,
@@ -155,6 +158,7 @@ const {
                         {{ screening.film_title }}
                       </button>
                     </strong>
+                    <PriorityBadge v-if="screening.film" :priority="screening.film.priority" />
                     <span class="planning__state">{{ screeningReason(screening) }}</span>
                   </div>
                   <p>{{ screening.venue_name }}</p>
@@ -215,14 +219,15 @@ const {
                     :class="screeningStateClass(screening)"
                   >
                     <div class="planning__matrix-time">{{ formatTimeRange(screening) }}</div>
-                    <strong>
-                      <button type="button" class="planning__detail-trigger" @click="openDetailPanel(screening.id)">
-                        {{ screening.film_title }}
-                      </button>
-                    </strong>
-                    <p v-if="screening.isMustLock" class="planning__matrix-note">A securiser</p>
-                    <p>{{ screening.film?.tagline || 'Genre non renseigne' }}</p>
-                  </article>
+                     <strong>
+                       <button type="button" class="planning__detail-trigger" @click="openDetailPanel(screening.id)">
+                         {{ screening.film_title }}
+                       </button>
+                     </strong>
+                     <PriorityBadge v-if="screening.film" :priority="screening.film.priority" />
+                     <p v-if="screening.isMustLock" class="planning__matrix-note">A securiser</p>
+                     <p>{{ screening.film?.tagline || 'Genre non renseigne' }}</p>
+                   </article>
                 </div>
               </template>
             </div>
@@ -300,7 +305,8 @@ const {
           <div>
             <p class="planning__detail-line"><strong>Horaire</strong> {{ formatTimeRange(detailScreening) }}</p>
             <p class="planning__detail-line"><strong>Salle</strong> {{ detailScreening.venue_name || 'Salle inconnue' }}</p>
-            <p class="planning__detail-line"><strong>Etat</strong> {{ screeningReason(detailScreening) }}</p>
+            <p class="planning__detail-line"><strong>Statut de selection</strong> {{ screeningReason(detailScreening) }}</p>
+            <p v-if="detailScreening.film" class="planning__detail-line planning__detail-line--priority"><strong>Niveau d attente</strong> <PriorityBadge :priority="detailScreening.film.priority" /></p>
           </div>
           <div>
             <p class="planning__detail-line"><strong>Rea</strong> {{ detailScreening.film?.directors || 'Non renseigne' }}</p>
@@ -321,11 +327,18 @@ const {
               :class="screeningStateClass(option)"
             >
               <div class="planning__detail-screening-main">
-                <strong>{{ formatTimeRange(option) }}</strong>
+                <strong>
+                  <button type="button" class="planning__detail-trigger" @click="openDetailPanel(option.id)">
+                    {{ formatDayLabel(option.dayKey) }} · {{ formatTimeRange(option) }}
+                  </button>
+                </strong>
                 <span>{{ option.venue_name }}</span>
               </div>
-              <p class="planning__detail-screening-note">{{ screeningReason(option) }}</p>
-              <div class="planning__selection-toggle" role="radiogroup" aria-label="Statut de la seance du film">
+              <p class="planning__detail-screening-note">{{ screeningComparisonStatus(option) }}</p>
+              <div v-if="screeningComparisonHints(option).length" class="planning__detail-hints">
+                <span v-for="hint in screeningComparisonHints(option)" :key="hint" class="planning__detail-hint">{{ hint }}</span>
+              </div>
+              <div class="planning__selection-toggle" aria-label="Statut de la seance du film">
                 <button
                   type="button"
                   class="planning__selection-option"
@@ -358,10 +371,14 @@ const {
           </div>
         </div>
 
-        <div v-if="detailScreening.isRecommended || detailScreening.isMustLock" class="planning__detail-copy">
-          <p class="planning__detail-copy-title">Pourquoi cette seance ressort</p>
+        <div v-if="detailScreening.isRecommended || detailScreening.isMustLock || detailScreening.recommendationRank !== null" class="planning__detail-copy">
+          <p class="planning__detail-copy-title">Aide a la decision</p>
           <ul class="planning__detail-list">
-            <li v-if="detailScreening.isMustLock">il ne reste qu une seule seance valable pour ce film prioritaire</li>
+            <li v-if="settingsStore.recommendationMode === 'personalized' && detailScreening.recommendationRank !== null && detailScreening.recommendationTotalOptions !== null && detailScreening.recommendationTotalOptions > 1">
+              option {{ detailScreening.recommendationRank }} sur {{ detailScreening.recommendationTotalOptions }} pour ce film selon tes parametres
+            </li>
+            <li v-if="detailScreening.isSingleScreening">c est la seule seance programmee pour ce film</li>
+            <li v-else-if="detailScreening.isMustLock">il ne reste qu une seule seance valable pour ce film prioritaire</li>
             <li v-for="reason in detailScreening.recommendationReasons" :key="reason">{{ reason }}</li>
           </ul>
         </div>
