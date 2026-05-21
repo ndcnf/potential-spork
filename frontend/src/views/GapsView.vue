@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
-import { formatMinutes, formatTimeRange, RESERVATION_BUFFER_MINUTES, toMinutes } from '@/lib/planning'
+import { formatMinutes, formatTimeRange, getFestivalDisplayInfo, RESERVATION_BUFFER_MINUTES } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
 import { useSettingsStore } from '@/stores/settings'
 
@@ -34,32 +34,40 @@ const selectedScreenings = computed(() =>
   store.visibleScreenings
     .filter((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')
     .filter((screening) => screening.starts_at && screening.ends_at)
-    .sort((left, right) => (left.starts_at ?? '').localeCompare(right.starts_at ?? '')),
+    .sort((left, right) => {
+      const leftInfo = getFestivalDisplayInfo(left.starts_at)
+      const rightInfo = getFestivalDisplayInfo(right.starts_at)
+      return leftInfo.displayDayKey.localeCompare(rightInfo.displayDayKey) || leftInfo.displayMinutes - rightInfo.displayMinutes
+    }),
 )
 
 const allPlannableScreenings = computed(() =>
   store.visibleScreenings
     .filter((screening) => plannableFilmIds.value.has(screening.film_id))
     .filter((screening) => screening.starts_at && screening.ends_at)
-    .sort((left, right) => (left.starts_at ?? '').localeCompare(right.starts_at ?? '')),
+    .sort((left, right) => {
+      const leftInfo = getFestivalDisplayInfo(left.starts_at)
+      const rightInfo = getFestivalDisplayInfo(right.starts_at)
+      return leftInfo.displayDayKey.localeCompare(rightInfo.displayDayKey) || leftInfo.displayMinutes - rightInfo.displayMinutes
+    }),
 )
 
 const gapSections = computed(() => {
   const selectedByDay = new Map<string, typeof selectedScreenings.value>()
   for (const screening of selectedScreenings.value) {
-    const day = screening.starts_at?.slice(0, 10) ?? 'Sans date'
+    const day = getFestivalDisplayInfo(screening.starts_at).displayDayKey
     selectedByDay.set(day, [...(selectedByDay.get(day) ?? []), screening])
   }
 
   const allByDay = new Map<string, typeof allPlannableScreenings.value>()
   for (const screening of allPlannableScreenings.value) {
-    const day = screening.starts_at?.slice(0, 10) ?? 'Sans date'
+    const day = getFestivalDisplayInfo(screening.starts_at).displayDayKey
     allByDay.set(day, [...(allByDay.get(day) ?? []), screening])
   }
 
   return [...allByDay.entries()].flatMap(([day, screenings]) => {
-    const selected = [...(selectedByDay.get(day) ?? [])].sort((left, right) => (left.starts_at ?? '').localeCompare(right.starts_at ?? ''))
-    const sortedDay = [...screenings].sort((left, right) => (left.starts_at ?? '').localeCompare(right.starts_at ?? ''))
+    const selected = [...(selectedByDay.get(day) ?? [])].sort((left, right) => getFestivalDisplayInfo(left.starts_at).displayMinutes - getFestivalDisplayInfo(right.starts_at).displayMinutes)
+    const sortedDay = [...screenings].sort((left, right) => getFestivalDisplayInfo(left.starts_at).displayMinutes - getFestivalDisplayInfo(right.starts_at).displayMinutes)
     const dayStart = sortedDay[0]
     const dayEnd = sortedDay[sortedDay.length - 1]
 
@@ -71,19 +79,19 @@ const gapSections = computed(() => {
 
     if (selected.length === 0) {
       windows.push({
-        startMinutes: toMinutes(dayStart.starts_at),
-        endMinutes: toMinutes(dayEnd.ends_at),
+        startMinutes: getFestivalDisplayInfo(dayStart.starts_at).displayMinutes,
+        endMinutes: getFestivalDisplayInfo(dayEnd.ends_at).displayMinutes,
         startLabel: dayStart.starts_at?.slice(11, 16) ?? '--:--',
         endLabel: dayEnd.ends_at?.slice(11, 16) ?? '--:--',
         key: `${day}-full-day`,
       })
     } else {
       const firstSelected = selected[0]
-      const beforeDuration = toMinutes(firstSelected.starts_at) - toMinutes(dayStart.starts_at)
+      const beforeDuration = getFestivalDisplayInfo(firstSelected.starts_at).displayMinutes - getFestivalDisplayInfo(dayStart.starts_at).displayMinutes
       if (beforeDuration >= RESERVATION_BUFFER_MINUTES) {
         windows.push({
-          startMinutes: toMinutes(dayStart.starts_at),
-          endMinutes: toMinutes(firstSelected.starts_at),
+          startMinutes: getFestivalDisplayInfo(dayStart.starts_at).displayMinutes,
+          endMinutes: getFestivalDisplayInfo(firstSelected.starts_at).displayMinutes,
           startLabel: dayStart.starts_at?.slice(11, 16) ?? '--:--',
           endLabel: firstSelected.starts_at?.slice(11, 16) ?? '--:--',
           key: `${day}-before-first`,
@@ -93,8 +101,8 @@ const gapSections = computed(() => {
       for (let index = 0; index < selected.length - 1; index += 1) {
         const previous = selected[index]
         const next = selected[index + 1]
-        const previousEnd = toMinutes(previous.ends_at)
-        const nextStart = toMinutes(next.starts_at)
+        const previousEnd = getFestivalDisplayInfo(previous.ends_at).displayMinutes
+        const nextStart = getFestivalDisplayInfo(next.starts_at).displayMinutes
         const gapDuration = nextStart - previousEnd
 
         if (gapDuration >= RESERVATION_BUFFER_MINUTES) {
@@ -109,11 +117,11 @@ const gapSections = computed(() => {
       }
 
       const lastSelected = selected[selected.length - 1]
-      const afterDuration = toMinutes(dayEnd.ends_at) - toMinutes(lastSelected.ends_at)
+      const afterDuration = getFestivalDisplayInfo(dayEnd.ends_at).displayMinutes - getFestivalDisplayInfo(lastSelected.ends_at).displayMinutes
       if (afterDuration >= RESERVATION_BUFFER_MINUTES) {
         windows.push({
-          startMinutes: toMinutes(lastSelected.ends_at),
-          endMinutes: toMinutes(dayEnd.ends_at),
+          startMinutes: getFestivalDisplayInfo(lastSelected.ends_at).displayMinutes,
+          endMinutes: getFestivalDisplayInfo(dayEnd.ends_at).displayMinutes,
           startLabel: lastSelected.ends_at?.slice(11, 16) ?? '--:--',
           endLabel: dayEnd.ends_at?.slice(11, 16) ?? '--:--',
           key: `${day}-after-last`,
@@ -131,16 +139,20 @@ const gapSections = computed(() => {
       const candidates = store.visibleScreenings
         .filter((screening) => screening.selection_status === 'none')
         .filter((screening) => plannableFilmIds.value.has(screening.film_id))
-        .filter((screening) => screening.starts_at?.slice(0, 10) === day)
+        .filter((screening) => getFestivalDisplayInfo(screening.starts_at).displayDayKey === day)
         .filter((screening) => screening.starts_at && screening.ends_at)
         .filter((screening) => {
-          const screeningStart = toMinutes(screening.starts_at)
-          const screeningEnd = toMinutes(screening.ends_at)
-          const startsTooEarly = settingsStore.recommendationSettings.avoidBeforeMinutes !== null && screeningStart < settingsStore.recommendationSettings.avoidBeforeMinutes
-          const startsTooLate = settingsStore.recommendationSettings.avoidAfterMinutes !== null && screeningStart >= settingsStore.recommendationSettings.avoidAfterMinutes
+          const screeningStart = getFestivalDisplayInfo(screening.starts_at).displayMinutes
+          const screeningEnd = getFestivalDisplayInfo(screening.ends_at).displayMinutes
+          const startsTooEarly =
+            settingsStore.recommendationSettings.avoidBeforeMinutes !== null &&
+            screeningStart < settingsStore.recommendationSettings.avoidBeforeMinutes
+          const endsTooLate =
+            settingsStore.recommendationSettings.avoidAfterMinutes !== null &&
+            screeningEnd > settingsStore.recommendationSettings.avoidAfterMinutes
           return (
             !startsTooEarly &&
-            !startsTooLate &&
+            !endsTooLate &&
             screeningStart >= window.startMinutes + RESERVATION_BUFFER_MINUTES &&
             screeningEnd <= window.endMinutes - RESERVATION_BUFFER_MINUTES
           )

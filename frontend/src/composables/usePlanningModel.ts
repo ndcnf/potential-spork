@@ -90,6 +90,20 @@ export function usePlanningModel() {
     return { score: total, note: 'meilleur compromis actuel', reasons: reasons.length ? reasons : ['pas de conflit detecte', 'ordre chronologique favorable'] }
   }
 
+  function countConflictPairs(screenings: Screening[]): number {
+    let count = 0
+
+    for (let index = 0; index < screenings.length; index += 1) {
+      for (let otherIndex = index + 1; otherIndex < screenings.length; otherIndex += 1) {
+        if (screeningsOverlapWithBuffer(screenings[index], screenings[otherIndex])) {
+          count += 1
+        }
+      }
+    }
+
+    return count
+  }
+
   onMounted(() => {
     if (typeof window !== 'undefined') {
       const breakpoint = getComputedStyle(document.documentElement).getPropertyValue('--breakpoint-mobile').trim() || '960px'
@@ -211,17 +225,22 @@ export function usePlanningModel() {
 
   const detailScreening = computed(() => planningScreenings.value.find((screening) => screening.id === detailScreeningId.value) ?? null)
 
+  const selectedConflictCount = computed(() => {
+    const selected = planningScreenings.value.filter((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')
+    return countConflictPairs(selected)
+  })
+
   const summary = computed(() => ({
     films: store.films.filter((film) => isPlanningPriority(film.priority)).length,
     selected: planningScreenings.value.filter((screening) => screening.isSelected).length,
-    conflicts: planningScreenings.value.filter((screening) => screening.isSelected && screening.isConflict).length,
+    conflicts: selectedConflictCount.value,
     toPlace: planningScreenings.value.filter((screening) => !screening.isSelected && !screening.isAlternative && screening.selection_status !== 'rejected').length,
   }))
 
   const daySummary = computed(() => ({
     total: dayScreenings.value.length,
     selected: dayScreenings.value.filter((screening) => screening.isSelected).length,
-    conflicts: dayScreenings.value.filter((screening) => screening.isSelected && screening.isConflict).length,
+    conflicts: countConflictPairs(dayScreenings.value.filter((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')),
   }))
 
   const gridVenueNames = computed(() => [...new Set(dayScreenings.value.map((screening) => screening.venue_name || 'Salle inconnue'))].sort((left, right) => left.localeCompare(right)))
@@ -329,7 +348,12 @@ export function usePlanningModel() {
     if (screening.isRecommended) return screening.recommendationNote ? `Recommandee · ${screening.recommendationNote}` : 'Recommandee'
     if (screening.isSingleScreening) return 'Seance unique'
     if (screening.isAlternative || screening.derived_state === 'disabled') {
-      const selectedSibling = planningScreenings.value.find((other) => other.film_id === screening.film_id && other.id !== screening.id && (other.selection_status === 'tentative' || other.selection_status === 'confirmed'))
+      const selectedSibling = planningScreenings.value.find(
+        (other) =>
+          other.film_id === screening.film_id &&
+          other.id !== screening.id &&
+          (other.selection_status === 'tentative' || other.selection_status === 'confirmed'),
+      )
       if (selectedSibling?.starts_at) {
         return `Seance prevue ${formatDayChipLabel(selectedSibling.dayKey)} a ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}`
       }
