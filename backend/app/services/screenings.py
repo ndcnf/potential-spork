@@ -47,10 +47,11 @@ def screening_to_read(screening: Screening, all_screenings: list[Screening]) -> 
 
 
 def sync_film_screening_status(db, screening: Screening) -> None:
-    if screening.selection_status not in {"tentative", "confirmed"}:
+    if screening.selection_status != "confirmed":
         return
 
     siblings = db.query(Screening).filter(Screening.film_id == screening.film_id, Screening.id != screening.id).all()
     for sibling in siblings:
-        sibling.selection_status = "none"
-        db.add(sibling)
+        if sibling.selection_status != "rejected":
+            sibling.selection_status = "none"
+            db.add(sibling)

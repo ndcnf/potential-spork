@@ -483,8 +483,6 @@ export function usePlanningModel() {
     detailScreeningId.value = null
   }
 
-  const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
-
   return {
     store,
     settingsStore,
@@ -521,7 +519,6 @@ export function usePlanningModel() {
     focusFirstArbitration,
     openDetailPanel,
     closeDetailPanel,
-    exportUrl,
     FESTIVAL_VIEW_KEY,
   }
 }

@@ -136,11 +136,18 @@ export const useFestivalStore = defineStore('festival', {
         target.priority = priority
       }
     },
-    setScreeningSelection(screeningId: number, status: Screening['selection_status']) {
+    async setScreeningSelection(screeningId: number, status: Screening['selection_status']) {
       this.ensureWorkingData()
 
       const target = this.screenings.find((screening) => screening.id === screeningId)
       if (!target) {
+        return
+      }
+
+      if (!this.usingMocks) {
+        await api.updateScreeningSelection(screeningId, status)
+        const screenings = await api.listScreenings()
+        this.screenings = screenings
         return
       }
 

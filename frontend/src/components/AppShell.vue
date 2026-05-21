@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useIcalExport } from '@/composables/useIcalExport'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 const route = useRoute()
+const { exportHref, exportIcal } = useIcalExport()
 
 const tabs = [
   { label: 'Films', to: '/films', hint: 'Selection initiale' },
@@ -9,8 +11,6 @@ const tabs = [
   { label: 'Creneaux libres', to: '/gaps', hint: 'Remplissage cible' },
   { label: 'Parametres', to: '/settings', hint: 'Preferences perso' },
 ]
-
-const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
 </script>
 
 <template>
@@ -36,7 +36,7 @@ const exportUrl = 'http://localhost:8000/api/exports/confirmed.ics'
         </nav>
 
         <div class="app-header__actions">
-          <a class="app-header__export" :href="exportUrl" target="_blank" rel="noopener">Exporter iCal</a>
+          <a class="app-header__export" :href="exportHref" target="_blank" rel="noopener" @click="exportIcal">Exporter iCal</a>
         </div>
       </div>
     </header>

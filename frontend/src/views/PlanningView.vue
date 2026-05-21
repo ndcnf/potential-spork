@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
+import { useIcalExport } from '@/composables/useIcalExport'
 import { usePlanningModel } from '@/composables/usePlanningModel'
+
+const { exportHref, exportIcal } = useIcalExport()
 
 const {
   settingsStore,
@@ -32,7 +35,6 @@ const {
   focusFirstConflict,
   focusFirstArbitration,
   closeDetailPanel,
-  exportUrl,
   FESTIVAL_VIEW_KEY,
   isMobile,
 } = usePlanningModel()
@@ -45,7 +47,7 @@ const {
         <h2>Planning</h2>
         <p class="page-copy">Visualiser le programme dans le temps pour choisir la meilleure seance film par film.</p>
       </div>
-      <a class="planning__export" :href="exportUrl" target="_blank" rel="noopener">Exporter iCal</a>
+      <a class="planning__export" :href="exportHref" target="_blank" rel="noopener" @click="exportIcal">Exporter iCal</a>
     </header>
 
     <section class="planning__meta-panel">

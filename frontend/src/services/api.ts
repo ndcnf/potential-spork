@@ -19,6 +19,11 @@ export const api = {
   listCycles: () => readJson<Cycle[]>('/cycles'),
   listFilms: () => readJson<Film[]>('/films'),
   listScreenings: () => readJson<Screening[]>('/screenings'),
+  updateScreeningSelection: (screeningId: number, selection_status: Screening['selection_status']) =>
+    readJson<Screening>(`/screenings/${screeningId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ selection_status }),
+    }),
   importCatalog: (year = 2025) =>
     readJson('/imports/nifff/catalog', {
       method: 'POST',
