@@ -95,10 +95,9 @@
   background: var(--color-state-neutral);
 }
 
-.cycle-header__priority-dot[data-priority='must-see'] { background: var(--color-priority-must); }
 .cycle-header__priority-dot[data-priority='high'] { background: var(--color-priority-high); }
 .cycle-header__priority-dot[data-priority='medium'] { background: var(--color-priority-medium); }
-.cycle-header__priority-dot[data-priority='low'] { background: transparent; border: 1px solid var(--color-priority-low); }
+.cycle-header__priority-dot[data-priority='low'] { background: transparent; border: 1px solid var(--color-priority-muted); }
 .cycle-header__priority-dot[data-priority='ignore'] { background: transparent; border: 1px solid var(--color-priority-muted); }
 
 .cycle-group__body {
@@ -174,7 +173,7 @@
 }
 
 .film-screenings__item--warning {
-  color: var(--color-priority-low);
+  color: var(--color-accent);
 }
 
 @media (max-width: 960px) {

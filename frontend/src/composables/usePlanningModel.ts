@@ -323,8 +323,7 @@ export function usePlanningModel() {
   }
 
   function filmPriorityDots(priority: Film['priority'] | undefined): number {
-    if (priority === 'must-see') return 3
-    if (priority === 'high') return 2
+    if (priority === 'must-see' || priority === 'high') return 2
     if (priority === 'medium') return 1
     return 0
   }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Priority } from '@/types'
 
-defineProps<{
+const props = defineProps<{
   modelValue: Priority
   dense?: boolean
 }>()
@@ -10,20 +10,30 @@ defineEmits<{
   'update:modelValue': [value: Priority]
 }>()
 
-const options: Array<{ value: Priority; label: string }> = [
+type SimplifiedPriority = 'ignore' | 'medium' | 'high'
+
+const options: Array<{ value: SimplifiedPriority; label: string }> = [
   { value: 'ignore', label: 'Ignorer' },
-  { value: 'low', label: 'Faible' },
   { value: 'medium', label: 'Moyen' },
-  { value: 'high', label: 'Fort' },
-  { value: 'must-see', label: 'Immanquable' },
+  { value: 'high', label: 'Prioritaire' },
 ]
 
-const shortLabels: Record<Priority, string> = {
+const shortLabels: Record<SimplifiedPriority, string> = {
   ignore: 'I',
-  low: 'F',
   medium: 'M',
-  high: 'H',
-  'must-see': '!',
+  high: 'P',
+}
+
+function normalizePriority(priority: Priority): SimplifiedPriority {
+  if (priority === 'must-see' || priority === 'high') {
+    return 'high'
+  }
+
+  if (priority === 'medium') {
+    return 'medium'
+  }
+
+  return 'ignore'
 }
 </script>
 
@@ -34,9 +44,9 @@ const shortLabels: Record<Priority, string> = {
       :key="option.value"
       class="priority-option"
       type="button"
-      :class="{ active: modelValue === option.value }"
+      :class="{ active: normalizePriority(props.modelValue) === option.value }"
       :data-priority="option.value"
-      :aria-pressed="modelValue === option.value"
+      :aria-pressed="normalizePriority(props.modelValue) === option.value"
       @click="$emit('update:modelValue', option.value)"
     >
       <span v-if="dense">{{ shortLabels[option.value] }}</span>

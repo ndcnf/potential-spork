@@ -10,6 +10,10 @@ const store = useFestivalStore()
 const settingsStore = useSettingsStore()
 const ignoredGapKeys = ref(new Set<string>())
 
+function isPlannablePriority(priority: string): boolean {
+  return priority === 'medium' || priority === 'high' || priority === 'must-see'
+}
+
 const gapMessages = [
   { min: 15, max: 15, label: 'Faudra courir' },
   { min: 16, max: 45, label: 'Tu peux souffler un peu' },
@@ -25,7 +29,7 @@ onMounted(() => {
 })
 
 const plannableFilmIds = computed(
-  () => new Set(store.films.filter((film) => ['medium', 'high', 'must-see'].includes(film.priority)).map((film) => film.id)),
+  () => new Set(store.films.filter((film) => isPlannablePriority(film.priority)).map((film) => film.id)),
 )
 
 const filmById = computed(() => new Map(store.films.map((film) => [film.id, film])))

@@ -10,6 +10,18 @@ const mockCycles: Cycle[] = previewDataset.cycles
 const mockFilms: Film[] = previewDataset.films
 const mockScreenings: Screening[] = previewDataset.screenings
 
+function normalizePriority(priority: Priority): 'ignore' | 'medium' | 'high' {
+  if (priority === 'must-see' || priority === 'high') {
+    return 'high'
+  }
+
+  if (priority === 'medium') {
+    return 'medium'
+  }
+
+  return 'ignore'
+}
+
 function recomputeScreeningStates(screenings: Screening[]): Screening[] {
   return screenings.map((screening) => {
     if (screening.selection_status === 'tentative' || screening.selection_status === 'confirmed') {
@@ -66,7 +78,7 @@ export const useFestivalStore = defineStore('festival', {
     },
     highlightedFilms(state) {
       const films = state.films.length ? state.films : mockFilms
-      return films.filter((film) => film.priority === 'must-see' || film.priority === 'high')
+      return films.filter((film) => normalizePriority(film.priority) === 'high')
     },
     visibleScreenings(state) {
       return state.screenings.length ? state.screenings : mockScreenings

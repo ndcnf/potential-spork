@@ -9,9 +9,11 @@ import type { Film, Priority, Screening } from '@/types'
 
 const store = useFestivalStore()
 
+type PriorityFilter = 'all' | 'ignore' | 'medium' | 'high'
+
 const filters = reactive({
   query: '',
-  priority: 'all',
+  priority: 'all' as PriorityFilter,
   hideLowNoise: false,
   sort: 'title',
 })
@@ -24,6 +26,18 @@ onMounted(() => {
   }
 })
 
+function normalizePriority(priority: Priority): Exclude<PriorityFilter, 'all'> {
+  if (priority === 'must-see' || priority === 'high') {
+    return 'high'
+  }
+
+  if (priority === 'medium') {
+    return 'medium'
+  }
+
+  return 'ignore'
+}
+
 const filteredGroups = computed(() => {
   const normalizedQuery = filters.query.trim().toLowerCase()
 
@@ -32,11 +46,13 @@ const filteredGroups = computed(() => {
       cycle: group.cycle,
       films: group.films
         .filter((film) => {
-          if (filters.hideLowNoise && (film.priority === 'ignore' || film.priority === 'low')) {
+          const simplifiedPriority = normalizePriority(film.priority)
+
+          if (filters.hideLowNoise && simplifiedPriority === 'ignore') {
             return false
           }
 
-          if (filters.priority !== 'all' && film.priority !== filters.priority) {
+          if (filters.priority !== 'all' && simplifiedPriority !== filters.priority) {
             return false
           }
 
@@ -91,11 +107,9 @@ function sortFilms(left: Film, right: Film, mode: string): number {
 function priorityRank(priority: Priority): number {
   return {
     ignore: 0,
-    low: 1,
-    medium: 2,
-    high: 3,
-    'must-see': 4,
-  }[priority]
+    medium: 1,
+    high: 2,
+  }[normalizePriority(priority)]
 }
 
 function isCycleOpen(cycleId: number): boolean {
@@ -107,7 +121,8 @@ function toggleCycle(cycleId: number): void {
 }
 
 function shouldWarnMissingScreening(priority: Priority): boolean {
-  return priority === 'medium' || priority === 'high' || priority === 'must-see'
+  const simplifiedPriority = normalizePriority(priority)
+  return simplifiedPriority === 'medium' || simplifiedPriority === 'high'
 }
 
 function formatScreeningLabel(screening: Screening): string {
@@ -147,11 +162,11 @@ function cycleScreeningLabel(films: Film[]): string | null {
 }
 
 function cycleFocusCount(films: Film[]): number {
-  return films.filter((film) => film.priority === 'medium' || film.priority === 'high' || film.priority === 'must-see').length
+  return films.filter((film) => normalizePriority(film.priority) !== 'ignore').length
 }
 
 function cyclePriorityAccessibilityLabel(films: Film[]): string {
-  return `${cycleFocusCount(films)} films moyen ou plus sur ${films.length} dans ce cycle`
+  return `${cycleFocusCount(films)} films prioritaires ou moyens sur ${films.length} dans ce cycle`
 }
 
 function sortPriorityForCycle(left: Film, right: Film): number {
@@ -175,10 +190,8 @@ function sortPriorityForCycle(left: Film, right: Film): number {
 
       <select v-model="filters.priority" class="toolbar-select">
         <option value="all">Toutes les priorites</option>
-        <option value="must-see">Immanquable</option>
-        <option value="high">Fort</option>
+        <option value="high">Prioritaire</option>
         <option value="medium">Moyen</option>
-        <option value="low">Faible</option>
         <option value="ignore">Ignorer</option>
       </select>
 
@@ -206,10 +219,8 @@ function sortPriorityForCycle(left: Film, right: Film): number {
         <span class="legend__label">Priorites</span>
         <div class="legend__items">
           <PriorityBadge priority="ignore" />
-          <PriorityBadge priority="low" />
           <PriorityBadge priority="medium" />
           <PriorityBadge priority="high" />
-          <PriorityBadge priority="must-see" />
         </div>
       </div>
 
@@ -239,7 +250,7 @@ function sortPriorityForCycle(left: Film, right: Film): number {
                 v-for="film in [...group.films].sort(sortPriorityForCycle)"
                 :key="film.id"
                 class="cycle-header__priority-dot"
-                :data-priority="film.priority"
+                :data-priority="normalizePriority(film.priority)"
               />
             </span>
           </small>
