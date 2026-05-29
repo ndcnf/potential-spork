@@ -289,13 +289,11 @@ Décisions UI désormais actées :
 - header global avec progression visible
 - CTA `Passer au Planning` conditionné par au moins un film `Prioritaire`
 - dots de progression conservées au niveau cycle comme **signal de synthèse**, pas comme contrôle
-- regroupement interne par sous-sections : `A traiter`, `Prioritaires`, `Moyens`, `Ignores`
+- pas de sous-sections visuelles `A traiter / Prioritaires / Moyens / Ignores` dans chaque cycle
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
 - à l'initialisation, les films arrivent en état **`A traiter`**, sans sélection préalable
-- les sous-sections de cycle restent visibles même vides pour limiter le layout shift lors d'un changement d'avis
 - le rappel `pas de seance prevue` ne concerne que les films `Prioritaires`
-- un changement de priorité ne reclasse plus immédiatement la carte dans une autre sous-section
-- la réorganisation devient une action explicite : `Reorganiser les sections`
+- le statut reste lisible via le contrôle dans la carte, les dots et les compteurs, sans bruit structurel supplémentaire
 
 Rappel critique :
 - ne pas aplatir la carte en ligne de tableau utilitaire
@@ -395,10 +393,7 @@ But : préserver le premier critère éditorial tout en ajoutant une lecture de 
 
 La structure principale recommandée reste :
 - `Cycle`
-  - `A traiter`
-  - `Prioritaires`
-  - `Moyens`
-  - `Ignores`
+- `Liste de films`
 
 Le cycle doit rester le conteneur principal de la page.
 
@@ -408,8 +403,8 @@ Ce qu’il faut corriger n’est pas le cycle lui-même, mais l’absence de sou
 
 Implémentation recommandée :
 - conserver `store.groupedFilms` comme base
-- créer pour chaque groupe une transformation `cycleSections`
-- répartir les films de chaque cycle dans 4 sous-sections de décision
+- garder une liste plate de films dans chaque cycle
+- utiliser les compteurs et dots pour résumer la progression sans resegmenter visuellement la liste
 - règle transitoire : `unreviewed` = `A traiter`, `high/must-see` = `Prioritaires`, `medium` = `Moyens`, `ignore` = `Ignores`
 
 Contenu enrichi utile par film :
@@ -604,6 +599,9 @@ Le résultat doit permettre ceci en quelques secondes :
 
 Si après implémentation la vue lit comme `selection éditoriale par cycle avec progression de tri visible`, alors la direction est bonne.
 Si elle lit encore comme `catalogue par cycle avec contrôles`, elle reste incomplète.
+
+Mais la progression doit rester un signal de synthèse.
+Si elle introduit plus de bruit structurel que d'aide, elle est mal placée.
 
 ### Piste visuelle pour plus tard
 

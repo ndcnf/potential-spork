@@ -614,16 +614,11 @@ Recommended page structure:
 - cycle-local progress signals
 - films inside that cycle
 
-Inside each cycle, use decision subsections:
-- `A traiter`
-- `Prioritaires`
-- `Moyens`
-- `Ignores`
+Inside each cycle, keep a simple flat list if the status control and progress signals already carry enough meaning.
 
 Implementation note:
-- keep those subsections visible even when empty if that helps preserve spatial memory and reduce layout shift
-- do not force immediate card relocation on priority change if that breaks editing continuity
-- explicit reorganization can be better than automatic reflow
+- avoid redundant status grouping if it adds visual noise
+- status can remain visible through inline controls, counters, and dots alone
 
 This gives the right hierarchy:
 - first: editorial universe / cycle
@@ -641,7 +636,7 @@ Product rule:
 
 Reason:
 - cycle preserves the programming context
-- local decision groups make progress visible
+- local progress signals make decision state visible
 - the user can qualify films without losing the logic of the festival selection
 
 #### 4. Cycle header behavior
@@ -793,6 +788,9 @@ Good examples:
 Rule:
 - `pas de seance prevue` should be reserved for `Prioritaire` films
 - this warning is unnecessary noise for `Moyen`
+
+Visual hierarchy rule:
+- do not express the same status through structure, control, and summary if the inline control plus cycle-level signals are already sufficient
 
 Bad examples:
 - full timetable inside the card
