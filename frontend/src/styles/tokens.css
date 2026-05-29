@@ -14,6 +14,8 @@
   --color-muted-subtle: color-mix(in srgb, var(--color-foreground) 58%, var(--color-background));
   --color-surface-soft: color-mix(in srgb, var(--color-foreground) 3%, var(--color-background));
   --color-surface-strong: color-mix(in srgb, var(--color-foreground) 5%, var(--color-background));
+  --color-surface-shell: color-mix(in srgb, var(--color-background) 82%, black);
+  --color-surface-shell-strong: color-mix(in srgb, var(--color-background) 96%, black);
   --color-border-color: color-mix(in srgb, var(--color-foreground) 8%, var(--color-background));
   --color-border-strong: color-mix(in srgb, var(--color-foreground) 14%, var(--color-background));
   --color-border-faint: color-mix(in srgb, var(--color-foreground) 4%, var(--color-background));
@@ -68,6 +70,18 @@
   --control-border-color: color-mix(in srgb, var(--color-foreground) 6%, var(--color-background));
   --control-bg: transparent;
   --control-bg-active: var(--color-border-color);
+  --field-padding-y: 0.45rem;
+  --field-padding-x: 0.7rem;
+  --pill-gap: var(--field-padding-y);
+  --swatch-size: 0.7rem;
+  --dot-size-sm: var(--field-padding-y);
+  --dot-size-md: 0.9rem;
+  --space-micro: 0.2rem;
+  --space-micro-lg: 0.4rem;
+  --space-tight: 0.35rem;
+  --space-tight-lg: var(--dot-size-md);
+  --panel-padding-x: 1.25rem;
+  --radius-card: 14px;
 
   --space-2xs: 0.15rem;
   --space-xs: 0.25rem;
