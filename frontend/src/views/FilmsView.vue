@@ -204,9 +204,9 @@ function sortPriorityForCycle(left: Film, right: Film): number {
   <section class="page">
     <header class="page-header films-hero">
       <div class="films-hero__main">
-        <h2>Liste films</h2>
+        <h2>Films</h2>
         <p class="page-copy">
-          Vue groupee par cycle. Le cycle reste visible comme structure, mais la decision se prend au niveau du film.
+          Parcourez les cycles, qualifiez les films, puis passez au planning quand vos priorites sont claires.
         </p>
       </div>
 
@@ -227,7 +227,7 @@ function sortPriorityForCycle(left: Film, right: Film): number {
         </div>
 
         <p class="films-progress__hint page-copy">
-          {{ planningReady ? 'Vous pouvez maintenant passer au planning pour arbitrer les seances.' : 'Selectionnez au moins un film prioritaire pour lancer un arbitrage utile.' }}
+          {{ planningReady ? 'Vos priorites sont assez claires pour commencer l\'arbitrage des seances.' : 'Commencez par marquer au moins un film comme prioritaire.' }}
         </p>
 
         <RouterLink
@@ -244,7 +244,7 @@ function sortPriorityForCycle(left: Film, right: Film): number {
     </header>
 
     <section class="toolbar toolbar--filters">
-      <input v-model="filters.query" class="toolbar-input" type="search" placeholder="Rechercher titre, real, casting" />
+      <input v-model="filters.query" class="toolbar-input" type="search" placeholder="Rechercher un titre, un realisateur, un casting" />
 
       <select v-model="filters.priority" class="toolbar-select">
         <option value="all">Toutes les priorites</option>

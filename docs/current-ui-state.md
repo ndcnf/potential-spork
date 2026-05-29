@@ -293,6 +293,8 @@ Décisions UI désormais actées :
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
 - headers de cycle renforcés par un traitement plus organique, type surlignage / encre, sans tomber dans l'effet décoratif gratuit
 - cartes film raffinées typographiquement : titre plus dense, tagline plus lisible, métadonnées plus discrètes et ligne séance traitée comme un chip éditorial léger
+- la carte film reste un support de lecture, pas une fausse zone cliquable
+- les états d'interaction forts vivent sur les vrais contrôles, pas sur tout le bloc carte
 - à l'initialisation, les films arrivent en état **`A traiter`**, sans sélection préalable
 - le rappel `pas de seance prevue` ne concerne que les films `Prioritaires`
 - le statut reste lisible via le contrôle dans la carte, les dots et les compteurs, sans bruit structurel supplémentaire
@@ -441,6 +443,35 @@ Traitement typographique désormais retenu :
 - métadonnées compactes et plus silencieuses
 - ligne pays / durée / cycle en registre plus utilitaire, quasi-légende
 - hint de séance rendu comme un petit chip calme plutôt qu'une ligne flottante banale
+
+États visuels désormais retenus :
+- pas de hover global trompeur sur la carte
+- pas de traitement `selected` appliqué au conteneur complet
+- le focus visible doit rester porté par les éléments réellement interactifs
+- la séparation entre cartes doit rester simple, calme et lisible
+
+### Clarification composant — `PrioritySelect`
+
+Le nom actuel est trompeur.
+
+Dans l'interface, `PrioritySelect` n'est pas un "sélecteur de priorité" abstrait.
+C'est en réalité le **contrôle principal de qualification d'un film**.
+
+Sa fonction exacte :
+- décider si un film est `Prioritaire`, `Moyen` ou `Ignorer`
+- rendre cette décision immédiate, locale, explicite
+- éviter un détour par un panneau, un menu ou un formulaire secondaire
+
+Ce composant n'est donc pas caduc dans son rôle.
+Mais son **nom technique** l'est peut-être.
+
+Nom produit / UX plus juste :
+- `FilmPriorityToggle`
+- ou `FilmPriorityPills`
+
+Règle importante :
+- c'est **le vrai point d'action de la carte**
+- la carte elle-même ne doit pas simuler une action plus large qu'elle n'offre
 
 Correction nécessaire :
 - aujourd’hui, le `PrioritySelect` est trop relégué en bas comme statut secondaire

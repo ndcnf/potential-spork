@@ -746,9 +746,19 @@ Optional if data exists:
 These optional scheduling signals must remain secondary in `Films`.
 If they dominate, the screen loses its role.
 
+State direction:
+- do not add card-level hover treatments that imply the whole card is clickable when it is not
+- `focus-visible` must stay attached to actual interactive controls
+- selected states belong primarily to the inline priority control, not to a large decorative card background
+
 ### Priority control
 
 Recommended component: `PrioritySelect` inline in card header zone.
+
+UX definition:
+- this is the film qualification control
+- it is the main action of the card
+- if the name `PrioritySelect` becomes misleading, rename it later to something closer to `FilmPriorityToggle`
 
 Behavior:
 - always visible
