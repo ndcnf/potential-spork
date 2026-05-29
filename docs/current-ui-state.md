@@ -292,6 +292,7 @@ Décisions UI désormais actées :
 - pas de sous-sections visuelles `A traiter / Prioritaires / Moyens / Ignores` dans chaque cycle
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
 - headers de cycle renforcés par un traitement plus organique, type surlignage / encre, sans tomber dans l'effet décoratif gratuit
+- cartes film raffinées typographiquement : titre plus dense, tagline plus lisible, métadonnées plus discrètes et ligne séance traitée comme un chip éditorial léger
 - à l'initialisation, les films arrivent en état **`A traiter`**, sans sélection préalable
 - le rappel `pas de seance prevue` ne concerne que les films `Prioritaires`
 - le statut reste lisible via le contrôle dans la carte, les dots et les compteurs, sans bruit structurel supplémentaire
@@ -433,6 +434,13 @@ Structure cible dans chaque `film-card` :
 - ligne 4 : casting
 - ligne 5 : pays · durée · cycle
 - ligne 6 : hint de séance si utile
+
+Traitement typographique désormais retenu :
+- titre plus affirmé, serré, avec meilleure densité éditoriale
+- tagline plus présente mais toujours secondaire
+- métadonnées compactes et plus silencieuses
+- ligne pays / durée / cycle en registre plus utilitaire, quasi-légende
+- hint de séance rendu comme un petit chip calme plutôt qu'une ligne flottante banale
 
 Correction nécessaire :
 - aujourd’hui, le `PrioritySelect` est trop relégué en bas comme statut secondaire

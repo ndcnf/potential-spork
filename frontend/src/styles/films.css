@@ -261,7 +261,7 @@
 
 .film-card {
   margin-top: 0;
-  padding: var(--space-sm) 0;
+  padding: var(--space-md) 0;
   background: transparent;
   border-bottom: 1px solid var(--color-border-faint);
 }
@@ -269,7 +269,7 @@
 .film-card-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: 0.45rem;
 }
 
 .film-card-primary {
@@ -293,15 +293,22 @@
 .film-card-primary h3,
 .film-card-primary h4 {
   min-width: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.22;
+  letter-spacing: -0.018em;
 }
 
 .film-title-year {
   color: var(--color-text-muted);
   font-weight: 400;
+  font-size: 0.92em;
 }
 
 .film-meta {
   color: var(--color-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.42;
 }
 
 .film-meta--compact,
@@ -310,31 +317,49 @@
 }
 
 .film-tagline--inline {
-  margin-top: var(--space-2xs);
-  color: var(--color-text-subtle);
+  margin-top: 0.12rem;
+  color: color-mix(in srgb, var(--color-text) 82%, var(--color-text-subtle));
+  font-size: 0.98rem;
+  line-height: 1.38;
   font-style: italic;
 }
 
 .film-cast--inline {
-  margin-top: var(--space-micro);
-  font-size: var(--font-size-md);
+  margin-top: 0.1rem;
+  font-size: 0.92rem;
+  line-height: 1.42;
   color: var(--color-text-subtle);
+}
+
+.film-meta--compact {
+  font-size: 0.84rem;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text-subtle) 88%, transparent);
 }
 
 .film-screenings {
   display: flex;
   flex-wrap: wrap;
   gap: var(--pill-gap);
-  padding-top: var(--space-micro);
+  padding-top: 0.18rem;
 }
 
 .film-screenings__item {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: var(--radius-pill);
   color: var(--color-text-muted);
-  font-size: var(--font-size-md);
+  font-size: 0.84rem;
+  line-height: 1.2;
+  background: color-mix(in srgb, var(--color-surface-strong) 70%, transparent);
 }
 
 .film-screenings__item--warning {
   color: var(--color-accent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 
 .film-card-heading .priority-select {

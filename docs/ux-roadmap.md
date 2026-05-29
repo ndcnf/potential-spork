@@ -712,6 +712,7 @@ Characteristics:
 - generous text rhythm
 - strong title emphasis
 - restrained utility chrome
+- typographic contrast should do most of the hierarchy work
 
 #### `FilmCard/Compact`
 Optional reduced variant for dense subsections or mobile continuation.
@@ -810,11 +811,19 @@ Desktop:
 - comfortable vertical rhythm
 - enough whitespace to preserve editorial reading
 - no badge pile-ups
+- title can feel denser and slightly larger than the metadata system
+- metadata should recede without becoming faint or fragile
 
 Mobile:
 - one card column
 - keep title, tagline, priority, and director always visible
 - cast and metadata may collapse slightly, but must not disappear entirely
+
+Typography direction inside cards:
+- title: compact, editorial, slightly tighter tracking
+- tagline: readable italic support line, not decorative whisper text
+- metadata: quieter, smaller, more utilitarian
+- schedule hint: light chip treatment acceptable if it improves scanability
 
 ### Future visual direction to explore later
 
