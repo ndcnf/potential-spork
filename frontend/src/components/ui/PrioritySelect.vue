@@ -33,6 +33,10 @@ function normalizePriority(priority: Priority): SimplifiedPriority {
     return 'medium'
   }
 
+  if (priority === 'ignore') {
+    return 'ignore'
+  }
+
   return 'ignore'
 }
 </script>
@@ -44,9 +48,9 @@ function normalizePriority(priority: Priority): SimplifiedPriority {
       :key="option.value"
       class="priority-option"
       type="button"
-      :class="{ active: normalizePriority(props.modelValue) === option.value }"
+      :class="{ active: props.modelValue !== 'unreviewed' && props.modelValue !== 'low' && normalizePriority(props.modelValue) === option.value }"
       :data-priority="option.value"
-      :aria-pressed="normalizePriority(props.modelValue) === option.value"
+      :aria-pressed="props.modelValue !== 'unreviewed' && props.modelValue !== 'low' && normalizePriority(props.modelValue) === option.value"
       @click="$emit('update:modelValue', option.value)"
     >
       <span v-if="dense">{{ shortLabels[option.value] }}</span>

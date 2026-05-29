@@ -10,7 +10,7 @@ import type { Film, Priority, Screening } from '@/types'
 
 const store = useFestivalStore()
 
-type PriorityFilter = 'all' | 'ignore' | 'medium' | 'high'
+type PriorityFilter = 'all' | 'pending' | 'ignore' | 'medium' | 'high'
 type DecisionSectionKey = 'pending' | 'high' | 'medium' | 'ignore'
 
 const filters = reactive({
@@ -37,6 +37,10 @@ function normalizePriority(priority: Priority): Exclude<PriorityFilter, 'all'> {
     return 'medium'
   }
 
+  if (priority === 'unreviewed' || priority === 'low') {
+    return 'pending'
+  }
+
   return 'ignore'
 }
 
@@ -49,7 +53,7 @@ function decisionSectionKey(priority: Priority): DecisionSectionKey {
     return 'medium'
   }
 
-  if (priority === 'low') {
+  if (priority === 'unreviewed' || priority === 'low') {
     return 'pending'
   }
 
@@ -137,8 +141,9 @@ function sortFilms(left: Film, right: Film, mode: string): number {
 function priorityRank(priority: Priority): number {
   return {
     ignore: 0,
-    medium: 1,
-    high: 2,
+    pending: 1,
+    medium: 2,
+    high: 3,
   }[normalizePriority(priority)]
 }
 
@@ -280,12 +285,13 @@ function cycleSections(films: Film[]): Array<{ key: DecisionSectionKey; label: s
     <section class="toolbar toolbar--filters">
       <input v-model="filters.query" class="toolbar-input" type="search" placeholder="Rechercher titre, real, casting" />
 
-      <select v-model="filters.priority" class="toolbar-select">
-        <option value="all">Toutes les priorites</option>
-        <option value="high">Prioritaire</option>
-        <option value="medium">Moyen</option>
-        <option value="ignore">Ignorer</option>
-      </select>
+        <select v-model="filters.priority" class="toolbar-select">
+          <option value="all">Toutes les priorites</option>
+          <option value="pending">A traiter</option>
+          <option value="high">Prioritaire</option>
+          <option value="medium">Moyen</option>
+          <option value="ignore">Ignorer</option>
+        </select>
 
       <select v-model="filters.sort" class="toolbar-select">
         <option value="title">Tri alphabetique</option>
@@ -295,7 +301,7 @@ function cycleSections(films: Film[]): Array<{ key: DecisionSectionKey; label: s
 
       <label class="toolbar-toggle">
         <input v-model="filters.hideLowNoise" type="checkbox" />
-        <span>Masquer les films a faible priorite</span>
+        <span>Masquer les films ignores</span>
       </label>
     </section>
 
@@ -310,6 +316,7 @@ function cycleSections(films: Film[]): Array<{ key: DecisionSectionKey; label: s
       <div class="legend__group">
         <span class="legend__label">Priorites</span>
         <div class="legend__items">
+          <PriorityBadge priority="unreviewed" />
           <PriorityBadge priority="ignore" />
           <PriorityBadge priority="medium" />
           <PriorityBadge priority="high" />

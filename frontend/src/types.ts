@@ -1,4 +1,4 @@
-export type Priority = 'ignore' | 'low' | 'medium' | 'high' | 'must-see'
+export type Priority = 'unreviewed' | 'ignore' | 'low' | 'medium' | 'high' | 'must-see'
 
 export interface RecommendationSettings {
   enabled: boolean

@@ -10,7 +10,7 @@ const mockCycles: Cycle[] = previewDataset.cycles
 const mockFilms: Film[] = previewDataset.films
 const mockScreenings: Screening[] = previewDataset.screenings
 
-function normalizePriority(priority: Priority): 'ignore' | 'medium' | 'high' {
+function normalizePriority(priority: Priority): 'pending' | 'ignore' | 'medium' | 'high' {
   if (priority === 'must-see' || priority === 'high') {
     return 'high'
   }
@@ -19,7 +19,33 @@ function normalizePriority(priority: Priority): 'ignore' | 'medium' | 'high' {
     return 'medium'
   }
 
+  if (priority === 'unreviewed' || priority === 'low') {
+    return 'pending'
+  }
+
   return 'ignore'
+}
+
+function sanitizePriority(priority: Priority | null | undefined): Priority {
+  if (!priority || priority === 'low') {
+    return 'unreviewed'
+  }
+
+  return priority
+}
+
+function sanitizeFilms(films: Film[]): Film[] {
+  return films.map((film) => ({
+    ...film,
+    priority: sanitizePriority(film.priority),
+  }))
+}
+
+function sanitizeCycles(cycles: Cycle[]): Cycle[] {
+  return cycles.map((cycle) => ({
+    ...cycle,
+    priority: sanitizePriority(cycle.priority),
+  }))
 }
 
 function recomputeScreeningStates(screenings: Screening[]): Screening[] {
@@ -93,10 +119,10 @@ export const useFestivalStore = defineStore('festival', {
   actions: {
     ensureWorkingData() {
       if (!this.cycles.length) {
-        this.cycles = structuredClone(mockCycles)
+        this.cycles = sanitizeCycles(structuredClone(mockCycles))
       }
       if (!this.films.length) {
-        this.films = structuredClone(mockFilms)
+        this.films = sanitizeFilms(structuredClone(mockFilms))
       }
       if (!this.screenings.length) {
         this.screenings = structuredClone(mockScreenings)
@@ -114,20 +140,20 @@ export const useFestivalStore = defineStore('festival', {
 
         const hasRealData = cycles.length > 0 || films.length > 0 || screenings.length > 0
         if (!hasRealData) {
-          this.cycles = mockCycles
-          this.films = mockFilms
+          this.cycles = sanitizeCycles(mockCycles)
+          this.films = sanitizeFilms(mockFilms)
           this.screenings = mockScreenings
           this.usingMocks = true
           return
         }
 
-        this.cycles = cycles
-        this.films = films
+        this.cycles = sanitizeCycles(cycles)
+        this.films = sanitizeFilms(films)
         this.screenings = screenings
         this.usingMocks = false
       } catch {
-        this.cycles = mockCycles
-        this.films = mockFilms
+        this.cycles = sanitizeCycles(mockCycles)
+        this.films = sanitizeFilms(mockFilms)
         this.screenings = mockScreenings
         this.usingMocks = true
       } finally {

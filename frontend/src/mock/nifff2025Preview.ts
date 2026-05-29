@@ -96,38 +96,34 @@ const screeningSource: PreviewScreening[] = [
 ]
 
 const cyclePriorities: Record<string, Priority> = {
-  'international-competition': 'high',
-  'third-kind': 'high',
-  'ultra-movies': 'medium',
-  'take-care': 'medium',
-  'nifff-invasion': 'ignore',
+  'international-competition': 'unreviewed',
+  'third-kind': 'unreviewed',
+  'ultra-movies': 'unreviewed',
+  'take-care': 'unreviewed',
+  'nifff-invasion': 'unreviewed',
 }
 
 const filmPriorities: Record<string, Priority> = {
-  alpha: 'must-see',
-  'the-ugly-stepsister': 'must-see',
-  eddington: 'high',
-  cloud: 'high',
-  'dangerous-animals': 'high',
-  'the-home': 'high',
-  'the-rule-of-jenny-pen': 'high',
-  'dead-talents-society': 'high',
-  'a-cure-for-wellness': 'medium',
-  'clown-in-a-cornfield': 'medium',
-  dogtooth: 'medium',
-  gatillero: 'medium',
-  'hallow-road': 'medium',
-  'jimmy-and-stiggs': 'medium',
-  'monkey-shines': 'low',
-  'fantastic-shorts': 'ignore',
-  together: 'low',
+  alpha: 'unreviewed',
+  'the-ugly-stepsister': 'unreviewed',
+  eddington: 'unreviewed',
+  cloud: 'unreviewed',
+  'dangerous-animals': 'unreviewed',
+  'the-home': 'unreviewed',
+  'the-rule-of-jenny-pen': 'unreviewed',
+  'dead-talents-society': 'unreviewed',
+  'a-cure-for-wellness': 'unreviewed',
+  'clown-in-a-cornfield': 'unreviewed',
+  dogtooth: 'unreviewed',
+  gatillero: 'unreviewed',
+  'hallow-road': 'unreviewed',
+  'jimmy-and-stiggs': 'unreviewed',
+  'monkey-shines': 'unreviewed',
+  'fantastic-shorts': 'unreviewed',
+  together: 'unreviewed',
 }
 
-const selectedScreenings = new Map<string, 'tentative' | 'confirmed'>([
-  ['alpha|2025-07-09|19:15', 'confirmed'],
-  ['dangerous-animals|2025-07-10|22:00', 'tentative'],
-  ['the-home|2025-07-06|14:00', 'tentative'],
-])
+const selectedScreenings = new Map<string, 'tentative' | 'confirmed'>()
 
 const filmDetails: Record<string, { language: string | null; age: string | null; synopsis: string | null; posterUrl: string | null }> = {
   alpha: {

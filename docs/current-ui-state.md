@@ -53,14 +53,19 @@ La logique UI a été simplifiée à 3 niveaux :
 - `Moyen`
 - `Ignorer`
 
+Mais l'état initial produit est désormais explicite :
+- `A traiter`
+
 Compatibilité temporaire conservée avec les anciennes valeurs de données :
 - `must-see` + `high` -> `Prioritaire`
 - `medium` -> `Moyen`
-- `low` + `ignore` -> `Ignorer`
+- `ignore` -> `Ignorer`
+- `low` -> ancien legacy a faire migrer vers `A traiter`
 
 Important :
-- la donnée brute n’a pas encore été migrée partout
-- la simplification est pour l’instant surtout portée par la couche UI / logique de mapping
+- l'état initial attendu n'est plus une pseudo-priorité basse
+- un film doit arriver **sans sélection préalable**
+- la couche UI et le store convertissent encore les anciennes valeurs `low` vers un vrai état de tri initial
 
 ### Règle éditoriale importante
 Dans la vue `Films`, les éléments suivants sont des **critères de sélection principaux** :
@@ -165,9 +170,9 @@ Règle :
 ## 5. Incohérences ou dettes encore présentes
 
 ### Dette produit / donnée
-- le type `Priority` reste à 5 valeurs dans `frontend/src/types.ts`
-- les mocks et certaines logiques métier utilisent encore `must-see` / `low`
-- la simplification 3 niveaux est donc réelle en UX, mais pas encore complètement migrée en profondeur
+- le type `Priority` porte encore des valeurs legacy dans `frontend/src/types.ts`
+- les anciennes valeurs `must-see` et `low` existent encore pour compatibilité
+- `low` ne doit plus être lu comme une préférence réelle, mais comme un reliquat à migrer vers l'état initial `A traiter`
 
 ### Dette de nomenclature tokens
 Le système est stable, mais encore transitoire :
@@ -286,6 +291,7 @@ Décisions UI désormais actées :
 - dots de progression conservées au niveau cycle comme **signal de synthèse**, pas comme contrôle
 - regroupement interne par sous-sections : `A traiter`, `Prioritaires`, `Moyens`, `Ignores`
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
+- à l'initialisation, les films arrivent en état **`A traiter`**, sans sélection préalable
 
 Rappel critique :
 - ne pas aplatir la carte en ligne de tableau utilitaire
@@ -377,7 +383,7 @@ Point de vigilance :
 - si vous voulez un vrai bucket `A traiter`, il faut introduire une notion métier distincte plus tard
 
 Donc pour V1, la version saine est :
-- `Restants a trier` = films visibles encore en valeur legacy `low`
+- `Restants a trier` = films visibles en état `unreviewed`
 
 #### Étape 2 — Garder la logique par cycle comme structure principale
 
@@ -400,7 +406,7 @@ Implémentation recommandée :
 - conserver `store.groupedFilms` comme base
 - créer pour chaque groupe une transformation `cycleSections`
 - répartir les films de chaque cycle dans 4 sous-sections de décision
-- règle transitoire : `low` = `A traiter`, `high/must-see` = `Prioritaires`, `medium` = `Moyens`, `ignore` = `Ignores`
+- règle transitoire : `unreviewed` = `A traiter`, `high/must-see` = `Prioritaires`, `medium` = `Moyens`, `ignore` = `Ignores`
 
 Contenu enrichi utile par film :
 - `cycle_name`
@@ -512,7 +518,7 @@ Garder :
 - tri simple
 
 Réévaluer :
-- `Masquer ignore + faible`
+- le wording des filtres une fois la migration legacy terminée
 
 Ce libellé est transitoire et sent la dette de migration.
 Il faudra soit :
@@ -520,7 +526,7 @@ Il faudra soit :
 - soit le supprimer après nettoyage des données
 
 Recommandation V1 :
-- renommer en `Masquer les films a faible priorite`
+- utiliser `Masquer les films ignores`
 
 ### Ordre de livraison recommandé
 

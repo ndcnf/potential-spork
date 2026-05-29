@@ -3,7 +3,7 @@ import type { Priority } from '@/types'
 
 const props = defineProps<{ priority: Priority }>()
 
-function normalizePriority(priority: Priority): 'ignore' | 'medium' | 'high' {
+function normalizePriority(priority: Priority): 'pending' | 'ignore' | 'medium' | 'high' {
   if (priority === 'must-see' || priority === 'high') {
     return 'high'
   }
@@ -12,10 +12,15 @@ function normalizePriority(priority: Priority): 'ignore' | 'medium' | 'high' {
     return 'medium'
   }
 
+  if (priority === 'unreviewed' || priority === 'low') {
+    return 'pending'
+  }
+
   return 'ignore'
 }
 
 const labels = {
+  pending: 'A traiter',
   ignore: 'Ignorer',
   medium: 'Moyen',
   high: 'Prioritaire',

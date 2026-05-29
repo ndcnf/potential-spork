@@ -176,6 +176,11 @@
   background: var(--color-priority-medium);
 }
 
+.cycle-header__priority-dot[data-priority='pending'] {
+  background: transparent;
+  border-color: var(--color-border-soft);
+}
+
 .cycle-header__priority-dot[data-priority='low'],
 .cycle-header__priority-dot[data-priority='ignore'] {
   background: transparent;

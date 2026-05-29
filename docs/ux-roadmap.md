@@ -625,10 +625,14 @@ This gives the right hierarchy:
 - second: decision progress inside that universe
 
 Transitional mapping for the current data model:
-- legacy `low` => `A traiter`
+- `unreviewed` => `A traiter`
 - `high` / `must-see` => `Prioritaires`
 - `medium` => `Moyens`
 - `ignore` => `Ignores`
+
+Product rule:
+- films must start with no prior decision
+- the initial state is `A traiter`, not a weak hidden priority
 
 Reason:
 - cycle preserves the programming context
@@ -662,6 +666,7 @@ Important:
 - there should be no cycle-level priority control in the MVP
 - progress dots may remain if they summarize film distribution inside the cycle
 - cycle-specific color chips are not required if typography does the separation better
+- planning should ignore films still in `A traiter`
 
 #### 5. Film cards / list items
 
