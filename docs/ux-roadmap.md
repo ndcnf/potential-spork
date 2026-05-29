@@ -551,7 +551,7 @@ Priority is an overlay on top of this payload, not a replacement for it.
 
 ### Screen intention
 
-`Films` should feel like a curated triage board.
+`Films` should feel like a curated selection workspace structured by cycle.
 
 Its job is to help users:
 - scan quickly
@@ -601,29 +601,56 @@ Not allowed:
 - too many simultaneous toggles
 - hidden advanced logic as a default mode
 
-#### 3. Priority-led content sections
+#### 3. Cycle-led content structure
 
-Recommended default grouping:
+The main structure of the page must remain **cycle-first**.
+
+This is not optional if cycle is the first editorial selection criterion.
+Flattening films into global priority buckets would be a UX mistake.
+
+Recommended page structure:
+- cycle block
+- cycle summary
+- cycle-local progress signals
+- films inside that cycle
+
+Inside each cycle, use decision subsections:
 - `A traiter`
 - `Prioritaires`
 - `Moyens`
 - `Ignores`
 
-This grouping is better than a flat list because it externalizes progress.
-
-Default order:
-1. `A traiter`
-2. `Prioritaires`
-3. `Moyens`
-4. `Ignores`
+This gives the right hierarchy:
+- first: editorial universe / cycle
+- second: decision progress inside that universe
 
 Reason:
-- unresolved decisions first
-- strongest desire second
-- weaker options later
-- rejected content deprioritized
+- cycle preserves the programming context
+- local decision groups make progress visible
+- the user can qualify films without losing the logic of the festival selection
 
-#### 4. Film cards / list items
+#### 4. Cycle header behavior
+
+Each cycle header should contain:
+- cycle name
+- cycle color cue
+- optional short cycle summary if available
+- number of films in the cycle
+- local counters:
+  - `X Prioritaires`
+  - `Y Moyens`
+  - `Z a traiter`
+- collapse/expand action if useful
+
+The cycle header must support orientation.
+It must not become a control cockpit.
+
+What to avoid in the cycle header:
+- multiple dominant actions
+- dense priority visualizations that require decoding
+- noisy badge accumulation
+
+#### 5. Film cards / list items
 
 Each card should support a fast F-pattern scan.
 The user must identify title, desirability cues, and priority state in seconds.
@@ -799,13 +826,13 @@ Nested affordances are otherwise error-prone.
 
 ### Empty, loading, and error states for `Films`
 
-#### Empty section: `A traiter`
-Message: `Tous les films visibles ont deja ete qualifies.`
-Action: `Voir les Prioritaires`
+#### Empty section inside a cycle: `A traiter`
+Message: `Tous les films de ce cycle ont deja ete qualifies.`
+Action: `Voir les Prioritaires du cycle`
 
-#### Empty section: `Prioritaires`
-Message: `Aucun film prioritaire pour l'instant.`
-Action: `Marquer un film comme Prioritaire`
+#### Empty section inside a cycle: `Prioritaires`
+Message: `Aucun film prioritaire dans ce cycle pour l'instant.`
+Action: `Marquer un film du cycle comme Prioritaire`
 
 #### Loading
 - preserve final card heights
@@ -829,7 +856,7 @@ Action: `Reessayer`
 
 V1 scope only:
 - progress-aware `Films` header
-- priority-led sections
+- cycle-first structure with local decision sections
 - stabilized editorial `FilmCard`
 - visible inline `PrioritySelect`
 - restrained scheduling hint
