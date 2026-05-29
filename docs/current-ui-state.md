@@ -276,7 +276,7 @@ La vue `Films` doit maintenant être traitée comme un **workspace éditorial de
 Structure recommandée à implémenter :
 - header avec progression
 - structure principale par `cycle`
-- sous-sections de décision dans chaque cycle : `A traiter`, `Prioritaires`, `Moyens`, `Ignores`
+- liste plate de films dans chaque cycle
 - cartes éditoriales stabilisées
 - CTA passerelle vers `Planning`
 
@@ -291,6 +291,7 @@ Décisions UI désormais actées :
 - dots de progression conservées au niveau cycle comme **signal de synthèse**, pas comme contrôle
 - pas de sous-sections visuelles `A traiter / Prioritaires / Moyens / Ignores` dans chaque cycle
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
+- headers de cycle renforcés par un traitement plus organique, type surlignage / encre, sans tomber dans l'effet décoratif gratuit
 - à l'initialisation, les films arrivent en état **`A traiter`**, sans sélection préalable
 - le rappel `pas de seance prevue` ne concerne que les films `Prioritaires`
 - le statut reste lisible via le contrôle dans la carte, les dots et les compteurs, sans bruit structurel supplémentaire
@@ -327,6 +328,9 @@ Concrètement, l’implémentation actuelle dans `frontend/src/views/FilmsView.v
 
 Le choix à faire est simple :
 **garder le cycle comme structure principale, puis rendre la progression de tri explicite à l’intérieur de chaque cycle.**
+
+Direction visuelle désormais retenue :
+**une gestion papier stylisée, simple et organique, portée d'abord par la typographie et un accent de surlignage sobre sur les titres de cycle.**
 
 ### Fichiers concernés
 
@@ -465,6 +469,7 @@ Il ne doit plus porter une logique d’override ou d’héritage de priorité.
 Décision récente :
 - les pastilles couleur spécifiques aux cycles sont retirées
 - les dots de progression restent utiles et sont conservées
+- les titres de cycle peuvent recevoir un traitement de surlignage organique léger pour renforcer la lecture sans alourdir l'interface
 
 #### Étape 5 — Garder l’indice de séance, mais à sa juste place
 

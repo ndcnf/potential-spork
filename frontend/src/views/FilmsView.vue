@@ -297,7 +297,8 @@ function sortPriorityForCycle(left: Film, right: Film): number {
       <header class="cycle-header">
         <div class="cycle-header__main">
           <div class="cycle-header__title-row">
-            <p class="cycle-title">{{ group.cycle.name }}</p>
+            <span class="cycle-header__eyebrow">Cycle</span>
+            <p class="cycle-title"><span class="cycle-title__ink">{{ group.cycle.name }}</span></p>
           </div>
           <small class="cycle-header__meta">
             <template v-if="cycleScreeningLabel(group.films)">

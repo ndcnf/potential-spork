@@ -668,6 +668,11 @@ Important:
 - cycle-specific color chips are not required if typography does the separation better
 - planning should ignore films still in `A traiter`
 
+Visual direction:
+- cycle headers may use a subtle highlighter / ink treatment behind the title
+- the effect must feel paper-like and editorial, not playful or flashy
+- typography remains the primary separator; the highlight is support, not the structure itself
+
 #### 5. Film cards / list items
 
 Each card should support a fast F-pattern scan.
