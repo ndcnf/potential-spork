@@ -147,7 +147,7 @@ This screen is an editorial selection workspace.
 It must answer:
 - What looks desirable?
 - Why is this film interesting?
-- Should I treat it as `Prioritaire`, `Moyen`, or `Ignorer`?
+- Should I treat it as `Immanquable`, `Peut-etre`, or `Non merci`?
 
 It should not behave like:
 - a dense database table
@@ -767,9 +767,13 @@ Behavior:
 - no modal required
 
 Allowed values only:
-- `Prioritaire`
-- `Moyen`
-- `Ignorer`
+- `Immanquable`
+- `Peut-etre`
+- `Non merci`
+
+Copy rule:
+- prefer explicit, human wording over coded abbreviations
+- avoid labels like `I / M / P`, which require decoding and create unnecessary cognitive load
 
 Product rule:
 - priority exists at film level only

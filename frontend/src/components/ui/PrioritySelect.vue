@@ -13,16 +13,10 @@ defineEmits<{
 type SimplifiedPriority = 'ignore' | 'medium' | 'high'
 
 const options: Array<{ value: SimplifiedPriority; label: string }> = [
-  { value: 'ignore', label: 'Ignorer' },
-  { value: 'medium', label: 'Moyen' },
-  { value: 'high', label: 'Prioritaire' },
+  { value: 'high', label: 'Immanquable' },
+  { value: 'medium', label: 'Peut-etre' },
+  { value: 'ignore', label: 'Non merci' },
 ]
-
-const shortLabels: Record<SimplifiedPriority, string> = {
-  ignore: 'I',
-  medium: 'M',
-  high: 'P',
-}
 
 function normalizePriority(priority: Priority): SimplifiedPriority {
   if (priority === 'must-see' || priority === 'high') {
@@ -53,8 +47,7 @@ function normalizePriority(priority: Priority): SimplifiedPriority {
       :aria-pressed="props.modelValue !== 'unreviewed' && props.modelValue !== 'low' && normalizePriority(props.modelValue) === option.value"
       @click="$emit('update:modelValue', option.value)"
     >
-      <span v-if="dense">{{ shortLabels[option.value] }}</span>
-      <span v-else>{{ option.label }}</span>
+      <span>{{ option.label }}</span>
     </button>
   </div>
 </template>

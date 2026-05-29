@@ -49,17 +49,17 @@ Conséquence :
 
 ### Priorités film
 La logique UI a été simplifiée à 3 niveaux :
-- `Prioritaire`
-- `Moyen`
-- `Ignorer`
+- `Immanquable`
+- `Peut-etre`
+- `Non merci`
 
 Mais l'état initial produit est désormais explicite :
 - `A traiter`
 
 Compatibilité temporaire conservée avec les anciennes valeurs de données :
-- `must-see` + `high` -> `Prioritaire`
-- `medium` -> `Moyen`
-- `ignore` -> `Ignorer`
+- `must-see` + `high` -> `Immanquable`
+- `medium` -> `Peut-etre`
+- `ignore` -> `Non merci`
 - `low` -> ancien legacy a faire migrer vers `A traiter`
 
 Important :
@@ -288,6 +288,7 @@ Règle produit :
 Décisions UI désormais actées :
 - header global avec progression visible
 - CTA `Passer au Planning` conditionné par au moins un film `Prioritaire`
+- CTA `Passer au Planning` conditionné par au moins un film `Immanquable`
 - dots de progression conservées au niveau cycle comme **signal de synthèse**, pas comme contrôle
 - pas de sous-sections visuelles `A traiter / Prioritaires / Moyens / Ignores` dans chaque cycle
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
@@ -458,7 +459,7 @@ Dans l'interface, `PrioritySelect` n'est pas un "sélecteur de priorité" abstra
 C'est en réalité le **contrôle principal de qualification d'un film**.
 
 Sa fonction exacte :
-- décider si un film est `Prioritaire`, `Moyen` ou `Ignorer`
+- décider si un film est `Immanquable`, `Peut-etre` ou `Non merci`
 - rendre cette décision immédiate, locale, explicite
 - éviter un détour par un panneau, un menu ou un formulaire secondaire
 
@@ -468,6 +469,16 @@ Mais son **nom technique** l'est peut-être.
 Nom produit / UX plus juste :
 - `FilmPriorityToggle`
 - ou `FilmPriorityPills`
+
+Microcopy désormais retenue dans l'interface :
+- `Immanquable`
+- `Peut-etre`
+- `Non merci`
+
+Raison :
+- plus explicite que `I / M / P`
+- plus humain que `Prioritaire / Moyen / Ignorer`
+- plus proche d'une logique de choix réel que d'un jargon de système
 
 Règle importante :
 - c'est **le vrai point d'action de la carte**

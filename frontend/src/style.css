@@ -307,8 +307,8 @@ a {
 .priority-option.active[data-priority='ignore'] { background: var(--color-neutral-soft-strong); border-color: var(--color-border-color); color: var(--color-priority-muted); }
 
 .priority-select.dense .priority-option {
-  min-width: 1.8rem;
-  padding: var(--space-sm) var(--pill-gap);
+  min-width: auto;
+  padding: var(--space-sm) calc(var(--field-padding-x) - var(--space-2xs));
 }
 
 .gap-suggestions,

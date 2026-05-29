@@ -214,11 +214,11 @@ function sortPriorityForCycle(left: Film, right: Film): number {
         <div class="films-progress__stats">
           <div class="films-progress__stat">
             <span class="films-progress__value">{{ globalPriorityCounts.high }}</span>
-            <span class="films-progress__label">Prioritaires</span>
+            <span class="films-progress__label">Immanquables</span>
           </div>
           <div class="films-progress__stat">
             <span class="films-progress__value">{{ globalPriorityCounts.medium }}</span>
-            <span class="films-progress__label">Moyens</span>
+            <span class="films-progress__label">Peut-etre</span>
           </div>
           <div class="films-progress__stat">
             <span class="films-progress__value">{{ globalPriorityCounts.pending }}</span>
@@ -227,7 +227,7 @@ function sortPriorityForCycle(left: Film, right: Film): number {
         </div>
 
         <p class="films-progress__hint page-copy">
-          {{ planningReady ? 'Vos priorites sont assez claires pour commencer l\'arbitrage des seances.' : 'Commencez par marquer au moins un film comme prioritaire.' }}
+          {{ planningReady ? 'Vos choix sont assez clairs pour commencer l\'arbitrage des seances.' : 'Commencez par marquer au moins un film comme immanquable.' }}
         </p>
 
         <RouterLink
@@ -249,9 +249,9 @@ function sortPriorityForCycle(left: Film, right: Film): number {
       <select v-model="filters.priority" class="toolbar-select">
         <option value="all">Toutes les priorites</option>
         <option value="pending">A traiter</option>
-        <option value="high">Prioritaire</option>
-        <option value="medium">Moyen</option>
-        <option value="ignore">Ignorer</option>
+        <option value="high">Immanquable</option>
+        <option value="medium">Peut-etre</option>
+        <option value="ignore">Non merci</option>
       </select>
 
       <select v-model="filters.sort" class="toolbar-select">

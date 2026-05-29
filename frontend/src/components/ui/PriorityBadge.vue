@@ -21,9 +21,9 @@ function normalizePriority(priority: Priority): 'pending' | 'ignore' | 'medium' 
 
 const labels = {
   pending: 'A traiter',
-  ignore: 'Ignorer',
-  medium: 'Moyen',
-  high: 'Prioritaire',
+  ignore: 'Non merci',
+  medium: 'Peut-etre',
+  high: 'Immanquable',
 } as const
 </script>
 
