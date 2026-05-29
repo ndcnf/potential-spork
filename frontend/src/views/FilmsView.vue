@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import { formatTimeRange, getFestivalDayKey } from '@/lib/planning'
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
@@ -94,6 +95,18 @@ const screeningCountByFilmId = computed(() => {
   return counts
 })
 
+const visibleFilms = computed(() => filteredGroups.value.flatMap((group) => group.films))
+
+const globalPriorityCounts = computed(() => cyclePriorityCounts(visibleFilms.value))
+
+const planningReady = computed(() => globalPriorityCounts.value.high > 0)
+
+const globalProgressLabel = computed(() => {
+  const total = visibleFilms.value.length
+  const { high, medium, ignore } = globalPriorityCounts.value
+  return `${high} prioritaires, ${medium} moyens et ${ignore} ignores sur ${total} films visibles`
+})
+
 function sortFilms(left: Film, right: Film, mode: string): number {
   if (mode === 'priority') {
     return priorityRank(right.priority) - priorityRank(left.priority) || left.title.localeCompare(right.title)
@@ -184,12 +197,44 @@ function sortPriorityForCycle(left: Film, right: Film): number {
 
 <template>
   <section class="page">
-    <header class="page-header">
-      <div>
+    <header class="page-header films-hero">
+      <div class="films-hero__main">
         <h2>Liste films</h2>
         <p class="page-copy">
           Vue groupee par cycle. Le cycle reste visible comme structure, mais la decision se prend au niveau du film.
         </p>
+      </div>
+
+      <div class="films-progress" :aria-label="globalProgressLabel">
+        <div class="films-progress__stats">
+          <div class="films-progress__stat">
+            <span class="films-progress__value">{{ globalPriorityCounts.high }}</span>
+            <span class="films-progress__label">Prioritaires</span>
+          </div>
+          <div class="films-progress__stat">
+            <span class="films-progress__value">{{ globalPriorityCounts.medium }}</span>
+            <span class="films-progress__label">Moyens</span>
+          </div>
+          <div class="films-progress__stat">
+            <span class="films-progress__value">{{ globalPriorityCounts.ignore }}</span>
+            <span class="films-progress__label">Ignores</span>
+          </div>
+        </div>
+
+        <p class="films-progress__hint page-copy">
+          {{ planningReady ? 'Vous pouvez maintenant passer au planning pour arbitrer les seances.' : 'Selectionnez au moins un film prioritaire pour lancer un arbitrage utile.' }}
+        </p>
+
+        <RouterLink
+          to="/planning"
+          class="films-progress__cta"
+          :class="{ 'films-progress__cta--disabled': !planningReady }"
+          :aria-disabled="!planningReady"
+          :tabindex="planningReady ? undefined : -1"
+          @click.prevent="!planningReady"
+        >
+          Passer au Planning
+        </RouterLink>
       </div>
     </header>
 
@@ -219,7 +264,7 @@ function sortPriorityForCycle(left: Film, right: Film): number {
       <div class="legend__group">
         <span class="legend__label">Cycles</span>
         <div class="legend__items">
-          <span class="legend__item"><span class="legend__swatch" /> pastille couleur = cycle du film</span>
+          <span class="legend__item">chaque cycle ouvre un bloc editorial distinct</span>
         </div>
       </div>
 
@@ -242,10 +287,9 @@ function sortPriorityForCycle(left: Film, right: Film): number {
     </section>
 
     <section v-for="group in filteredGroups" :key="group.cycle.id" class="cycle-group">
-      <header class="cycle-header" :style="{ borderColor: group.cycle.color ?? '#3a3a3a' }">
+      <header class="cycle-header">
         <div class="cycle-header__main">
           <div class="cycle-header__title-row">
-            <span class="cycle-header__swatch" :style="{ backgroundColor: group.cycle.color ?? '#3a3a3a' }" />
             <p class="cycle-title">{{ group.cycle.name }}</p>
           </div>
           <small class="cycle-header__meta">

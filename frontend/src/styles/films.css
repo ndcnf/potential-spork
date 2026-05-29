@@ -5,6 +5,74 @@
   align-items: center;
 }
 
+.films-hero {
+  align-items: stretch;
+}
+
+.films-hero__main {
+  max-width: 42rem;
+}
+
+.films-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: min(100%, 22rem);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface-shell) 72%, transparent);
+}
+
+.films-progress__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+.films-progress__stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-strong);
+}
+
+.films-progress__value {
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.films-progress__label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.films-progress__hint {
+  margin: 0;
+}
+
+.films-progress__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-height);
+  padding: var(--control-padding-y) var(--control-padding-x);
+  border-radius: var(--control-radius);
+  border: 1px solid var(--color-border-mid);
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.films-progress__cta--disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
 .toolbar-input,
 .toolbar-select {
   min-height: var(--control-height-lg);
@@ -55,7 +123,10 @@
 
 .cycle-title {
   margin: 0;
-  font-weight: 600;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .cycle-header__main {
@@ -70,13 +141,6 @@
   align-items: center;
   gap: var(--space-md);
   min-width: 0;
-}
-
-.cycle-header__swatch {
-  width: var(--swatch-size);
-  height: var(--swatch-size);
-  border-radius: var(--radius-pill);
-  flex: 0 0 auto;
 }
 
 .cycle-header__meta {
@@ -229,6 +293,14 @@
 }
 
 @media (max-width: 960px) {
+  .films-progress {
+    min-width: 0;
+  }
+
+  .films-progress__stats {
+    grid-template-columns: 1fr;
+  }
+
   .cycle-group__body {
     grid-template-columns: 1fr;
     justify-content: stretch;
