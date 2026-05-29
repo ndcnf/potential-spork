@@ -45,7 +45,7 @@
   width: 2.75rem;
   height: 1.6rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--color-border-strong);
   transition: background-color 140ms ease;
   flex: 0 0 auto;
 }
@@ -62,7 +62,7 @@
 }
 
 .settings__switch--active .settings__switch-ui {
-  background: rgba(255, 91, 87, 0.42);
+  background: var(--color-accent-border);
 }
 
 .settings__switch--active .settings__switch-knob {
