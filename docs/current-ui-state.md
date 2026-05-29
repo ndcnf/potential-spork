@@ -292,6 +292,10 @@ Décisions UI désormais actées :
 - regroupement interne par sous-sections : `A traiter`, `Prioritaires`, `Moyens`, `Ignores`
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
 - à l'initialisation, les films arrivent en état **`A traiter`**, sans sélection préalable
+- les sous-sections de cycle restent visibles même vides pour limiter le layout shift lors d'un changement d'avis
+- le rappel `pas de seance prevue` ne concerne que les films `Prioritaires`
+- un changement de priorité ne reclasse plus immédiatement la carte dans une autre sous-section
+- la réorganisation devient une action explicite : `Reorganiser les sections`
 
 Rappel critique :
 - ne pas aplatir la carte en ligne de tableau utilitaire

@@ -620,6 +620,11 @@ Inside each cycle, use decision subsections:
 - `Moyens`
 - `Ignores`
 
+Implementation note:
+- keep those subsections visible even when empty if that helps preserve spatial memory and reduce layout shift
+- do not force immediate card relocation on priority change if that breaks editing continuity
+- explicit reorganization can be better than automatic reflow
+
 This gives the right hierarchy:
 - first: editorial universe / cycle
 - second: decision progress inside that universe
@@ -784,6 +789,10 @@ Good examples:
 - `3 seances disponibles`
 - `Prochaine seance aujourd'hui a 18:15`
 - `Conflits possibles avec 2 choix prioritaires`
+
+Rule:
+- `pas de seance prevue` should be reserved for `Prioritaire` films
+- this warning is unnecessary noise for `Moyen`
 
 Bad examples:
 - full timetable inside the card
