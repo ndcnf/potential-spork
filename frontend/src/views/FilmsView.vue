@@ -11,6 +11,7 @@ import type { Film, Priority, Screening } from '@/types'
 const store = useFestivalStore()
 
 type PriorityFilter = 'all' | 'ignore' | 'medium' | 'high'
+type DecisionSectionKey = 'pending' | 'high' | 'medium' | 'ignore'
 
 const filters = reactive({
   query: '',
@@ -34,6 +35,22 @@ function normalizePriority(priority: Priority): Exclude<PriorityFilter, 'all'> {
 
   if (priority === 'medium') {
     return 'medium'
+  }
+
+  return 'ignore'
+}
+
+function decisionSectionKey(priority: Priority): DecisionSectionKey {
+  if (priority === 'must-see' || priority === 'high') {
+    return 'high'
+  }
+
+  if (priority === 'medium') {
+    return 'medium'
+  }
+
+  if (priority === 'low') {
+    return 'pending'
   }
 
   return 'ignore'
@@ -103,8 +120,8 @@ const planningReady = computed(() => globalPriorityCounts.value.high > 0)
 
 const globalProgressLabel = computed(() => {
   const total = visibleFilms.value.length
-  const { high, medium, ignore } = globalPriorityCounts.value
-  return `${high} prioritaires, ${medium} moyens et ${ignore} ignores sur ${total} films visibles`
+  const { high, medium, pending } = globalPriorityCounts.value
+  return `${high} prioritaires, ${medium} moyens et ${pending} restant a trier sur ${total} films visibles`
 })
 
 function sortFilms(left: Film, right: Film, mode: string): number {
@@ -174,24 +191,46 @@ function cycleScreeningLabel(films: Film[]): string | null {
   return `${uniqueCounts[0]} a ${uniqueCounts.at(-1)} seances par film`
 }
 
-function cyclePriorityCounts(films: Film[]): { high: number; medium: number; ignore: number } {
+function cyclePriorityCounts(films: Film[]): { pending: number; high: number; medium: number; ignore: number } {
   return films.reduce(
     (counts, film) => {
-      const normalized = normalizePriority(film.priority)
-      counts[normalized] += 1
+      const section = decisionSectionKey(film.priority)
+      counts[section] += 1
       return counts
     },
-    { high: 0, medium: 0, ignore: 0 },
+    { pending: 0, high: 0, medium: 0, ignore: 0 },
   )
 }
 
 function cyclePriorityAccessibilityLabel(films: Film[]): string {
   const counts = cyclePriorityCounts(films)
-  return `${counts.high} prioritaires, ${counts.medium} moyens, ${counts.ignore} ignores sur ${films.length} films dans ce cycle`
+  return `${counts.pending} a traiter, ${counts.high} prioritaires, ${counts.medium} moyens et ${counts.ignore} ignores sur ${films.length} films dans ce cycle`
 }
 
 function sortPriorityForCycle(left: Film, right: Film): number {
   return priorityRank(right.priority) - priorityRank(left.priority) || left.title.localeCompare(right.title)
+}
+
+function cycleSections(films: Film[]): Array<{ key: DecisionSectionKey; label: string; films: Film[] }> {
+  const sections = {
+    pending: [] as Film[],
+    high: [] as Film[],
+    medium: [] as Film[],
+    ignore: [] as Film[],
+  }
+
+  for (const film of films) {
+    sections[decisionSectionKey(film.priority)].push(film)
+  }
+
+  const orderedSections: Array<{ key: DecisionSectionKey; label: string; films: Film[] }> = [
+    { key: 'pending', label: 'A traiter', films: sections.pending },
+    { key: 'high', label: 'Prioritaires', films: sections.high },
+    { key: 'medium', label: 'Moyens', films: sections.medium },
+    { key: 'ignore', label: 'Ignores', films: sections.ignore },
+  ]
+
+  return orderedSections.filter((section) => section.films.length > 0)
 }
 </script>
 
@@ -216,8 +255,8 @@ function sortPriorityForCycle(left: Film, right: Film): number {
             <span class="films-progress__label">Moyens</span>
           </div>
           <div class="films-progress__stat">
-            <span class="films-progress__value">{{ globalPriorityCounts.ignore }}</span>
-            <span class="films-progress__label">Ignores</span>
+            <span class="films-progress__value">{{ globalPriorityCounts.pending }}</span>
+            <span class="films-progress__label">A traiter</span>
           </div>
         </div>
 
@@ -307,9 +346,9 @@ function sortPriorityForCycle(left: Film, right: Film): number {
             </span>
             <span class="cycle-header__separator" aria-hidden="true">·</span>
             <span class="cycle-header__counters">
+              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).pending }}</strong> a traiter</span>
               <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).high }}</strong> prioritaires</span>
               <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).medium }}</strong> moyens</span>
-              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).ignore }}</strong> ignores</span>
             </span>
           </small>
         </div>
@@ -322,31 +361,40 @@ function sortPriorityForCycle(left: Film, right: Film): number {
       </header>
 
       <div v-if="isCycleOpen(group.cycle.id)" class="cycle-group__body">
-        <article v-for="film in group.films" :key="film.id" class="film-card">
-          <div class="film-card-stack">
-            <div class="film-card-primary">
-              <div class="film-card-heading">
-                <h3>{{ film.title }} <span class="film-title-year">({{ film.year || 'annee ?' }})</span></h3>
-                <PrioritySelect :model-value="film.priority" dense @update:model-value="store.updateFilmPriority(film.id, $event)" />
-              </div>
-              <p class="film-tagline film-tagline--inline">{{ film.tagline || 'Tagline NIFFF a importer' }}</p>
-              <p class="film-meta">{{ film.directors || 'Real non renseigne' }}</p>
-              <p v-if="film.cast" class="film-cast film-cast--inline">{{ film.cast }}</p>
-              <p class="film-meta film-meta--compact">
-                {{ film.countries || 'Pays ?' }} · {{ film.duration_minutes || '?' }} min · {{ film.cycle_name || group.cycle.name }}
-              </p>
-            </div>
+        <section v-for="section in cycleSections(group.films)" :key="`${group.cycle.id}-${section.key}`" class="cycle-section">
+          <header class="cycle-section__header">
+            <h3 class="cycle-section__title">{{ section.label }}</h3>
+            <span class="cycle-section__count">{{ section.films.length }}</span>
+          </header>
 
-            <div v-if="selectedScreeningByFilmId.get(film.id)" class="film-screenings">
-              <span class="film-screenings__item">
-                {{ formatScreeningLabel(selectedScreeningByFilmId.get(film.id)!) }}
-              </span>
-            </div>
-            <div v-else-if="shouldWarnMissingScreening(film.priority)" class="film-screenings">
-              <span class="film-screenings__item film-screenings__item--warning">pas de seance prevue</span>
-            </div>
+          <div class="cycle-section__body">
+            <article v-for="film in section.films" :key="film.id" class="film-card" :data-section="section.key">
+              <div class="film-card-stack">
+                <div class="film-card-primary">
+                  <div class="film-card-heading">
+                    <h4>{{ film.title }} <span class="film-title-year">({{ film.year || 'annee ?' }})</span></h4>
+                    <PrioritySelect :model-value="film.priority" dense @update:model-value="store.updateFilmPriority(film.id, $event)" />
+                  </div>
+                  <p class="film-tagline film-tagline--inline">{{ film.tagline || 'Tagline NIFFF a importer' }}</p>
+                  <p class="film-meta">{{ film.directors || 'Real non renseigne' }}</p>
+                  <p v-if="film.cast" class="film-cast film-cast--inline">{{ film.cast }}</p>
+                  <p class="film-meta film-meta--compact">
+                    {{ film.countries || 'Pays ?' }} · {{ film.duration_minutes || '?' }} min · {{ film.cycle_name || group.cycle.name }}
+                  </p>
+                </div>
+
+                <div v-if="selectedScreeningByFilmId.get(film.id)" class="film-screenings">
+                  <span class="film-screenings__item">
+                    {{ formatScreeningLabel(selectedScreeningByFilmId.get(film.id)!) }}
+                  </span>
+                </div>
+                <div v-else-if="shouldWarnMissingScreening(film.priority)" class="film-screenings">
+                  <span class="film-screenings__item film-screenings__item--warning">pas de seance prevue</span>
+                </div>
+              </div>
+            </article>
           </div>
-        </article>
+        </section>
       </div>
     </section>
 

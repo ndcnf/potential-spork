@@ -624,6 +624,12 @@ This gives the right hierarchy:
 - first: editorial universe / cycle
 - second: decision progress inside that universe
 
+Transitional mapping for the current data model:
+- legacy `low` => `A traiter`
+- `high` / `must-see` => `Prioritaires`
+- `medium` => `Moyens`
+- `ignore` => `Ignores`
+
 Reason:
 - cycle preserves the programming context
 - local decision groups make progress visible
@@ -633,7 +639,7 @@ Reason:
 
 Each cycle header should contain:
 - cycle name
-- cycle color cue
+- strong typographic treatment
 - optional short cycle summary if available
 - number of films in the cycle
 - local counters:
@@ -654,6 +660,8 @@ Important:
 - cycle is a reading structure, not a decision object
 - priority belongs to individual films only
 - there should be no cycle-level priority control in the MVP
+- progress dots may remain if they summarize film distribution inside the cycle
+- cycle-specific color chips are not required if typography does the separation better
 
 #### 5. Film cards / list items
 
@@ -790,6 +798,17 @@ Mobile:
 - one card column
 - keep title, tagline, priority, and director always visible
 - cast and metadata may collapse slightly, but must not disappear entirely
+
+### Future visual direction to explore later
+
+Possible art direction for cycle headers:
+- larger titles
+- slightly organic paper-like emphasis
+- subtle `stabilo` feeling
+
+Constraint:
+- this can enrich character later
+- it must not weaken readability or decision clarity
 
 ### Suggested design tokens and layout values
 

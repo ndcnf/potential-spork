@@ -280,6 +280,13 @@ Règle produit :
 - le cycle reste une structure éditoriale de lecture
 - aucun `PrioritySelect` au niveau cycle dans le MVP
 
+Décisions UI désormais actées :
+- header global avec progression visible
+- CTA `Passer au Planning` conditionné par au moins un film `Prioritaire`
+- dots de progression conservées au niveau cycle comme **signal de synthèse**, pas comme contrôle
+- regroupement interne par sous-sections : `A traiter`, `Prioritaires`, `Moyens`, `Ignores`
+- distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
+
 Rappel critique :
 - ne pas aplatir la carte en ligne de tableau utilitaire
 - ne pas casser le regroupement par cycle : c'est un critère éditorial primaire
@@ -370,7 +377,7 @@ Point de vigilance :
 - si vous voulez un vrai bucket `A traiter`, il faut introduire une notion métier distincte plus tard
 
 Donc pour V1, la version saine est :
-- `Restants a trier` = films visibles qui sont encore en priorité basse héritée / non qualifiés clairement
+- `Restants a trier` = films visibles encore en valeur legacy `low`
 
 #### Étape 2 — Garder la logique par cycle comme structure principale
 
@@ -391,8 +398,9 @@ Ce qu’il faut corriger n’est pas le cycle lui-même, mais l’absence de sou
 
 Implémentation recommandée :
 - conserver `store.groupedFilms` comme base
-- créer pour chaque groupe un computed ou une transformation du type `cycleSections`
+- créer pour chaque groupe une transformation `cycleSections`
 - répartir les films de chaque cycle dans 4 sous-sections de décision
+- règle transitoire : `low` = `A traiter`, `high/must-see` = `Prioritaires`, `medium` = `Moyens`, `ignore` = `Ignores`
 
 Contenu enrichi utile par film :
 - `cycle_name`
@@ -443,11 +451,15 @@ Pourquoi :
 
 Le cycle header doit rester fort, mais plus utile :
 - nom du cycle
-- couleur du cycle
+- traitement typographique fort
 - compteurs locaux
 - état d’avancement du tri
 
 Il ne doit plus porter une logique d’override ou d’héritage de priorité.
+
+Décision récente :
+- les pastilles couleur spécifiques aux cycles sont retirées
+- les dots de progression restent utiles et sont conservées
 
 #### Étape 5 — Garder l’indice de séance, mais à sa juste place
 
@@ -582,6 +594,17 @@ Le résultat doit permettre ceci en quelques secondes :
 
 Si après implémentation la vue lit comme `selection éditoriale par cycle avec progression de tri visible`, alors la direction est bonne.
 Si elle lit encore comme `catalogue par cycle avec contrôles`, elle reste incomplète.
+
+### Piste visuelle pour plus tard
+
+À explorer dans une passe ultérieure, pas maintenant :
+- titres de cycle encore plus affirmés
+- traitement plus organique, type `surlignage / stabilo`
+- sensation de gestion papier stylisée, sans perdre la lisibilité ni la sobriété
+
+Important :
+- ce futur langage visuel doit rester au service de la décision
+- il ne doit pas transformer l’interface en décoration nostalgique
 
 ### Commande de validation
 

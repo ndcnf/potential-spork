@@ -199,16 +199,50 @@
 }
 
 .cycle-group__body {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 32rem));
-  gap: var(--space-md);
-  justify-content: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
 }
 
 .cycle-actions {
   display: flex;
   align-items: center;
   gap: var(--space-md);
+}
+
+.cycle-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.cycle-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-top: var(--space-xs);
+}
+
+.cycle-section__title {
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cycle-section__count {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.cycle-section__body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 32rem));
+  gap: var(--space-md);
+  justify-content: start;
 }
 
 .film-card {
@@ -236,12 +270,14 @@
 }
 
 .film-card-primary h3,
+.film-card-primary h4,
 .film-card-primary .film-meta,
 .film-card-primary .film-cast {
   margin-block: 0;
 }
 
-.film-card-primary h3 {
+.film-card-primary h3,
+.film-card-primary h4 {
   min-width: 0;
 }
 
@@ -301,7 +337,7 @@
     grid-template-columns: 1fr;
   }
 
-  .cycle-group__body {
+  .cycle-section__body {
     grid-template-columns: 1fr;
     justify-content: stretch;
   }
