@@ -14,12 +14,6 @@
   color: var(--color-accent);
 }
 
-.planning__layout {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
 .planning__meta-panel,
 .planning__controls-panel,
 .planning__summary {
@@ -42,20 +36,14 @@
 .planning__summary-card,
 .planning__mode-button,
 .planning__day-button,
-.planning__item,
 .planning__mini,
-.planning__gap,
-.planning__matrix-item {
+.planning__action {
   border: 0;
   background: transparent;
-  border-radius: 0;
 }
 
 .planning__summary-card,
-.planning__item,
-.planning__mini,
-.planning__gap,
-.planning__matrix-item {
+.planning__mini {
   padding: 0;
 }
 
@@ -94,10 +82,8 @@
   font-weight: 600;
 }
 
-.planning__controls,
 .planning__mode-switch,
-.planning__day-picker,
-.planning__action-group {
+.planning__day-picker {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
@@ -163,11 +149,7 @@
 }
 
 .planning__timeline,
-.planning__venues-view,
 .planning__visualization-view,
-.planning__main,
-.planning__side,
-.planning__agenda,
 .planning__stack {
   display: flex;
   flex-direction: column;
@@ -502,13 +484,11 @@
 }
 
 .planning__detail-screening-main strong,
-.planning__detail-screening-main span,
-.planning__detail-screening-note {
+.planning__detail-screening-main span {
   margin: 0;
 }
 
-.planning__detail-screening-main span,
-.planning__detail-screening-note {
+.planning__detail-screening-main span {
   color: var(--color-text-muted);
 }
 
@@ -569,7 +549,7 @@
 .planning__timeline-item--must-lock .planning__timeline-marker { background: var(--color-state-must-lock); }
 .planning__timeline-item--recommended .planning__timeline-marker { background: var(--color-state-recommended); }
 .planning__timeline-item--conflict .planning__timeline-marker,
-.planning__matrix-item.planning__timeline-item--conflict { background: var(--color-state-conflict); }
+.planning__timeline-item--conflict { background: var(--color-state-conflict); }
 .planning__timeline-item--disabled { opacity: 0.5; }
 .planning__timeline-item--rejected { opacity: 0.55; }
 .planning__timeline-item--rejected .planning__timeline-marker { background: transparent; border: 1px solid var(--color-text-subtle); }
@@ -586,31 +566,14 @@
   border-bottom: 1px solid var(--color-border-soft);
 }
 
-.planning__item-time { min-width: 7rem; color: var(--color-accent); font-weight: 600; }
-.planning__item-body,
 .planning__mini p,
-.planning__matrix-item p { min-width: 0; }
-.planning__item-body p,
-.planning__mini p,
-.planning__matrix-item p,
 .planning__empty,
 .planning__summary-card span,
-.planning__panel-header span,
-.planning__state { margin: 0; color: var(--color-text-muted); }
+.planning__panel-header span { margin: 0; color: var(--color-text-muted); }
 .planning__panel-header .eyebrow { margin-bottom: 0.2rem; }
 .planning__item-actions { display: flex; flex-direction: column; align-items: end; gap: 0.5rem; }
 .planning__action--ghost { opacity: 0.75; border-color: var(--color-surface-strong); color: var(--color-text-muted); }
-.planning__item--selected { padding: 0.85rem 0; border-bottom: 1px solid var(--control-border-color); }
-.planning__item--conflict { border-bottom-color: var(--color-negative-border); }
-.planning__mini--conflict { padding: 0.75rem 0; border-bottom: 1px solid var(--color-negative-border); }
 .planning__mini--alternative { padding: 0.75rem 0; border-bottom: 1px solid var(--control-border-color); }
-.planning__gap { display: flex; justify-content: space-between; gap: 1rem; padding: 0.5rem 0 0.9rem; border-bottom: 1px dashed var(--color-border-mid); }
-
-.planning__matrix { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 0.75rem 1rem; }
-.planning__matrix-head { color: var(--color-text-subtle); font-size: var(--font-size-sm); text-transform: uppercase; letter-spacing: 0.12em; }
-.planning__matrix-venue { padding-top: 0.7rem; color: var(--color-text); }
-.planning__matrix-cell { display: flex; flex-direction: column; gap: 0.6rem; }
-.planning__matrix-item .planning__matrix-note { margin: 0; color: var(--color-state-must-lock); }
 
 @media (max-width: 960px) {
   .planning { width: 100%; }
@@ -625,9 +588,6 @@
   .planning__visual-lanes { grid-template-columns: repeat(var(--planning-venues), minmax(4.25rem, 5rem)); }
   .planning__timeline-item { grid-template-columns: 1fr; gap: 0.35rem; }
   .planning__timeline-track { grid-template-columns: 0.9rem minmax(0, 1fr); }
-  .planning__item-time,
   .planning__item-actions { min-width: auto; align-items: start; }
-  .planning__matrix { grid-template-columns: 1fr; }
-  .planning__matrix-venue { padding-top: 0; }
   .planning__detail-panel { position: static; padding-left: 0; border-left: 0; border-top: 1px solid var(--color-border-soft); }
 }
