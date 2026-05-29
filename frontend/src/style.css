@@ -201,6 +201,7 @@ a {
   align-items: center;
   gap: var(--pill-gap);
   font-size: var(--font-size-md);
+  color: var(--color-text-subtle);
 }
 
 .legend__swatch {
@@ -267,11 +268,12 @@ a {
   font-size: var(--font-size-sm);
   white-space: nowrap;
   background: var(--control-border-color);
+  border: 1px solid transparent;
 }
 
-.priority-badge[data-priority='high'] { background: var(--color-accent-soft); color: var(--color-accent); }
-.priority-badge[data-priority='medium'] { background: var(--color-neutral-soft); color: var(--color-text); }
-.priority-badge[data-priority='ignore'] { background: var(--color-neutral-soft-strong); color: var(--color-priority-muted); }
+.priority-badge[data-priority='high'] { background: var(--color-accent-soft); border-color: var(--color-accent-border); color: var(--color-accent); }
+.priority-badge[data-priority='medium'] { background: var(--color-neutral-soft); border-color: var(--color-border-soft); color: var(--color-text); }
+.priority-badge[data-priority='ignore'] { background: var(--color-neutral-soft-strong); border-color: var(--color-border-color); color: var(--color-priority-muted); }
 
 .priority-select {
   display: inline-flex;
@@ -286,7 +288,7 @@ a {
   min-height: 2rem;
   min-width: 2rem;
   padding: var(--space-sm) calc(var(--field-padding-x) - var(--space-2xs));
-  border: 0;
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-priority-muted);
@@ -299,9 +301,9 @@ a {
   background: var(--control-bg-active);
 }
 
-.priority-option.active[data-priority='high'] { background: var(--color-accent-soft); color: var(--color-accent); }
-.priority-option.active[data-priority='medium'] { background: var(--color-neutral-soft); color: var(--color-text); }
-.priority-option.active[data-priority='ignore'] { background: var(--color-neutral-soft-strong); color: var(--color-priority-muted); }
+.priority-option.active[data-priority='high'] { background: var(--color-accent-soft); border-color: var(--color-accent-border); color: var(--color-accent); }
+.priority-option.active[data-priority='medium'] { background: var(--color-neutral-soft); border-color: var(--color-border-soft); color: var(--color-text); }
+.priority-option.active[data-priority='ignore'] { background: var(--color-neutral-soft-strong); border-color: var(--color-border-color); color: var(--color-priority-muted); }
 
 .priority-select.dense .priority-option {
   min-width: 1.8rem;
