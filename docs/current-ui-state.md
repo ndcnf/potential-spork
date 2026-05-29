@@ -222,3 +222,68 @@ Pour la suite immédiate, la roadmap de référence reste :
 - `docs/ux-roadmap.md`
 
 Et ce fichier sert de complément opérationnel.
+
+---
+
+## 9. Décisions désormais verrouillées pour la suite
+
+### Workflow canonique
+Le workflow produit de référence est désormais :
+
+1. `Select films`
+2. `Arbitrate conflicts`
+3. `Fill remaining gaps`
+
+Traduction de travail possible côté UI FR :
+
+1. `Films`
+2. `Planning`
+3. `Trous`
+
+Important :
+- `Films` = qualification éditoriale
+- `Planning` = arbitrage de séances
+- `Trous` = complétion opportuniste
+
+Le produit ne doit plus présenter ces vues comme 3 outils parallèles.
+Elles forment une séquence.
+
+### Promesse UX par vue
+
+- `Films` : m'aider à décider quels films méritent vraiment mon attention
+- `Planning` : m'aider à choisir la bonne séance quand ça entre en collision
+- `Trous` : m'aider à compléter les moments libres avec les meilleures options restantes
+- `Settings` : rester hors du flux principal
+
+### Action principale par vue
+
+- `Films` : définir la priorité du film
+- `Planning` : choisir / remplacer une séance
+- `Trous` : remplir un créneau
+- `Settings` : enregistrer la configuration
+
+Si une vue expose plusieurs actions de même poids, la hiérarchie est mauvaise.
+
+### Décision spécifique sur `Films`
+
+La vue `Films` doit maintenant être traitée comme un **workspace éditorial de tri**.
+
+Structure recommandée à implémenter :
+- header avec progression
+- sections orientées priorité : `A traiter`, `Prioritaires`, `Moyens`, `Ignores`
+- cartes éditoriales stabilisées
+- CTA passerelle vers `Planning`
+
+Rappel critique :
+- ne pas aplatir la carte en ligne de tableau utilitaire
+- ne pas rendre les signaux planning plus forts que les signaux film
+
+### États à ne plus oublier
+
+Pour les vues cœur (`Films`, `Planning`, `Trous`), les états suivants doivent être explicitement pensés :
+- empty
+- loading
+- error
+- transition feedback
+
+L'absence de ces états n'est pas un détail visuel. C'est une dette UX structurelle.

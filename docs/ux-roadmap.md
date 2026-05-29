@@ -104,6 +104,230 @@ Both are required.
 
 ---
 
+## P0 Detailed Note — Canonical Workflow and Screen Intentions
+
+### Canonical 3-step workflow
+
+The product flow should be visible and explicit:
+
+1. **Select films**
+2. **Arbitrate conflicts**
+3. **Fill remaining gaps**
+
+This wording is the right level of clarity.
+
+- `Select films` is editorial and desire-driven.
+- `Arbitrate conflicts` is about decision-making under time constraints.
+- `Fill remaining gaps` is about opportunistic completion, not rediscovery.
+
+Avoid weaker labels such as:
+- `Browse`
+- `Optimize`
+- `Explore`
+- `Schedule`
+
+Those labels are either too vague, too technical, or too tool-like.
+
+### Global UX promise
+
+The app promise should be simple:
+
+**Help me turn a broad film wish list into a realistic NIFFF schedule, without making me think like a festival expert.**
+
+Every main screen must support one distinct moment in that journey.
+
+### Screen mapping
+
+#### 1. `Films`
+**Step:** Select films  
+**UX promise:** Help me quickly decide which films deserve my attention.  
+**Primary action:** Set or adjust film priority.
+
+This screen is an editorial selection workspace.
+It must answer:
+- What looks desirable?
+- Why is this film interesting?
+- Should I treat it as `Prioritaire`, `Moyen`, or `Ignorer`?
+
+It should not behave like:
+- a dense database table
+- a schedule builder
+- a metadata dump
+
+#### 2. `Planning`
+**Step:** Arbitrate conflicts  
+**UX promise:** Help me choose the right screening when time constraints collide.  
+**Primary action:** Choose or replace a screening.
+
+This screen is an arbitration workspace.
+It must answer:
+- What is already decided?
+- What conflicts now?
+- If I choose this screening, what do I lose?
+
+It should not behave like:
+- a film discovery screen
+- a general catalogue view
+- a multi-CTA control panel
+
+#### 3. `Trous / Free Slots`
+**Step:** Fill remaining gaps  
+**UX promise:** Help me complete empty moments with the most relevant remaining options.  
+**Primary action:** Add the best fitting film to a gap.
+
+This screen is a completion assistant.
+It must answer:
+- Where do I still have room?
+- Is there a strong match?
+- Is there only a medium fallback?
+
+It should not behave like:
+- a second Films screen
+- a hidden expert optimizer
+- a generic recommendation feed
+
+#### 4. `Settings`
+**Step:** Outside the core flow  
+**UX promise:** Let me adjust preferences without interrupting the main journey.  
+**Primary action:** Save configuration.
+
+This screen is secondary and out-of-band.
+It must not absorb product choices that belong to the main workflow.
+
+### Primary navigation model
+
+The main navigation should reflect the workflow directly:
+
+- `1. Films`
+- `2. Planning`
+- `3. Free Slots`
+- `Settings` stays visually secondary
+
+Recommended behavior:
+- show step numbers for the first 3 views
+- keep the active step highly legible
+- show progression, not just location
+
+Good signal examples:
+- `Step 1 of 3`
+- `12 prioritaires definis`
+- `4 conflits a arbitrer`
+- `3 creneaux encore libres`
+
+The user should always understand what has been done and what remains unresolved.
+
+### One primary action per core screen
+
+This rule is non-negotiable.
+
+- `Films` => **Prioritize this film**
+- `Planning` => **Choose/replace this screening**
+- `Free Slots` => **Fill this gap**
+- `Settings` => **Save settings**
+
+Secondary actions may exist, but they must remain subordinate.
+
+If a screen has several equally loud actions, the information hierarchy is broken.
+
+### Required progression signals
+
+The product should visibly track the decision journey.
+
+Minimum counters to surface:
+- number of `Prioritaire` films
+- number of unresolved conflicts
+- number of remaining useful gaps
+
+Recommended progression copy:
+- `Selection en cours`
+- `Arbitrage requis`
+- `Planning presque complet`
+
+Do not gamify this with fake achievement language.
+This is decision support, not habit tracking.
+
+### Empty, loading, and transition states
+
+The current product cannot feel guided if these states are weak or absent.
+That would be a structural UX failure.
+
+#### `Films` empty states
+
+**Case: no films match current filters**  
+Message: `Aucun film ne correspond a vos filtres.`  
+Action: `Reinitialiser les filtres`
+
+**Case: no films have been prioritized yet**  
+Message: `Commencez par qualifier quelques films pour construire votre selection.`  
+Action: `Voir tous les films`
+
+#### `Planning` empty states
+
+**Case: no priority films selected yet**  
+Message: `Vous n'avez pas encore assez de films qualifies pour arbitrer votre planning.`  
+Action: `Retourner a Films`
+
+**Case: no conflicts for now**  
+Message: `Aucun conflit pour l'instant. Votre planning est lisible sur cette plage.`  
+Action: `Voir les creneaux libres`
+
+#### `Free Slots` empty states
+
+**Case: no remaining useful gaps**  
+Message: `Aucun creneau utile a completer pour le moment.`  
+Action: `Revoir le planning`
+
+**Case: gap exists but no relevant film matches**  
+Message: `Aucune proposition pertinente pour ce creneau.`  
+Action: `Voir les options moyennes`
+
+#### Loading states
+
+Use skeleton screens, not generic spinners, for content-heavy views.
+
+- `Films`: skeleton list preserving card rhythm
+- `Planning`: skeleton timeline preserving time columns and block heights
+- `Free Slots`: skeleton gap groups with placeholder suggestions
+
+The layout must remain stable while loading.
+No jumping UI.
+
+#### Transition messages
+
+Important transitions should confirm consequence, not just success.
+
+Examples:
+- `Film passe en Prioritaire`
+- `Cette seance remplace votre choix precedent de 20:30`
+- `Creneau de 14:00 complete avec une option moyenne`
+
+Avoid vague toasts such as `Updated` or `Done`.
+That language says nothing.
+
+### Workflow guardrails
+
+- `Films` must stay the entry point for desire-based selection.
+- `Planning` must show decisions first, not all possible data.
+- `Free Slots` must not require permanent back-and-forth to the catalogue.
+- `Settings` must stay secondary.
+- Each step must reduce uncertainty before exposing the next one.
+
+### Immediate implementation target for P0
+
+For the next iteration, the product only needs to make the flow legible.
+Not richer. Legible.
+
+Minimum deliverables:
+- visible 3-step navigation
+- one-line UX promise per main view
+- one dominant CTA per screen
+- real empty states for the 3 core workflow views
+- progression counters in navigation or view headers
+
+If these pieces are missing, the workflow is still implicit, and implicit workflow is exactly the current weakness.
+
+---
+
 ## P2 Detailed Note — Planning as an Arbitration Workspace
 
 ### Purpose
@@ -280,3 +504,345 @@ Each screening item should expose only one primary action according to context:
 - A user identifies conflicts in under 5 seconds.
 - A user can arbitrate between two screenings in under 15 seconds.
 - The product feels like schedule building, not database browsing.
+
+---
+
+## P1 Detailed Note — Films as an Editorial Selection Workspace
+
+### Purpose
+
+Step 1 exists to help the user qualify desire before dealing with scheduling constraints.
+
+This is not a raw catalogue dump.
+This is not a planner disguised as a list.
+This is an editorial decision workspace.
+
+The user should leave this screen with a clear preference structure:
+- what I strongly want to see
+- what I may see
+- what I can ignore
+
+### User questions this screen must answer
+
+The screen should answer these questions quickly:
+- Why is this film interesting?
+- Is it strong enough to mark as `Prioritaire`?
+- Have I already triaged enough films to move on?
+- Which films still need a decision?
+- Can I compare a few candidates without reading everything?
+
+If the screen requires long scanning before desire signals emerge, the hierarchy is wrong.
+
+### Core content payload
+
+The following elements are mandatory in the main film card because they support choice directly:
+- title
+- year
+- tagline
+- director
+- cast
+- country
+- duration
+
+These are not decorative metadata.
+They are part of the decision payload.
+
+Priority is an overlay on top of this payload, not a replacement for it.
+
+### Screen intention
+
+`Films` should feel like a curated triage board.
+
+Its job is to help users:
+- scan quickly
+- notice promising films
+- commit a preference level
+- keep enough context to justify that preference
+
+It should not optimize for exhaustive data density.
+That choice would be a UX regression.
+
+### Recommended page structure
+
+#### 1. Header block
+Purpose:
+- orient the user
+- show progress
+- expose one next step
+
+Content:
+- page title: `Films`
+- support line: `Qualifiez les films avant d'arbitrer les seances.`
+- counters:
+  - `X Prioritaires`
+  - `Y Moyens`
+  - `Z Restants a trier`
+- primary CTA: `Passer au Planning`
+
+Behavior:
+- CTA enabled only when the user has enough prioritized films to make planning meaningful
+- if not enabled, explain why in plain language
+
+Example helper copy:
+- `Selectionnez au moins quelques films prioritaires pour lancer l'arbitrage.`
+
+#### 2. Utility bar
+Purpose:
+- support triage without stealing attention from content
+
+Allowed controls:
+- search
+- filter by priority
+- filter by day if relevant to the dataset
+- sorting/grouping mode
+
+Not allowed:
+- dense expert filter matrices
+- too many simultaneous toggles
+- hidden advanced logic as a default mode
+
+#### 3. Priority-led content sections
+
+Recommended default grouping:
+- `A traiter`
+- `Prioritaires`
+- `Moyens`
+- `Ignores`
+
+This grouping is better than a flat list because it externalizes progress.
+
+Default order:
+1. `A traiter`
+2. `Prioritaires`
+3. `Moyens`
+4. `Ignores`
+
+Reason:
+- unresolved decisions first
+- strongest desire second
+- weaker options later
+- rejected content deprioritized
+
+#### 4. Film cards / list items
+
+Each card should support a fast F-pattern scan.
+The user must identify title, desirability cues, and priority state in seconds.
+
+### `FilmCard` component spec
+
+#### Content hierarchy
+
+Visual order of importance:
+1. title
+2. tagline
+3. editorial metadata block
+4. priority control
+5. secondary actions
+
+Concrete metadata line:
+- `Realisateur`
+- `Casting`
+- `Pays · Annee · Duree`
+
+Recommended compact composition:
+- **Row 1:** title + year + priority badge/select
+- **Row 2:** tagline
+- **Row 3:** director
+- **Row 4:** cast
+- **Row 5:** country / year / duration
+- **Row 6:** contextual scheduling hint if genuinely useful
+
+### Variants
+
+#### `FilmCard/Editorial`
+Default card for the main `Films` view.
+
+Characteristics:
+- full editorial payload visible
+- generous text rhythm
+- strong title emphasis
+- restrained utility chrome
+
+#### `FilmCard/Compact`
+Optional reduced variant for dense subsections or mobile continuation.
+
+Characteristics:
+- title remains dominant
+- tagline may truncate to 2 lines
+- cast may truncate to 1 line
+- priority control remains visible
+
+Do not use a purely tabular row as the default desktop variant.
+That would flatten the selection experience.
+
+### States
+
+Minimum states required:
+- `default`
+- `hover`
+- `focus-visible`
+- `selected-prioritaire`
+- `selected-moyen`
+- `selected-ignore`
+- `loading`
+- `empty-section`
+- `error`
+
+Optional if data exists:
+- `already-scheduled`
+- `has-screening-conflicts`
+
+These optional scheduling signals must remain secondary in `Films`.
+If they dominate, the screen loses its role.
+
+### Priority control
+
+Recommended component: `PrioritySelect` inline in card header zone.
+
+Behavior:
+- always visible
+- keyboard accessible
+- immediate update feedback
+- no modal required
+
+Allowed values only:
+- `Prioritaire`
+- `Moyen`
+- `Ignorer`
+
+Microcopy rule:
+- explicit labels
+- no cryptic icons without text
+
+### Secondary actions
+
+Allowed:
+- `Voir les seances`
+- `Voir plus`
+
+Not allowed as equally dominant actions:
+- multiple schedule actions per card
+- compare, bookmark, share, hide, expand, and queue all at once
+
+Too many actions here would explode cognitive load.
+
+### Scheduling hint inside Films
+
+Scheduling information may exist, but it must stay subordinate.
+
+Good examples:
+- `3 seances disponibles`
+- `Prochaine seance aujourd'hui a 18:15`
+- `Conflits possibles avec 2 choix prioritaires`
+
+Bad examples:
+- full timetable inside the card
+- detailed conflict matrix
+- multiple slot-level CTAs
+
+`Films` qualifies desire first. Scheduling remains a hint at this stage.
+
+### Recommended information density
+
+Desktop:
+- comfortable vertical rhythm
+- enough whitespace to preserve editorial reading
+- no badge pile-ups
+
+Mobile:
+- one card column
+- keep title, tagline, priority, and director always visible
+- cast and metadata may collapse slightly, but must not disappear entirely
+
+### Suggested design tokens and layout values
+
+These values should be treated as implementation targets, not vague inspiration.
+
+#### Card
+- padding: `16px`
+- vertical gap: `8px`
+- border radius: `12px`
+- border: `1px solid color-mix(in srgb, var(--color-foreground) 10%, transparent)`
+- background: `color-mix(in srgb, var(--color-background) 92%, var(--color-foreground) 8%)`
+
+#### Section spacing
+- page vertical gap: `24px`
+- section header bottom margin: `12px`
+- card stack gap: `12px`
+
+#### Typography
+- title: `font-size 1rem` to `1.125rem`, `font-weight 600`
+- tagline: `0.95rem`, `line-height 1.45`, slightly brighter than metadata
+- metadata: `0.875rem`, foreground with reduced opacity
+- helper text: `0.8125rem`
+
+#### State signals
+- `Prioritaire`: accent-filled or accent-emphasized outline
+- `Moyen`: neutral with moderate foreground emphasis
+- `Ignorer`: subdued foreground and reduced contrast
+- `focus-visible`: clear 2px accent ring, WCAG-compliant
+
+Do not introduce three unrelated colors for the three priority levels.
+That would break the visual system already established.
+
+### Accessibility requirements
+
+Non-negotiable:
+- full keyboard navigation through cards and priority controls
+- visible focus state on every interactive element
+- AA contrast minimum on text and controls
+- priority state must never rely on color alone
+- truncated text must expose full content via accessible reveal pattern if needed
+
+If the card is clickable as a whole and contains controls, interaction zones must be unambiguous.
+Nested affordances are otherwise error-prone.
+
+### Empty, loading, and error states for `Films`
+
+#### Empty section: `A traiter`
+Message: `Tous les films visibles ont deja ete qualifies.`
+Action: `Voir les Prioritaires`
+
+#### Empty section: `Prioritaires`
+Message: `Aucun film prioritaire pour l'instant.`
+Action: `Marquer un film comme Prioritaire`
+
+#### Loading
+- preserve final card heights
+- show placeholder title, tagline, and metadata rows
+- keep progress counters skeletonized in the header
+
+#### Error
+Message: `Impossible de charger les films pour le moment.`
+Action: `Reessayer`
+
+### Anti-patterns to avoid
+
+- Turning the view into a sortable spreadsheet.
+- Hiding tagline or reducing it to decorative whisper text.
+- Making priority louder than the film itself.
+- Injecting too many scheduling mechanics into card bodies.
+- Multiplying badges for genre, country, duration, venue, state, and recommendation at once.
+- Using truncation so aggressively that films become indistinguishable.
+
+### First implementation target for P1
+
+V1 scope only:
+- progress-aware `Films` header
+- priority-led sections
+- stabilized editorial `FilmCard`
+- visible inline `PrioritySelect`
+- restrained scheduling hint
+- real empty/loading/error states
+
+Delivery order:
+1. lock section model
+2. stabilize card hierarchy
+3. make priority update immediate and calm
+4. add progress counters and gateway CTA to Planning
+5. refine empty/loading/error states
+
+Success criteria:
+- a user can triage films quickly without losing editorial context
+- priority is visible at a glance but does not flatten the content
+- the view feels like a selection stage, not a tool dump
