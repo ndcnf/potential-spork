@@ -91,20 +91,48 @@
 .cycle-header__priority-dots {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
+  flex-wrap: wrap;
+  gap: 0.375rem;
 }
 
 .cycle-header__priority-dot {
-  width: var(--dot-size-sm);
-  height: var(--dot-size-sm);
+  width: 0.625rem;
+  height: 0.625rem;
   border-radius: var(--radius-pill);
   background: var(--color-state-neutral);
+  border: 1px solid transparent;
+  flex: 0 0 auto;
 }
 
-.cycle-header__priority-dot[data-priority='high'] { background: var(--color-priority-high); }
-.cycle-header__priority-dot[data-priority='medium'] { background: var(--color-priority-medium); }
-.cycle-header__priority-dot[data-priority='low'] { background: transparent; border: 1px solid var(--color-priority-muted); }
-.cycle-header__priority-dot[data-priority='ignore'] { background: transparent; border: 1px solid var(--color-priority-muted); }
+.cycle-header__priority-dot[data-priority='high'] {
+  background: var(--color-priority-high);
+}
+
+.cycle-header__priority-dot[data-priority='medium'] {
+  background: var(--color-priority-medium);
+}
+
+.cycle-header__priority-dot[data-priority='low'],
+.cycle-header__priority-dot[data-priority='ignore'] {
+  background: transparent;
+  border-color: var(--color-priority-muted);
+}
+
+.cycle-header__counters {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.cycle-header__counter {
+  color: var(--color-text-muted);
+}
+
+.cycle-header__counter strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
 
 .cycle-group__body {
   display: grid;
@@ -136,10 +164,21 @@
   min-width: 0;
 }
 
+.film-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
 .film-card-primary h3,
 .film-card-primary .film-meta,
 .film-card-primary .film-cast {
   margin-block: 0;
+}
+
+.film-card-primary h3 {
+  min-width: 0;
 }
 
 .film-title-year {
@@ -175,10 +214,6 @@
   padding-top: var(--space-micro);
 }
 
-.film-card-status {
-  padding-top: var(--space-2xs);
-}
-
 .film-screenings__item {
   color: var(--color-text-muted);
   font-size: var(--font-size-md);
@@ -188,12 +223,8 @@
   color: var(--color-accent);
 }
 
-.film-card-status {
-  display: flex;
-  align-items: center;
-}
-
-.film-card-status .priority-select {
+.film-card-heading .priority-select {
+  flex: 0 0 auto;
   opacity: 0.92;
 }
 
@@ -206,5 +237,10 @@
   .page-header,
   .cycle-header {
     flex-direction: column;
+  }
+
+  .film-card-heading {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

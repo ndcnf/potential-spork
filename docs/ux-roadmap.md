@@ -639,7 +639,7 @@ Each cycle header should contain:
 - local counters:
   - `X Prioritaires`
   - `Y Moyens`
-  - `Z a traiter`
+  - `Z Ignores` or `Z restant a qualifier` depending on the final data rule
 - collapse/expand action if useful
 
 The cycle header must support orientation.
@@ -649,6 +649,11 @@ What to avoid in the cycle header:
 - multiple dominant actions
 - dense priority visualizations that require decoding
 - noisy badge accumulation
+
+Important:
+- cycle is a reading structure, not a decision object
+- priority belongs to individual films only
+- there should be no cycle-level priority control in the MVP
 
 #### 5. Film cards / list items
 
@@ -736,6 +741,11 @@ Allowed values only:
 - `Prioritaire`
 - `Moyen`
 - `Ignorer`
+
+Product rule:
+- priority exists at film level only
+- cycle never overrides film priority
+- cycle helps exploration and orientation, not preference assignment
 
 Microcopy rule:
 - explicit labels

@@ -275,6 +275,11 @@ Structure recommandée à implémenter :
 - cartes éditoriales stabilisées
 - CTA passerelle vers `Planning`
 
+Règle produit :
+- la priorité se décide au niveau **film uniquement**
+- le cycle reste une structure éditoriale de lecture
+- aucun `PrioritySelect` au niveau cycle dans le MVP
+
 Rappel critique :
 - ne pas aplatir la carte en ligne de tableau utilitaire
 - ne pas casser le regroupement par cycle : c'est un critère éditorial primaire
@@ -329,6 +334,9 @@ Faire de `Films` un espace de tri éditorial piloté par les cycles, avec une pr
 
 Le point important :
 **on ne refond pas toute l’architecture. On réordonne la vue pour qu’elle serve enfin le workflow.**
+
+Autre règle importante :
+**on supprime la priorité au niveau cycle. La décision de préférence vit uniquement sur les films individuels.**
 
 ### Ce qu’il faut changer, dans l’ordre
 
@@ -393,6 +401,7 @@ Contenu enrichi utile par film :
 - `screeningCount`
 
 Le cycle reste donc la structure éditoriale de premier niveau, ce qui est la bonne hiérarchie.
+Il ne doit pas porter de décision de priorité.
 
 #### Étape 3 — Stabiliser la carte film comme carte éditoriale
 
@@ -424,6 +433,10 @@ But : retirer les éléments qui sursignalisent la structure cycle.
 - nuages de dots de priorité par cycle
 - bouton `Replier / Ouvrir` si son poids visuel dépasse l'utilité réelle
 
+Décision MVP :
+- le `PrioritySelect` au niveau cycle doit être retiré
+- la priorité se gère uniquement carte film par carte film
+
 Pourquoi :
 - ces signaux racontent l’organisation des données
 - ils ne racontent pas le travail que l’utilisateur doit faire
@@ -433,6 +446,8 @@ Le cycle header doit rester fort, mais plus utile :
 - couleur du cycle
 - compteurs locaux
 - état d’avancement du tri
+
+Il ne doit plus porter une logique d’override ou d’héritage de priorité.
 
 #### Étape 5 — Garder l’indice de séance, mais à sa juste place
 
@@ -511,13 +526,17 @@ Recommandation V1 :
 - `PrioritySelect` remonté dans le header de carte
 
 #### Passe 4
+- retrait du `PrioritySelect` au niveau cycle
+- simplification du cycle header
+
+#### Passe 5
 - nettoyage CSS de `films.css`
 - simplification des patterns devenus trop bruyants autour des cycles
 
-#### Passe 5
+#### Passe 6
 - empty / loading / error states
 
-#### Passe 6
+#### Passe 7
 - microcopy de transition et polish accessibilité
 
 ### Refactor technique minimal recommandé
@@ -548,6 +567,10 @@ Dans `frontend/src/styles/films.css`, prévoir :
 - `.cycle-header__priority-dots`
 - logique de `.cycle-actions` comme centre de gravité
 - bruit visuel qui concurrence la lecture éditoriale des cycles
+
+À supprimer si confirmés dans le code :
+- contrôles de priorité attachés au cycle
+- affordances qui suggèrent une priorité héritée cycle → film
 
 ### Validation UX attendue après implémentation
 
