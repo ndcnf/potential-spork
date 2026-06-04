@@ -32,6 +32,8 @@ const {
   screeningComparisonStatus,
   screeningStateClass,
   screeningComparisonHints,
+  screeningDecisionNote,
+  screeningPrimaryActionLabel,
   visualizationBlockClass,
   selectedCountForDay,
   dayChipLabel,
@@ -386,6 +388,9 @@ const planningGuidance = computed(() => {
 
         <div v-if="relatedFilmScreenings.length" class="planning__detail-copy">
           <p class="planning__detail-copy-title">{{ relatedFilmScreenings.length > 1 ? 'Comparer les seances de ce film' : 'Seance de ce film' }}</p>
+          <p class="planning__detail-copy-subtitle">
+            {{ relatedFilmScreenings.length > 1 ? 'Commencez par choisir ou remplacer une seance, puis ajustez son statut si besoin.' : 'Cette seance peut etre retenue telle quelle ou remplacee plus tard.' }}
+          </p>
           <div class="planning__detail-screenings">
             <article
               v-for="option in relatedFilmScreenings"
@@ -409,6 +414,16 @@ const planningGuidance = computed(() => {
               </div>
               <div v-if="screeningComparisonHints(option).length" class="planning__detail-hints">
                 <span v-for="hint in screeningComparisonHints(option)" :key="hint" class="planning__detail-hint">{{ hint }}</span>
+              </div>
+              <p class="planning__detail-note">{{ screeningDecisionNote(option) }}</p>
+              <div v-if="option.selection_status !== 'tentative' && option.selection_status !== 'confirmed'" class="planning__detail-actions">
+                <button
+                  type="button"
+                  class="planning__action planning__action--primary"
+                  @click="toggleScreeningSelection(option.id, 'tentative')"
+                >
+                  {{ screeningPrimaryActionLabel(option) }}
+                </button>
               </div>
               <div class="planning__session-links">
                 <a v-if="option.ticket_url" :href="option.ticket_url" target="_blank" rel="noopener">billetterie</a>

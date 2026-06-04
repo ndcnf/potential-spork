@@ -484,6 +484,7 @@
 .planning__detail-copy-title,
 .planning__detail-copy p { margin: 0; }
 .planning__detail-copy-title { color: var(--color-text); }
+.planning__detail-copy-subtitle { color: var(--color-text-muted); }
 .planning__detail-list { margin: 0; padding-left: 1rem; color: var(--color-text-muted); }
 .planning__detail-list li + li { margin-top: var(--space-xs); }
 
@@ -515,6 +516,17 @@
 
 .planning__detail-screening-main span {
   color: var(--color-text-muted);
+}
+
+.planning__detail-note {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.planning__detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
 
 .planning__status-pill {

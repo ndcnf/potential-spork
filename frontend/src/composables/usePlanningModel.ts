@@ -404,6 +404,45 @@ export function usePlanningModel() {
     return hints.slice(0, 2)
   }
 
+  function screeningDecisionNote(screening: PlanningScreening): string {
+    const selectedSibling = findSelectedSibling(screening)
+    const conflictingSelected = findConflictingSelectedOtherFilm(screening)
+
+    if (screening.selection_status === 'confirmed') {
+      return 'Cette seance est deja confirmee dans votre planning.'
+    }
+
+    if (screening.selection_status === 'tentative') {
+      return 'Cette seance est deja retenue provisoirement.'
+    }
+
+    if ((screening.isAlternative || screening.derived_state === 'disabled') && selectedSibling?.starts_at) {
+      return `Choisir cette seance remplacera votre autre choix du ${formatDayChipLabel(selectedSibling.dayKey)} a ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}.`
+    }
+
+    if (conflictingSelected?.starts_at) {
+      return `Choisir cette seance entrera en conflit avec ${conflictingSelected.film_title}, ${formatDayChipLabel(conflictingSelected.dayKey)} ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}.`
+    }
+
+    if (screening.isMustLock) {
+      return 'C est la derniere option viable pour ce film prioritaire.'
+    }
+
+    if (screening.isSingleScreening) {
+      return 'C est la seule seance disponible pour ce film.'
+    }
+
+    return 'Cette seance reste disponible sans collision immediate.'
+  }
+
+  function screeningPrimaryActionLabel(screening: PlanningScreening): string {
+    if (screening.isAlternative || screening.derived_state === 'disabled') {
+      return 'Remplacer par cette seance'
+    }
+
+    return 'Choisir cette seance'
+  }
+
   function screeningStatusTone(screening: PlanningScreening): string {
     if (screening.selection_status === 'rejected') return 'rejected'
     if (screening.isConflict || screening.derived_state === 'conflict') return 'conflict'
@@ -503,6 +542,8 @@ export function usePlanningModel() {
     screeningComparisonStatus,
     screeningStateClass,
     screeningComparisonHints,
+    screeningDecisionNote,
+    screeningPrimaryActionLabel,
     visualizationBlockClass,
     selectedCountForDay,
     dayChipLabel,
