@@ -133,31 +133,6 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
       </fieldset>
     </section>
 
-    <section class="settings__panel" :class="{ 'settings__panel--inactive': !settingsStore.recommendationSettings.enabled }">
-      <header class="settings__section-header">
-        <div>
-          <h3>Creneaux libres</h3>
-          <p class="page-copy">Ne faire ressortir que les creneaux suffisamment longs pour etre utiles.</p>
-        </div>
-      </header>
-
-      <fieldset class="settings__fieldset" :disabled="!settingsStore.recommendationSettings.enabled">
-        <label class="settings__select-row">
-          <span>Montrer les creneaux d'au moins</span>
-          <select
-            :value="settingsStore.recommendationSettings.minGapMinutes"
-            @change="settingsStore.setMinGapMinutes(Number(($event.target as HTMLSelectElement).value))"
-          >
-            <option :value="30">30 min</option>
-            <option :value="45">45 min</option>
-            <option :value="60">1h</option>
-            <option :value="90">1h30</option>
-            <option :value="120">2h</option>
-          </select>
-        </label>
-      </fieldset>
-    </section>
-
     <section class="settings__panel settings__panel--danger">
       <button type="button" class="ghost-button" @click="settingsStore.resetRecommendationSettings()">Reinitialiser les preferences</button>
     </section>

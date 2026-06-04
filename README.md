@@ -11,7 +11,7 @@ Festival planner perso pour le NIFFF.
 ## Structure
 
 - `backend/`: API, persistence, import NIFFF, export `.ics`
-- `frontend/`: proto UI/UX navigable pour `Films`, `Planning`, `Trous`
+- `frontend/`: proto UI/UX navigable pour `Films`, `Planning`, `Settings`
 
 ## Prerequis
 

@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import FilmsView from '@/views/FilmsView.vue'
-import GapsView from '@/views/GapsView.vue'
 import PlanningView from '@/views/PlanningView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 
@@ -11,7 +10,6 @@ const router = createRouter({
     { path: '/', redirect: '/films' },
     { path: '/films', component: FilmsView },
     { path: '/planning', component: PlanningView },
-    { path: '/gaps', component: GapsView },
     { path: '/settings', component: SettingsView },
   ],
 })

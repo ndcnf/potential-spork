@@ -478,13 +478,6 @@ export function usePlanningModel() {
     return dayKey === FESTIVAL_VIEW_KEY ? 'Festival entier' : formatDayChipLabel(dayKey)
   }
 
-  function toggleScreeningSelection(screeningId: number, nextStatus: Screening['selection_status']): void {
-    const screening = planningScreenings.value.find((item) => item.id === screeningId)
-    if (!screening) return
-    const targetStatus = screening.selection_status === nextStatus ? 'none' : nextStatus
-    store.setScreeningSelection(screeningId, targetStatus)
-  }
-
   function setScreeningSelection(screeningId: number, nextStatus: Screening['selection_status']): void {
     store.setScreeningSelection(screeningId, nextStatus)
   }
@@ -555,7 +548,6 @@ export function usePlanningModel() {
     visualizationBlockClass,
     selectedCountForDay,
     dayChipLabel,
-    toggleScreeningSelection,
     setScreeningSelection,
     clearScreeningSelection,
     jumpToDay,

@@ -8,7 +8,6 @@ const { exportHref, exportIcal } = useIcalExport()
 const tabs = [
   { label: '1. Films', to: '/films', hint: 'Selection editoriale', step: true },
   { label: '2. Planning', to: '/planning', hint: 'Arbitrer les conflits', step: true },
-  { label: '3. Trous', to: '/gaps', hint: 'Completer le planning', step: true },
   { label: 'Parametres', to: '/settings', hint: 'Hors parcours principal', step: false },
 ]
 </script>

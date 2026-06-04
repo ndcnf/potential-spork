@@ -411,27 +411,6 @@
   text-underline-offset: 0.15em;
 }
 
-.planning__selection-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--pill-gap);
-}
-
-.planning__selection-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--pill-gap);
-  min-height: 2rem;
-  padding: var(--space-xs) var(--field-padding-x);
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--color-text-muted);
-  font: inherit;
-  cursor: pointer;
-}
-
-.planning__selection-pill-dot,
 .planning__status-pill-dot,
 .planning__film-priority-dot {
   width: var(--dot-size-sm);
@@ -440,15 +419,6 @@
   background: currentColor;
   flex: 0 0 auto;
 }
-
-.planning__selection-pill--active {
-  color: var(--color-text);
-  background: var(--color-surface-strong);
-}
-
-.planning__selection-pill--tentative { color: var(--color-state-tentative); background: var(--color-state-tentative-soft); }
-.planning__selection-pill--confirmed { color: var(--color-state-confirmed); background: var(--color-state-confirmed-soft); border-color: var(--color-accent-border); }
-.planning__selection-pill--rejected { color: var(--color-text-muted); background: var(--color-neutral-soft); }
 
 .planning__detail-panel {
   display: flex;

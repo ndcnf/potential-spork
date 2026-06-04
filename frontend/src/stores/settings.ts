@@ -9,7 +9,6 @@ const defaultSettings = (): RecommendationSettings => ({
   preferredVenueScores: {},
   avoidBeforeMinutes: null,
   avoidAfterMinutes: null,
-  minGapMinutes: 90,
 })
 
 export const useSettingsStore = defineStore('settings', {
@@ -22,8 +21,7 @@ export const useSettingsStore = defineStore('settings', {
       return (
         Object.keys(state.recommendationSettings.preferredVenueScores).length > 0 ||
         state.recommendationSettings.avoidBeforeMinutes !== null ||
-        state.recommendationSettings.avoidAfterMinutes !== null ||
-        state.recommendationSettings.minGapMinutes !== 90
+        state.recommendationSettings.avoidAfterMinutes !== null
       )
     },
     recommendationMode(): 'off' | 'neutral' | 'personalized' {
@@ -52,7 +50,6 @@ export const useSettingsStore = defineStore('settings', {
             preferredVenueScores: parsed.preferredVenueScores ?? {},
             avoidBeforeMinutes: parsed.avoidBeforeMinutes ?? null,
             avoidAfterMinutes: parsed.avoidAfterMinutes ?? null,
-            minGapMinutes: parsed.minGapMinutes ?? 90,
           }
         } catch {
           this.recommendationSettings = defaultSettings()
@@ -85,10 +82,6 @@ export const useSettingsStore = defineStore('settings', {
     },
     setAvoidAfterMinutes(value: number | null) {
       this.recommendationSettings.avoidAfterMinutes = value
-      this.persist()
-    },
-    setMinGapMinutes(value: number) {
-      this.recommendationSettings.minGapMinutes = value
       this.persist()
     },
     resetRecommendationSettings() {

@@ -13,7 +13,8 @@ To create a personal, film-centric planning tool that guides users from broad ex
 *   **Explicit Progression:** The app must clearly show what has been decided, what is blocked, and what the next decisive step is.
 
 ## 📊 Current State Assessment
-*   **Existing Views:** Film Catalog, Schedule, Free Slots, Settings.
+*   **Existing Views (current frontend):** Film Catalog, Schedule, Settings.
+*   **Deferred View:** Free Slots / Gaps is now out of the active frontend scope and should be treated as a V2/V3 track.
 *   **Visual Foundation:** A refined visual theme utilizing a consistent dark mode; a simplified design system based on `background / foreground / accent` states managed via opacity.
 *   **Product Focus:** The core logic is confirmed to be `film-first`.
 *   **Prioritization:** Simplified UI priority model: **Priority**, **Medium**, **Ignore**.
@@ -76,6 +77,7 @@ Both are required.
 *   **Success Criteria:** Conflicts are visible and resolvable first; consequences of decisions are clear; reduced hesitation without a framework.
 
 ### **P3: Free Slots/Gaps (Focus: Completion Engine)**
+*   **Status:** Deferred to V2/V3. Not part of the current frontend scope.
 *   **Objective:** Convert "Free Slots" view into an opportunistic, intelligent scheduling assistant.
 *   **Tasks:**
     *   Center the view on actionable gaps.
@@ -96,19 +98,20 @@ Both are required.
 *   **Settings:** Must remain a secondary, out-of-band configuration area.
 
 ## ✅ Next Iteration Checklist
-1.  Validate the 3-step canonical workflow and associated terminology.
-2.  Map every existing view to a single, unique UX intention.
-3.  List all missing empty states and required guidance messages.
-4.  Define the priority sections for both the Film Catalog and the Schedule view.
-5.  Identify 3-5 concrete UX conflicts to simplify immediately.
+1.  Done: validate the 3-step canonical workflow and associated terminology.
+2.  Done: map every existing view to a single, unique UX intention.
+3.  In progress: list and implement the missing empty states and guidance messages across the core views.
+4.  Done for the current pass: define the priority structure for `Films` and the arbitration structure for `Planning`.
+5.  In progress: simplify concrete UX conflicts, starting with multi-CTA overload in `Planning`.
+6.  Later: only revisit `Trous / Free Slots` in a V2/V3 product pass.
 
 ---
 
 ## P0 Detailed Note — Canonical Workflow and Screen Intentions
 
-### Canonical 3-step workflow
+### Canonical workflow
 
-The product flow should be visible and explicit:
+The long-term product flow should be visible and explicit:
 
 1. **Select films**
 2. **Arbitrate conflicts**
@@ -135,6 +138,9 @@ The app promise should be simple:
 **Help me turn a broad film wish list into a realistic NIFFF schedule, without making me think like a festival expert.**
 
 Every main screen must support one distinct moment in that journey.
+
+For the current frontend release, only the first 2 steps are active.
+The completion step is deferred.
 
 ### Screen mapping
 
@@ -171,6 +177,7 @@ It should not behave like:
 - a multi-CTA control panel
 
 #### 3. `Trous / Free Slots`
+**Status:** Deferred to V2/V3  
 **Step:** Fill remaining gaps  
 **UX promise:** Help me complete empty moments with the most relevant remaining options.  
 **Primary action:** Add the best fitting film to a gap.
@@ -200,11 +207,10 @@ The main navigation should reflect the workflow directly:
 
 - `1. Films`
 - `2. Planning`
-- `3. Free Slots`
 - `Settings` stays visually secondary
 
 Recommended behavior:
-- show step numbers for the first 3 views
+- show step numbers for the active workflow views
 - keep the active step highly legible
 - show progression, not just location
 
@@ -222,7 +228,6 @@ This rule is non-negotiable.
 
 - `Films` => **Prioritize this film**
 - `Planning` => **Choose/replace this screening**
-- `Free Slots` => **Fill this gap**
 - `Settings` => **Save settings**
 
 Secondary actions may exist, but they must remain subordinate.
@@ -236,7 +241,6 @@ The product should visibly track the decision journey.
 Minimum counters to surface:
 - number of `Prioritaire` films
 - number of unresolved conflicts
-- number of remaining useful gaps
 
 Recommended progression copy:
 - `Selection en cours`
@@ -269,17 +273,7 @@ Action: `Retourner a Films`
 
 **Case: no conflicts for now**  
 Message: `Aucun conflit pour l'instant. Votre planning est lisible sur cette plage.`  
-Action: `Voir les creneaux libres`
-
-#### `Free Slots` empty states
-
-**Case: no remaining useful gaps**  
-Message: `Aucun creneau utile a completer pour le moment.`  
-Action: `Revoir le planning`
-
-**Case: gap exists but no relevant film matches**  
-Message: `Aucune proposition pertinente pour ce creneau.`  
-Action: `Voir les options moyennes`
+Action: `Retourner a Films`
 
 #### Loading states
 
@@ -287,7 +281,6 @@ Use skeleton screens, not generic spinners, for content-heavy views.
 
 - `Films`: skeleton list preserving card rhythm
 - `Planning`: skeleton timeline preserving time columns and block heights
-- `Free Slots`: skeleton gap groups with placeholder suggestions
 
 The layout must remain stable while loading.
 No jumping UI.
@@ -308,7 +301,6 @@ That language says nothing.
 
 - `Films` must stay the entry point for desire-based selection.
 - `Planning` must show decisions first, not all possible data.
-- `Free Slots` must not require permanent back-and-forth to the catalogue.
 - `Settings` must stay secondary.
 - Each step must reduce uncertainty before exposing the next one.
 
