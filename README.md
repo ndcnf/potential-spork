@@ -20,6 +20,8 @@ Festival planner perso pour le NIFFF.
 
 ## Installation
 
+Les commandes ci-dessous partent de la racine du projet `potential-spork`.
+
 ### Mac/Linux
 
 Backend :
@@ -45,6 +47,7 @@ Backend :
 ```powershell
 cd backend
 py -3.12 -m venv .venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .venv\Scripts\Activate.ps1
 pip install -e .
 ```
@@ -57,6 +60,8 @@ npm install
 ```
 
 ## Lancement
+
+Les commandes ci-dessous partent de la racine du projet `potential-spork`.
 
 ### Mac/Linux
 
@@ -81,6 +86,7 @@ Backend :
 
 ```powershell
 cd backend
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .venv\Scripts\Activate.ps1
 uvicorn app.main:app --reload
 ```
