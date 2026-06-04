@@ -204,6 +204,26 @@ a {
   background: color-mix(in srgb, var(--color-accent-soft) 55%, var(--color-surface-shell));
 }
 
+.notice-panel--success {
+  border-color: var(--color-accent-border);
+  background: color-mix(in srgb, var(--color-accent-soft) 45%, var(--color-surface-shell));
+}
+
+.notice-panel--info {
+  border-color: var(--color-border-mid);
+  background: color-mix(in srgb, var(--color-surface-strong) 78%, transparent);
+}
+
+.notice-panel--toast {
+  position: fixed;
+  right: var(--space-lg);
+  bottom: var(--space-lg);
+  z-index: 40;
+  width: min(26rem, calc(100vw - (var(--space-lg) * 2)));
+  box-shadow: 0 12px 30px color-mix(in srgb, black 24%, transparent);
+  backdrop-filter: blur(14px);
+}
+
 .skeleton-block {
   position: relative;
   overflow: hidden;
@@ -268,6 +288,14 @@ a {
 @keyframes skeleton-shimmer {
   100% {
     transform: translateX(100%);
+  }
+}
+
+@media (max-width: 960px) {
+  .notice-panel--toast {
+    right: var(--space-md);
+    bottom: calc(5.5rem + var(--space-md));
+    width: min(24rem, calc(100vw - (var(--space-md) * 2)));
   }
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { useIcalExport } from '@/composables/useIcalExport'
@@ -48,6 +48,13 @@ const {
   isMobile,
 } = usePlanningModel()
 
+const transitionFeedback = reactive<{ message: string; tone: 'info' | 'success'; visible: boolean; timer: ReturnType<typeof setTimeout> | null }>({
+  message: '',
+  tone: 'info',
+  visible: false,
+  timer: null,
+})
+
 const hasPlanningCandidates = computed(() => summary.value.films > 0)
 const hasConflicts = computed(() => summary.value.conflicts > 0)
 const hasArbitrations = computed(() => summary.value.toPlace > 0)
@@ -88,6 +95,57 @@ const planningGuidance = computed(() => {
     actionTo: null,
   }
 })
+
+function showTransitionFeedback(message: string, tone: 'info' | 'success' = 'success') {
+  if (transitionFeedback.timer) {
+    clearTimeout(transitionFeedback.timer)
+  }
+
+  transitionFeedback.message = message
+  transitionFeedback.tone = tone
+  transitionFeedback.visible = true
+  transitionFeedback.timer = setTimeout(() => {
+    transitionFeedback.visible = false
+    transitionFeedback.timer = null
+  }, 2600)
+}
+
+async function applyScreeningSelection(screeningId: number, nextStatus: 'tentative' | 'confirmed' | 'rejected') {
+  const screening = dayScreenings.value.find((item) => item.id === screeningId) ?? relatedFilmScreenings.value.find((item) => item.id === screeningId)
+
+  await setScreeningSelection(screeningId, nextStatus)
+
+  if (!screening) {
+    return
+  }
+
+  if (nextStatus === 'confirmed') {
+    showTransitionFeedback(`Séance confirmée pour ${screening.film_title}.`)
+    return
+  }
+
+  if (nextStatus === 'rejected') {
+    showTransitionFeedback(`Séance ignorée pour ${screening.film_title}.`, 'info')
+    return
+  }
+
+  if (screening.selection_status === 'none' && (screening.isAlternative || screening.derived_state === 'disabled')) {
+    showTransitionFeedback(`Cette séance remplace ton autre choix pour ${screening.film_title}.`)
+    return
+  }
+
+  showTransitionFeedback(`Séance ajoutée au planning pour ${screening.film_title}.`)
+}
+
+async function removeScreeningSelection(screeningId: number) {
+  const screening = dayScreenings.value.find((item) => item.id === screeningId) ?? relatedFilmScreenings.value.find((item) => item.id === screeningId)
+
+  await clearScreeningSelection(screeningId)
+
+  if (screening) {
+    showTransitionFeedback(`Séance retirée du planning pour ${screening.film_title}.`, 'info')
+  }
+}
 </script>
 
 <template>
@@ -163,6 +221,14 @@ const planningGuidance = computed(() => {
           {{ planningGuidance.actionLabel }}
         </RouterLink>
       </div>
+    </section>
+
+    <section
+      v-if="transitionFeedback.visible"
+      class="notice-panel notice-panel--toast"
+      :class="transitionFeedback.tone === 'success' ? 'notice-panel--success' : 'notice-panel--info'"
+    >
+      <p class="page-copy">{{ transitionFeedback.message }}</p>
     </section>
 
     <section class="planning__meta-panel">
@@ -307,7 +373,7 @@ const planningGuidance = computed(() => {
                       v-if="screening.selection_status === 'tentative'"
                       type="button"
                       class="planning__action planning__action--primary"
-                      @click="setScreeningSelection(screening.id, 'confirmed')"
+                      @click="applyScreeningSelection(screening.id, 'confirmed')"
                     >
                       Confirmer cette séance
                     </button>
@@ -315,7 +381,7 @@ const planningGuidance = computed(() => {
                       v-else-if="screening.selection_status !== 'confirmed'"
                       type="button"
                       class="planning__action planning__action--primary"
-                      @click="setScreeningSelection(screening.id, 'tentative')"
+                      @click="applyScreeningSelection(screening.id, 'tentative')"
                     >
                       {{ screeningPrimaryActionLabel(screening) }}
                     </button>
@@ -324,7 +390,7 @@ const planningGuidance = computed(() => {
                       v-if="screening.selection_status === 'confirmed'"
                       type="button"
                       class="planning__action planning__action--secondary"
-                      @click="setScreeningSelection(screening.id, 'tentative')"
+                      @click="applyScreeningSelection(screening.id, 'tentative')"
                     >
                       Repasser en tentative
                     </button>
@@ -332,7 +398,7 @@ const planningGuidance = computed(() => {
                       v-if="screening.selection_status === 'tentative' || screening.selection_status === 'confirmed'"
                       type="button"
                       class="planning__action planning__action--ghost"
-                      @click="clearScreeningSelection(screening.id)"
+                      @click="removeScreeningSelection(screening.id)"
                     >
                       Retirer du planning
                     </button>
@@ -340,7 +406,7 @@ const planningGuidance = computed(() => {
                       v-else-if="screening.selection_status !== 'rejected'"
                       type="button"
                       class="planning__action planning__action--ghost"
-                      @click="setScreeningSelection(screening.id, 'rejected')"
+                      @click="applyScreeningSelection(screening.id, 'rejected')"
                     >
                       Ignorer cette séance
                     </button>
@@ -479,7 +545,7 @@ const planningGuidance = computed(() => {
                   v-if="option.selection_status === 'tentative'"
                   type="button"
                   class="planning__action planning__action--primary"
-                  @click="setScreeningSelection(option.id, 'confirmed')"
+                  @click="applyScreeningSelection(option.id, 'confirmed')"
                 >
                   Confirmer cette séance
                 </button>
@@ -487,7 +553,7 @@ const planningGuidance = computed(() => {
                   v-else-if="option.selection_status !== 'confirmed'"
                   type="button"
                   class="planning__action planning__action--primary"
-                  @click="setScreeningSelection(option.id, 'tentative')"
+                  @click="applyScreeningSelection(option.id, 'tentative')"
                 >
                   {{ screeningPrimaryActionLabel(option) }}
                 </button>
@@ -496,7 +562,7 @@ const planningGuidance = computed(() => {
                   v-if="option.selection_status === 'confirmed'"
                   type="button"
                   class="planning__action planning__action--secondary"
-                  @click="setScreeningSelection(option.id, 'tentative')"
+                  @click="applyScreeningSelection(option.id, 'tentative')"
                 >
                   Repasser en tentative
                 </button>
@@ -504,7 +570,7 @@ const planningGuidance = computed(() => {
                   v-if="option.selection_status === 'tentative' || option.selection_status === 'confirmed'"
                   type="button"
                   class="planning__action planning__action--ghost"
-                  @click="clearScreeningSelection(option.id)"
+                  @click="removeScreeningSelection(option.id)"
                 >
                   Retirer du planning
                 </button>
@@ -512,7 +578,7 @@ const planningGuidance = computed(() => {
                   v-else-if="option.selection_status !== 'rejected'"
                   type="button"
                   class="planning__action planning__action--ghost"
-                  @click="setScreeningSelection(option.id, 'rejected')"
+                  @click="applyScreeningSelection(option.id, 'rejected')"
                 >
                   Ignorer cette séance
                 </button>

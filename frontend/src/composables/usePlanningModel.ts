@@ -478,12 +478,12 @@ export function usePlanningModel() {
     return dayKey === FESTIVAL_VIEW_KEY ? 'Festival entier' : formatDayChipLabel(dayKey)
   }
 
-  function setScreeningSelection(screeningId: number, nextStatus: Screening['selection_status']): void {
-    store.setScreeningSelection(screeningId, nextStatus)
+  async function setScreeningSelection(screeningId: number, nextStatus: Screening['selection_status']): Promise<void> {
+    await store.setScreeningSelection(screeningId, nextStatus)
   }
 
-  function clearScreeningSelection(screeningId: number): void {
-    store.setScreeningSelection(screeningId, 'none')
+  async function clearScreeningSelection(screeningId: number): Promise<void> {
+    await store.setScreeningSelection(screeningId, 'none')
   }
 
   function jumpToDay(dayKey: string): void {
