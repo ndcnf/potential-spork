@@ -98,6 +98,10 @@ a {
   background: var(--color-surface-strong);
 }
 
+.app-header__link--secondary {
+  opacity: 0.72;
+}
+
 .app-header__link small {
   color: var(--color-text-subtle);
 }
@@ -108,6 +112,10 @@ a {
 
 .app-header__link--active span {
   color: var(--color-accent);
+}
+
+.app-header__link--secondary.app-header__link--active {
+  opacity: 1;
 }
 
 .app-header__export {
@@ -162,6 +170,22 @@ a {
 .page-footer {
   padding-top: var(--space-sm);
   border-top: 1px solid var(--color-border-soft);
+}
+
+.empty-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-xl);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface-shell) 72%, transparent);
+}
+
+.empty-panel h3,
+.empty-panel p {
+  margin: 0;
 }
 
 .legend {

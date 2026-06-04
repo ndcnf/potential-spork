@@ -6,10 +6,10 @@ const route = useRoute()
 const { exportHref, exportIcal } = useIcalExport()
 
 const tabs = [
-  { label: 'Films', to: '/films', hint: 'Selection initiale' },
-  { label: 'Planning', to: '/planning', hint: 'Assemblage visuel' },
-  { label: 'Creneaux libres', to: '/gaps', hint: 'Remplissage cible' },
-  { label: 'Parametres', to: '/settings', hint: 'Preferences perso' },
+  { label: '1. Films', to: '/films', hint: 'Selection editoriale', step: true },
+  { label: '2. Planning', to: '/planning', hint: 'Arbitrer les conflits', step: true },
+  { label: '3. Trous', to: '/gaps', hint: 'Completer le planning', step: true },
+  { label: 'Parametres', to: '/settings', hint: 'Hors parcours principal', step: false },
 ]
 </script>
 
@@ -28,7 +28,7 @@ const tabs = [
             :key="tab.to"
             :to="tab.to"
             class="app-header__link"
-            :class="{ 'app-header__link--active': route.path === tab.to }"
+            :class="{ 'app-header__link--active': route.path === tab.to, 'app-header__link--secondary': !tab.step }"
           >
             <span>{{ tab.label }}</span>
             <small>{{ tab.hint }}</small>

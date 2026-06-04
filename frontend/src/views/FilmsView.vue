@@ -111,6 +111,42 @@ const globalProgressLabel = computed(() => {
   return `${high} prioritaires, ${medium} moyens et ${pending} restant a trier sur ${total} films visibles`
 })
 
+const hasPrioritySelection = computed(() =>
+  store.films.some((film) => {
+    const simplifiedPriority = normalizePriority(film.priority)
+    return simplifiedPriority === 'high' || simplifiedPriority === 'medium'
+  }),
+)
+
+const filtersAreActive = computed(() =>
+  filters.query.trim().length > 0 || filters.priority !== 'all' || filters.hideLowNoise || filters.sort !== 'title',
+)
+
+const filmsEmptyState = computed(() => {
+  if (filteredGroups.value.length > 0) {
+    return null
+  }
+
+  if (filtersAreActive.value) {
+    return {
+      message: 'Aucun film ne correspond a vos filtres.',
+      action: 'Reinitialiser les filtres',
+    }
+  }
+
+  if (!hasPrioritySelection.value) {
+    return {
+      message: 'Commencez par qualifier quelques films pour construire votre selection.',
+      action: 'Voir tous les films',
+    }
+  }
+
+  return {
+    message: 'Aucun film visible pour le moment.',
+    action: 'Reinitialiser les filtres',
+  }
+})
+
 function sortFilms(left: Film, right: Film, mode: string): number {
   if (mode === 'priority') {
     return priorityRank(right.priority) - priorityRank(left.priority) || left.title.localeCompare(right.title)
@@ -198,12 +234,20 @@ function cyclePriorityAccessibilityLabel(films: Film[]): string {
 function sortPriorityForCycle(left: Film, right: Film): number {
   return priorityRank(right.priority) - priorityRank(left.priority) || left.title.localeCompare(right.title)
 }
+
+function resetFilters(): void {
+  filters.query = ''
+  filters.priority = 'all'
+  filters.hideLowNoise = false
+  filters.sort = 'title'
+}
 </script>
 
 <template>
   <section class="page">
     <header class="page-header films-hero">
       <div class="films-hero__main">
+        <p class="eyebrow">Etape 1 sur 3</p>
         <h2>Films</h2>
         <p class="page-copy">
           Parcourez les cycles, qualifiez les films, puis passez au planning quand vos priorites sont claires.
@@ -293,7 +337,14 @@ function sortPriorityForCycle(left: Film, right: Film): number {
       </div>
     </section>
 
-    <section v-for="group in filteredGroups" :key="group.cycle.id" class="cycle-group">
+    <section v-if="filmsEmptyState" class="empty-panel">
+      <h3>Aucun film a afficher</h3>
+      <p class="page-copy">{{ filmsEmptyState.message }}</p>
+      <button class="ghost-button" type="button" @click="resetFilters">{{ filmsEmptyState.action }}</button>
+    </section>
+
+    <template v-else>
+      <section v-for="group in filteredGroups" :key="group.cycle.id" class="cycle-group">
       <header class="cycle-header">
         <div class="cycle-header__main">
           <div class="cycle-header__title-row">
@@ -356,7 +407,8 @@ function sortPriorityForCycle(left: Film, right: Film): number {
           </div>
         </article>
       </div>
-    </section>
+      </section>
+    </template>
 
     <footer class="page-footer">
       <small>{{ store.usingMocks ? 'Donnees de preview : NIFFF 2025 croise PDF + Wayback' : 'Donnees : base locale / API courante' }}</small>
