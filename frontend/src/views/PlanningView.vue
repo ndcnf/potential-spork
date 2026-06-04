@@ -54,7 +54,7 @@ const hasArbitrations = computed(() => summary.value.toPlace > 0)
 const planningGuidance = computed(() => {
   if (!hasPlanningCandidates.value) {
     return {
-      title: 'Commencez par qualifier quelques films',
+      title: 'Commence par qualifier quelques films',
       copy: "Tu n'as pas encore assez de films qualifiés pour arbitrer ton planning.",
       actionLabel: 'Retourner à Films',
       actionTo: '/films',
@@ -80,7 +80,7 @@ const planningGuidance = computed(() => {
   }
 
   return {
-    title: 'Choisissez la meilleure séance par film',
+    title: 'Choisis la meilleure séance par film',
     copy: 'Tu peux maintenant confirmer ou remplacer les séances restantes sans surcharger le planning.',
     actionLabel: null,
     actionTo: null,
@@ -401,7 +401,7 @@ const planningGuidance = computed(() => {
         <div v-if="relatedFilmScreenings.length" class="planning__detail-copy">
           <p class="planning__detail-copy-title">{{ relatedFilmScreenings.length > 1 ? 'Comparer les séances de ce film' : 'Séance de ce film' }}</p>
           <p class="planning__detail-copy-subtitle">
-            {{ relatedFilmScreenings.length > 1 ? 'Commencez par choisir ou remplacer une séance, puis ajustez son statut si besoin.' : 'Cette séance peut être retenue telle quelle ou remplacée plus tard.' }}
+            {{ relatedFilmScreenings.length > 1 ? 'Commence par choisir ou remplacer une séance, puis ajuste son statut si besoin.' : 'Cette séance peut être retenue telle quelle ou remplacée plus tard.' }}
           </p>
           <div class="planning__detail-screenings">
             <article

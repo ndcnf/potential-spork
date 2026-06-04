@@ -129,14 +129,14 @@ const filmsEmptyState = computed(() => {
 
   if (filtersAreActive.value) {
     return {
-      message: 'Aucun film ne correspond à vos filtres.',
+      message: 'Aucun film ne correspond à tes filtres.',
       action: 'Réinitialiser les filtres',
     }
   }
 
   if (!hasPrioritySelection.value) {
     return {
-      message: 'Commencez par qualifier quelques films pour construire votre sélection.',
+      message: 'Commence par qualifier quelques films pour construire ta sélection.',
       action: 'Voir tous les films',
     }
   }
@@ -288,7 +288,7 @@ function resetFilters(): void {
     </header>
 
     <section class="toolbar toolbar--filters">
-      <input v-model="filters.query" class="toolbar-input" type="search" placeholder="Rechercher un titre, un réalisateur ou un casting" />
+      <input v-model="filters.query" class="toolbar-input" type="search" placeholder="Rechercher un titre, un·e réalisateurice, un pays ou un casting" />
 
       <select v-model="filters.priority" class="toolbar-select">
         <option value="all">Toutes les priorités</option>
