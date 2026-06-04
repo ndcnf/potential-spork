@@ -98,7 +98,7 @@ Both are required.
 *   **Settings:** Must remain a secondary, out-of-band configuration area.
 
 ## ✅ Next Iteration Checklist
-1.  Done: validate the 3-step canonical workflow and associated terminology.
+1.  Done: validate the canonical workflow and associated terminology, with the 3rd step explicitly deferred out of the current frontend scope.
 2.  Done: map every existing view to a single, unique UX intention.
 3.  In progress: list and implement the missing empty states and guidance messages across the core views.
 4.  Done for the current pass: define the priority structure for `Films` and the arbitration structure for `Planning`.
@@ -215,7 +215,7 @@ Recommended behavior:
 - show progression, not just location
 
 Good signal examples:
-- `Step 1 of 3`
+- `Step 1 of 2`
 - `12 prioritaires definis`
 - `4 conflits a arbitrer`
 - `3 creneaux encore libres`
@@ -310,7 +310,7 @@ For the next iteration, the product only needs to make the flow legible.
 Not richer. Legible.
 
 Minimum deliverables:
-- visible 3-step navigation
+- visible workflow navigation for the active steps
 - one-line UX promise per main view
 - one dominant CTA per screen
 - real empty states for the 3 core workflow views

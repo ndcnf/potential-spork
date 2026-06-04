@@ -247,7 +247,7 @@ function resetFilters(): void {
   <section class="page">
     <header class="page-header films-hero">
       <div class="films-hero__main">
-        <p class="eyebrow">Etape 1 sur 3</p>
+        <p class="eyebrow">Etape 1 sur 2</p>
         <h2>Films</h2>
         <p class="page-copy">
           Parcourez les cycles, qualifiez les films, puis passez au planning quand vos priorites sont claires.

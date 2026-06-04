@@ -92,7 +92,7 @@ const planningGuidance = computed(() => {
   <section class="page planning">
     <header class="page-header">
       <div>
-        <p class="eyebrow">Etape 2 sur 3</p>
+        <p class="eyebrow">Etape 2 sur 2</p>
         <h2>Planning</h2>
         <p class="page-copy">Arbitrez les collisions, puis choisissez ou remplacez la bonne seance film par film.</p>
       </div>

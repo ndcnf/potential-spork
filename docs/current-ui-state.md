@@ -134,7 +134,7 @@ Déjà fait :
 - cohérence sémantique restaurée sur `tentative` / `confirmed`
 - logique accent + opacité en place
 - encore la vue à plus forte valeur produit
-- étape `2 sur 3` désormais explicite dans l'UI
+- étape `2 sur 2` désormais explicite dans l'UI
 - guidage en tête de vue désormais orienté arbitrage
 - panneau de détail recentré sur la comparaison de séances et leurs conséquences
 - hiérarchie d'actions simplifiée dans la timeline et dans le panneau : une action principale, puis actions secondaires limitées
@@ -227,7 +227,7 @@ Ordre conseillé :
 
 Déjà acté et implémenté dans le frontend :
 
-- workflow principal visible en `1. Films` / `2. Planning`
+- workflow principal visible en `1. Films` / `2. Planning`, sans troisième étape active dans le frontend courant
 - `Films` renforcé comme espace de sélection éditoriale avec progression visible et CTA passerelle vers `Planning`
 - `Planning` recentré comme espace d’arbitrage avec guidage explicite et hiérarchie d’actions simplifiée
 
@@ -259,7 +259,7 @@ Important :
 - `Planning` = arbitrage de séances
 
 Le produit ne doit plus présenter les vues actives comme des outils parallèles.
-La séquence courante est `Films` puis `Planning`.
+La séquence courante est un parcours explicite en 2 étapes : `Films` puis `Planning`.
 
 ### Promesse UX par vue
 
