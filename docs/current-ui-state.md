@@ -49,17 +49,17 @@ Conséquence :
 ### Priorités film
 La logique UI a été simplifiée à 3 niveaux :
 - `Immanquable`
-- `Peut-etre`
+- `Peut-être`
 - `Non merci`
 
 Mais l'état initial produit est désormais explicite :
-- `A traiter`
+- `À traiter`
 
 Compatibilité temporaire conservée avec les anciennes valeurs de données :
 - `must-see` + `high` -> `Immanquable`
-- `medium` -> `Peut-etre`
+- `medium` -> `Peut-être`
 - `ignore` -> `Non merci`
-- `low` -> ancien legacy a faire migrer vers `A traiter`
+- `low` -> ancien legacy à faire migrer vers `À traiter`
 
 Important :
 - l'état initial attendu n'est plus une pseudo-priorité basse
@@ -117,6 +117,8 @@ Ils affichent désormais une hiérarchie simplifiée en 3 niveaux, tout en accep
 - priorité simplifiée en 3 niveaux côté UI
 - carte film encore éditoriale, ce qui est volontaire
 - la sélection repose toujours sur les infos film, pas seulement sur la priorité
+- ton désormais homogénéisé au `tu`
+- accents et libellés visibles réalignés avec l’UI courante
 
 Déjà fait :
 - simplification des badges / selecteurs de priorité
@@ -138,6 +140,7 @@ Déjà fait :
 - guidage en tête de vue désormais orienté arbitrage
 - panneau de détail recentré sur la comparaison de séances et leurs conséquences
 - hiérarchie d'actions simplifiée dans la timeline et dans le panneau : une action principale, puis actions secondaires limitées
+- ton désormais homogénéisé au `tu`
 
 Déjà fait :
 - réalignement CSS / markup
@@ -165,6 +168,7 @@ Décision :
 État actuel :
 - plus cohérent visuellement
 - reste secondaire dans le produit
+- wording recentré sur les recommandations du planning, pas sur des réglages produit larges
 
 Règle :
 - ne pas laisser les settings absorber des décisions produit qui devraient vivre dans le flux principal
@@ -224,12 +228,14 @@ Ordre conseillé :
 1. compléter les états guidés restants (`loading`, `error`, `transition feedback`) sur les vues cœur actives
 2. poursuivre l’allègement de `Planning` si de nouveaux points de friction apparaissent dans la timeline
 3. garder `Trous` hors scope jusqu'à une V2 ou V3 explicite
+4. ne retoucher la copy qu'à la marge, sauf si un vrai problème de compréhension réapparaît
 
 Déjà acté et implémenté dans le frontend :
 
 - workflow principal visible en `1. Films` / `2. Planning`, sans troisième étape active dans le frontend courant
 - `Films` renforcé comme espace de sélection éditoriale avec progression visible et CTA passerelle vers `Planning`
 - `Planning` recentré comme espace d’arbitrage avec guidage explicite et hiérarchie d’actions simplifiée
+- ton UI unifié au `tu`, avec accents rétablis sur les libellés visibles
 
 Pour la suite immédiate, la roadmap de référence reste :
 
@@ -296,14 +302,14 @@ Décisions UI désormais actées :
 - CTA `Passer au Planning` conditionné par au moins un film `Prioritaire`
 - CTA `Passer au Planning` conditionné par au moins un film `Immanquable`
 - dots de progression conservées au niveau cycle comme **signal de synthèse**, pas comme contrôle
-- pas de sous-sections visuelles `A traiter / Prioritaires / Moyens / Ignores` dans chaque cycle
+- pas de sous-sections visuelles `À traiter / Prioritaires / Moyens / Ignorés` dans chaque cycle
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
 - headers de cycle renforcés par un traitement plus organique, type surlignage / encre, sans tomber dans l'effet décoratif gratuit
 - cartes film raffinées typographiquement : titre plus dense, tagline plus lisible, métadonnées plus discrètes et ligne séance traitée comme un chip éditorial léger
 - la carte film reste un support de lecture, pas une fausse zone cliquable
 - les états d'interaction forts vivent sur les vrais contrôles, pas sur tout le bloc carte
-- à l'initialisation, les films arrivent en état **`A traiter`**, sans sélection préalable
-- le rappel `pas de seance prevue` ne concerne que les films `Prioritaires`
+- à l'initialisation, les films arrivent en état **`À traiter`**, sans sélection préalable
+- le rappel `pas de séance prévue` ne concerne que les films `Prioritaires`
 - le statut reste lisible via le contrôle dans la carte, les dots et les compteurs, sans bruit structurel supplémentaire
 
 Rappel critique :

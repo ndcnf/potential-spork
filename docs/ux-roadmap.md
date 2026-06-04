@@ -153,7 +153,7 @@ This screen is an editorial selection workspace.
 It must answer:
 - What looks desirable?
 - Why is this film interesting?
-- Should I treat it as `Immanquable`, `Peut-etre`, or `Non merci`?
+- Should I treat it as `Immanquable`, `Peut-être`, or `Non merci`?
 
 It should not behave like:
 - a dense database table
@@ -216,9 +216,9 @@ Recommended behavior:
 
 Good signal examples:
 - `Step 1 of 2`
-- `12 prioritaires definis`
-- `4 conflits a arbitrer`
-- `3 creneaux encore libres`
+- `12 prioritaires définis`
+- `4 conflits à arbitrer`
+- `3 créneaux encore libres`
 
 The user should always understand what has been done and what remains unresolved.
 
@@ -258,22 +258,22 @@ That would be a structural UX failure.
 #### `Films` empty states
 
 **Case: no films match current filters**  
-Message: `Aucun film ne correspond a vos filtres.`  
-Action: `Reinitialiser les filtres`
+Message: `Aucun film ne correspond à tes filtres.`  
+Action: `Réinitialiser les filtres`
 
 **Case: no films have been prioritized yet**  
-Message: `Commencez par qualifier quelques films pour construire votre selection.`  
+Message: `Commence par qualifier quelques films pour construire ta sélection.`  
 Action: `Voir tous les films`
 
 #### `Planning` empty states
 
 **Case: no priority films selected yet**  
-Message: `Vous n'avez pas encore assez de films qualifies pour arbitrer votre planning.`  
-Action: `Retourner a Films`
+Message: `Tu n'as pas encore assez de films qualifiés pour arbitrer ton planning.`  
+Action: `Retourner à Films`
 
 **Case: no conflicts for now**  
-Message: `Aucun conflit pour l'instant. Votre planning est lisible sur cette plage.`  
-Action: `Retourner a Films`
+Message: `Aucun conflit pour l'instant. Ton planning est lisible sur cette plage.`  
+Action: `Retourner à Films`
 
 #### Loading states
 
@@ -290,9 +290,9 @@ No jumping UI.
 Important transitions should confirm consequence, not just success.
 
 Examples:
-- `Film passe en Prioritaire`
-- `Cette seance remplace votre choix precedent de 20:30`
-- `Creneau de 14:00 complete avec une option moyenne`
+- `Film passé en Prioritaire`
+- `Cette séance remplace ton choix précédent de 20:30`
+- `Créneau de 14:00 complété avec une option moyenne`
 
 Avoid vague toasts such as `Updated` or `Done`.
 That language says nothing.
