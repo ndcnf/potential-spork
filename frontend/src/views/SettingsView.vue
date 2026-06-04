@@ -45,7 +45,7 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
       <div>
         <h2>Parametres</h2>
         <p class="page-copy">
-          Les recommandations restent sous ton controle. Si rien n'est configure, le planning reste neutre et manuel.
+          Zone secondaire du produit. Ces reglages influencent seulement les recommandations du planning et ne remplacent pas vos choix.
         </p>
       </div>
     </header>
@@ -53,8 +53,8 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
     <section class="settings__panel">
       <header class="settings__section-header">
         <div>
-          <h3>Recommandations</h3>
-          <p class="page-copy">Active ou non les recommandations personnalisees.</p>
+          <h3>Recommandations du planning</h3>
+          <p class="page-copy">Activez ou non l'aide a la decision dans le planning.</p>
         </div>
         <label class="settings__switch" :class="{ 'settings__switch--active': settingsStore.recommendationSettings.enabled }">
           <input
@@ -68,9 +68,9 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
       </header>
 
       <p class="settings__status">
-        <template v-if="settingsStore.recommendationMode === 'off'">Recommandations desactivees.</template>
+        <template v-if="settingsStore.recommendationMode === 'off'">Recommandations desactivees : le planning reste entierement manuel.</template>
         <template v-else-if="settingsStore.recommendationMode === 'neutral'">Recommandations actives, mais sans preference definie : l'app reste neutre.</template>
-        <template v-else>Recommandations personnalisees actives.</template>
+        <template v-else>Recommandations actives avec preferences personnalisees.</template>
       </p>
     </section>
 
@@ -78,7 +78,7 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
       <header class="settings__section-header">
         <div>
           <h3>Confort des salles</h3>
-          <p class="page-copy">Tu peux favoriser ou penaliser certaines salles. Laisse vide si tu ne veux aucune influence.</p>
+          <p class="page-copy">Vous pouvez favoriser ou penaliser certaines salles. Laissez vide pour rester neutre.</p>
         </div>
       </header>
 
@@ -106,7 +106,7 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
       <header class="settings__section-header">
         <div>
           <h3>Preferences horaires</h3>
-          <p class="page-copy">Optionnel. Ce sont des preferences souples, pas des interdictions strictes.</p>
+          <p class="page-copy">Optionnel. Ce sont des preferences souples pour orienter les recommandations, pas des interdictions strictes.</p>
         </div>
       </header>
 
@@ -134,7 +134,7 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
     </section>
 
     <section class="settings__panel settings__panel--danger">
-      <button type="button" class="ghost-button" @click="settingsStore.resetRecommendationSettings()">Reinitialiser les preferences</button>
+      <button type="button" class="ghost-button" @click="settingsStore.resetRecommendationSettings()">Reinitialiser les recommandations</button>
     </section>
   </section>
 </template>

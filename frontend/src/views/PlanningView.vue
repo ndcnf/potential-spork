@@ -65,7 +65,7 @@ const planningGuidance = computed(() => {
     return {
       title: 'Planning presque complet',
       copy: "Aucun conflit pour l'instant. Votre planning est lisible sur cette plage.",
-      actionLabel: 'Retourner a Films',
+      actionLabel: 'Revoir la selection de films',
       actionTo: '/films',
     }
   }
@@ -94,7 +94,7 @@ const planningGuidance = computed(() => {
       <div>
         <p class="eyebrow">Etape 2 sur 2</p>
         <h2>Planning</h2>
-        <p class="page-copy">Arbitrez les collisions, puis choisissez ou remplacez la bonne seance film par film.</p>
+        <p class="page-copy">Arbitrez les collisions et retenez la bonne seance pour chaque film deja selectionne.</p>
       </div>
       <a class="planning__export" :href="exportHref" target="_blank" rel="noopener" @click="exportIcal">Exporter iCal</a>
     </header>
@@ -158,9 +158,9 @@ const planningGuidance = computed(() => {
         <div class="planning__control-group planning__control-group--status">
           <p class="eyebrow">Recommandations</p>
           <p class="planning__status-note">
-            <template v-if="settingsStore.recommendationMode === 'off'">Desactivees. Le planning reste manuel.</template>
+            <template v-if="settingsStore.recommendationMode === 'off'">Desactivees. L'arbitrage reste entierement manuel.</template>
             <template v-else-if="settingsStore.recommendationMode === 'neutral'">Actives, mais sans preference definie : l'app reste neutre.</template>
-            <template v-else>Personnalisees selon tes parametres.</template>
+            <template v-else>Actives et personnalisees selon vos preferences.</template>
           </p>
         </div>
 
