@@ -19,6 +19,13 @@ const filters = reactive({
   sort: 'title',
 })
 
+const transitionFeedback = reactive<{ message: string; tone: 'success' | 'info'; visible: boolean; timer: ReturnType<typeof setTimeout> | null }>({
+  message: '',
+  tone: 'success',
+  visible: false,
+  timer: null,
+})
+
 const openCycles = reactive<Record<number, boolean>>({})
 
 onMounted(() => {
@@ -242,6 +249,34 @@ function resetFilters(): void {
   filters.hideLowNoise = false
   filters.sort = 'title'
 }
+
+function showTransitionFeedback(message: string, tone: 'success' | 'info' = 'success') {
+  if (transitionFeedback.timer) {
+    clearTimeout(transitionFeedback.timer)
+  }
+
+  transitionFeedback.message = message
+  transitionFeedback.tone = tone
+  transitionFeedback.visible = true
+  transitionFeedback.timer = setTimeout(() => {
+    transitionFeedback.visible = false
+    transitionFeedback.timer = null
+  }, 2600)
+}
+
+function priorityLabel(priority: Priority): string {
+  const simplified = normalizePriority(priority)
+
+  if (simplified === 'high') return 'Immanquable'
+  if (simplified === 'medium') return 'Peut-être'
+  if (simplified === 'ignore') return 'Non merci'
+  return 'À traiter'
+}
+
+function applyFilmPriority(film: Film, priority: Priority) {
+  store.updateFilmPriority(film.id, priority)
+  showTransitionFeedback(`${film.title} passe en ${priorityLabel(priority)}.`)
+}
 </script>
 
 <template>
@@ -284,6 +319,14 @@ function resetFilters(): void {
     </section>
 
     <template v-else>
+    <section
+      v-if="transitionFeedback.visible"
+      class="notice-panel notice-panel--toast"
+      :class="transitionFeedback.tone === 'success' ? 'notice-panel--success' : 'notice-panel--info'"
+    >
+      <p class="page-copy">{{ transitionFeedback.message }}</p>
+    </section>
+
     <header class="page-header films-hero">
       <div class="films-hero__main">
         <p class="eyebrow">Étape 1 sur 2</p>
@@ -430,7 +473,7 @@ function resetFilters(): void {
             <div class="film-card-primary">
               <div class="film-card-heading">
                 <h4>{{ film.title }} <span class="film-title-year">({{ film.year || 'année ?' }})</span></h4>
-                <PrioritySelect :model-value="film.priority" dense @update:model-value="store.updateFilmPriority(film.id, $event)" />
+                <PrioritySelect :model-value="film.priority" dense @update:model-value="applyFilmPriority(film, $event)" />
               </div>
               <p class="film-tagline film-tagline--inline">{{ film.tagline || 'Tagline NIFFF à importer' }}</p>
                <p class="film-meta">{{ film.directors || 'Réalisation non renseignée' }}</p>

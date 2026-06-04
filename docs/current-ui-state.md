@@ -119,6 +119,7 @@ Ils affichent désormais une hiérarchie simplifiée en 3 niveaux, tout en accep
 - la sélection repose toujours sur les infos film, pas seulement sur la priorité
 - ton désormais homogénéisé au `tu`
 - accents et libellés visibles réalignés avec l’UI courante
+- feedback de transition désormais visible lors du changement de priorité
 
 Déjà fait :
 - simplification des badges / selecteurs de priorité
@@ -141,6 +142,7 @@ Déjà fait :
 - panneau de détail recentré sur la comparaison de séances et leurs conséquences
 - hiérarchie d'actions simplifiée dans la timeline et dans le panneau : une action principale, puis actions secondaires limitées
 - ton désormais homogénéisé au `tu`
+- feedback de transition désormais visible lors des actions sur les séances
 
 Déjà fait :
 - réalignement CSS / markup
@@ -225,7 +227,7 @@ Le build a déjà été utilisé comme garde-fou tout au long des dernières it�
 
 Ordre conseillé :
 
-1. compléter les états guidés restants (`loading`, `error`, `transition feedback`) sur les vues cœur actives
+1. compléter les états guidés restants, surtout `error` distinct du fallback mock
 2. poursuivre l’allègement de `Planning` si de nouveaux points de friction apparaissent dans la timeline
 3. garder `Trous` hors scope jusqu'à une V2 ou V3 explicite
 4. ne retoucher la copy qu'à la marge, sauf si un vrai problème de compréhension réapparaît
@@ -236,6 +238,8 @@ Déjà acté et implémenté dans le frontend :
 - `Films` renforcé comme espace de sélection éditoriale avec progression visible et CTA passerelle vers `Planning`
 - `Planning` recentré comme espace d’arbitrage avec guidage explicite et hiérarchie d’actions simplifiée
 - ton UI unifié au `tu`, avec accents rétablis sur les libellés visibles
+- skeletons de chargement ajoutés sur les vues actives
+- feedbacks de transition ajoutés sur les changements de priorité et les actions sur les séances
 
 Pour la suite immédiate, la roadmap de référence reste :
 

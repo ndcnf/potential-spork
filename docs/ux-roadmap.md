@@ -100,10 +100,11 @@ Both are required.
 ## ✅ Next Iteration Checklist
 1.  Done: validate the canonical workflow and associated terminology, with the 3rd step explicitly deferred out of the current frontend scope.
 2.  Done: map every existing view to a single, unique UX intention.
-3.  In progress: list and implement the missing empty states and guidance messages across the core views.
+3.  In progress: keep refining the remaining guided states, with emphasis now on explicit error handling.
 4.  Done for the current pass: define the priority structure for `Films` and the arbitration structure for `Planning`.
 5.  In progress: simplify concrete UX conflicts, starting with multi-CTA overload in `Planning`.
-6.  Later: only revisit `Trous / Free Slots` in a V2/V3 product pass.
+6.  Done for the current pass: add visible transition feedback for priority and screening decisions.
+7.  Later: only revisit `Trous / Free Slots` in a V2/V3 product pass.
 
 ---
 
