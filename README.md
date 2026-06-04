@@ -13,14 +13,83 @@ Festival planner perso pour le NIFFF.
 - `backend/`: API, persistence, import NIFFF, export `.ics`
 - `frontend/`: proto UI/UX navigable pour `Films`, `Planning`, `Trous`
 
-## Backend
+## Prerequis
+
+- `Python 3.12+`
+- `Node.js` + `npm`
+
+## Installation
+
+### Mac/Linux
+
+Backend :
 
 ```bash
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
+```
+
+Frontend :
+
+```bash
+cd frontend
+npm install
+```
+
+### Windows
+
+Backend :
+
+```powershell
+cd backend
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -e .
+```
+
+Frontend :
+
+```powershell
+cd frontend
+npm install
+```
+
+## Lancement
+
+### Mac/Linux
+
+Backend :
+
+```bash
+cd backend
+source .venv/bin/activate
 uvicorn app.main:app --reload
+```
+
+Frontend :
+
+```bash
+cd frontend
+npm run dev
+```
+
+### Windows
+
+Backend :
+
+```powershell
+cd backend
+.venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload
+```
+
+Frontend :
+
+```powershell
+cd frontend
+npm run dev
 ```
 
 API disponible sur `http://localhost:8000`.
@@ -34,14 +103,6 @@ Endpoints V1 utiles:
 - `GET /api/screenings`
 - `GET /api/planning`
 - `GET /api/exports/confirmed.ics`
-
-## Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
 
 App disponible sur `http://localhost:5173`.
 
