@@ -485,6 +485,14 @@ export function usePlanningModel() {
     store.setScreeningSelection(screeningId, targetStatus)
   }
 
+  function setScreeningSelection(screeningId: number, nextStatus: Screening['selection_status']): void {
+    store.setScreeningSelection(screeningId, nextStatus)
+  }
+
+  function clearScreeningSelection(screeningId: number): void {
+    store.setScreeningSelection(screeningId, 'none')
+  }
+
   function jumpToDay(dayKey: string): void {
     activeDay.value = dayKey
   }
@@ -548,6 +556,8 @@ export function usePlanningModel() {
     selectedCountForDay,
     dayChipLabel,
     toggleScreeningSelection,
+    setScreeningSelection,
+    clearScreeningSelection,
     jumpToDay,
     focusFirstConflict,
     focusFirstArbitration,

@@ -38,6 +38,8 @@ const {
   selectedCountForDay,
   dayChipLabel,
   toggleScreeningSelection,
+  setScreeningSelection,
+  clearScreeningSelection,
   openDetailPanel,
   focusFirstConflict,
   focusFirstArbitration,
@@ -416,50 +418,52 @@ const planningGuidance = computed(() => {
                 <span v-for="hint in screeningComparisonHints(option)" :key="hint" class="planning__detail-hint">{{ hint }}</span>
               </div>
               <p class="planning__detail-note">{{ screeningDecisionNote(option) }}</p>
-              <div v-if="option.selection_status !== 'tentative' && option.selection_status !== 'confirmed'" class="planning__detail-actions">
+              <div class="planning__detail-actions">
                 <button
+                  v-if="option.selection_status === 'tentative'"
                   type="button"
                   class="planning__action planning__action--primary"
-                  @click="toggleScreeningSelection(option.id, 'tentative')"
+                  @click="setScreeningSelection(option.id, 'confirmed')"
+                >
+                  Confirmer cette seance
+                </button>
+                <button
+                  v-else-if="option.selection_status !== 'confirmed'"
+                  type="button"
+                  class="planning__action planning__action--primary"
+                  @click="setScreeningSelection(option.id, 'tentative')"
                 >
                   {{ screeningPrimaryActionLabel(option) }}
+                </button>
+
+                <button
+                  v-if="option.selection_status === 'confirmed'"
+                  type="button"
+                  class="planning__action planning__action--secondary"
+                  @click="setScreeningSelection(option.id, 'tentative')"
+                >
+                  Repasser en tentative
+                </button>
+                <button
+                  v-if="option.selection_status === 'tentative' || option.selection_status === 'confirmed'"
+                  type="button"
+                  class="planning__action planning__action--ghost"
+                  @click="clearScreeningSelection(option.id)"
+                >
+                  Retirer du planning
+                </button>
+                <button
+                  v-else-if="option.selection_status !== 'rejected'"
+                  type="button"
+                  class="planning__action planning__action--ghost"
+                  @click="setScreeningSelection(option.id, 'rejected')"
+                >
+                  Ignorer cette seance
                 </button>
               </div>
               <div class="planning__session-links">
                 <a v-if="option.ticket_url" :href="option.ticket_url" target="_blank" rel="noopener">billetterie</a>
                 <a href="#" @click="exportScreeningIcal(option, $event)">agenda</a>
-              </div>
-              <div class="planning__selection-pills" aria-label="Statut de la seance du film">
-                <button
-                  type="button"
-                  class="planning__selection-pill"
-                  :class="{ 'planning__selection-pill--active': option.selection_status === 'tentative', 'planning__selection-pill--tentative': option.selection_status === 'tentative' }"
-                  :aria-pressed="option.selection_status === 'tentative'"
-                  @click="toggleScreeningSelection(option.id, 'tentative')"
-                >
-                  <span class="planning__selection-pill-dot" />
-                  Tentative
-                </button>
-                <button
-                  type="button"
-                  class="planning__selection-pill"
-                  :class="{ 'planning__selection-pill--active': option.selection_status === 'confirmed', 'planning__selection-pill--confirmed': option.selection_status === 'confirmed' }"
-                  :aria-pressed="option.selection_status === 'confirmed'"
-                  @click="toggleScreeningSelection(option.id, 'confirmed')"
-                >
-                  <span class="planning__selection-pill-dot" />
-                  Confirmee
-                </button>
-                <button
-                  type="button"
-                  class="planning__selection-pill"
-                  :class="{ 'planning__selection-pill--active': option.selection_status === 'rejected', 'planning__selection-pill--rejected': option.selection_status === 'rejected' }"
-                  :aria-pressed="option.selection_status === 'rejected'"
-                  @click="toggleScreeningSelection(option.id, 'rejected')"
-                >
-                  <span class="planning__selection-pill-dot" />
-                  Ignoree
-                </button>
               </div>
             </article>
           </div>
