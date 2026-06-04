@@ -55,8 +55,8 @@ const planningGuidance = computed(() => {
   if (!hasPlanningCandidates.value) {
     return {
       title: 'Commencez par qualifier quelques films',
-      copy: "Vous n'avez pas encore assez de films qualifies pour arbitrer votre planning.",
-      actionLabel: 'Retourner a Films',
+      copy: "Tu n'as pas encore assez de films qualifiés pour arbitrer ton planning.",
+      actionLabel: 'Retourner à Films',
       actionTo: '/films',
     }
   }
@@ -64,8 +64,8 @@ const planningGuidance = computed(() => {
   if (!hasConflicts.value && !hasArbitrations.value) {
     return {
       title: 'Planning presque complet',
-      copy: "Aucun conflit pour l'instant. Votre planning est lisible sur cette plage.",
-      actionLabel: 'Revoir la selection de films',
+      copy: "Aucun conflit pour l'instant. Ton planning est lisible sur cette plage.",
+      actionLabel: 'Revoir la sélection de films',
       actionTo: '/films',
     }
   }
@@ -73,15 +73,15 @@ const planningGuidance = computed(() => {
   if (hasConflicts.value) {
     return {
       title: 'Arbitrage requis',
-      copy: 'Commencez par resoudre les collisions entre seances deja retenues avant d ajouter de nouveaux choix.',
+      copy: 'Commence par résoudre les collisions entre séances déjà retenues avant d’ajouter de nouveaux choix.',
       actionLabel: null,
       actionTo: null,
     }
   }
 
   return {
-    title: 'Choisissez la meilleure seance par film',
-    copy: 'Vous pouvez maintenant confirmer ou remplacer les seances restantes sans surcharger le planning.',
+    title: 'Choisissez la meilleure séance par film',
+    copy: 'Tu peux maintenant confirmer ou remplacer les séances restantes sans surcharger le planning.',
     actionLabel: null,
     actionTo: null,
   }
@@ -92,9 +92,9 @@ const planningGuidance = computed(() => {
   <section class="page planning">
     <header class="page-header">
       <div>
-        <p class="eyebrow">Etape 2 sur 2</p>
+        <p class="eyebrow">Étape 2 sur 2</p>
         <h2>Planning</h2>
-        <p class="page-copy">Arbitrez les collisions et retenez la bonne seance pour chaque film deja selectionne.</p>
+        <p class="page-copy">Arbitre les collisions et retiens la bonne séance pour chaque film déjà qualifié.</p>
       </div>
       <a class="planning__export" :href="exportHref" target="_blank" rel="noopener" @click="exportIcal">Exporter iCal</a>
     </header>
@@ -111,7 +111,7 @@ const planningGuidance = computed(() => {
           Voir le premier conflit
         </button>
         <button v-else-if="hasArbitrations" type="button" class="planning__action planning__action--primary" @click="focusFirstArbitration">
-          Voir la premiere seance a arbitrer
+          Voir la première séance à arbitrer
         </button>
         <RouterLink v-else-if="planningGuidance.actionLabel && planningGuidance.actionTo" :to="planningGuidance.actionTo" class="planning__action planning__action--secondary">
           {{ planningGuidance.actionLabel }}
@@ -127,28 +127,28 @@ const planningGuidance = computed(() => {
         </article>
         <article class="planning__summary-card">
           <strong>{{ summary.selected }}</strong>
-          <span>seances choisies</span>
+          <span>séances choisies</span>
         </article>
         <button type="button" class="planning__summary-card planning__summary-card--action" :disabled="!conflictingSelectedScreenings.length" @click="focusFirstConflict">
           <strong>{{ summary.conflicts }}</strong>
-          <span>conflits a regler</span>
+          <span>conflits à régler</span>
         </button>
         <button type="button" class="planning__summary-card planning__summary-card--action" :disabled="!arbitrableScreenings.length" @click="focusFirstArbitration">
           <strong>{{ summary.toPlace }}</strong>
-          <span>seances a arbitrer</span>
+          <span>séances à arbitrer</span>
         </button>
       </div>
 
       <section class="legend legend--planning">
         <div class="legend__group">
-          <span class="legend__label">Etats</span>
+          <span class="legend__label">États</span>
           <div class="legend__items legend__items--compact">
-            <span class="legend__item"><span class="legend__marker legend__marker--confirmed" /> confirmee</span>
+            <span class="legend__item"><span class="legend__marker legend__marker--confirmed" /> confirmée</span>
             <span class="legend__item"><span class="legend__marker legend__marker--tentative" /> tentative</span>
-            <span class="legend__item"><span class="legend__marker legend__marker--must-lock" /> a securiser</span>
+            <span class="legend__item"><span class="legend__marker legend__marker--must-lock" /> à sécuriser</span>
             <span class="legend__item"><span class="legend__marker legend__marker--conflict" /> conflit</span>
-            <span class="legend__item"><span class="legend__marker legend__marker--disabled" /> autre seance deja choisie</span>
-            <span class="legend__item"><span class="legend__marker legend__marker--rejected" /> seance ecartee</span>
+            <span class="legend__item"><span class="legend__marker legend__marker--disabled" /> autre séance déjà choisie</span>
+            <span class="legend__item"><span class="legend__marker legend__marker--rejected" /> séance écartée</span>
             <span class="legend__item"><span class="legend__marker legend__marker--available" /> disponible</span>
           </div>
         </div>
@@ -158,9 +158,9 @@ const planningGuidance = computed(() => {
         <div class="planning__control-group planning__control-group--status">
           <p class="eyebrow">Recommandations</p>
           <p class="planning__status-note">
-            <template v-if="settingsStore.recommendationMode === 'off'">Desactivees. L'arbitrage reste entierement manuel.</template>
-            <template v-else-if="settingsStore.recommendationMode === 'neutral'">Actives, mais sans preference definie : l'app reste neutre.</template>
-            <template v-else>Actives et personnalisees selon vos preferences.</template>
+            <template v-if="settingsStore.recommendationMode === 'off'">Désactivées. L'arbitrage reste entièrement manuel.</template>
+            <template v-else-if="settingsStore.recommendationMode === 'neutral'">Activées, mais sans préférence définie : l'app reste neutre.</template>
+            <template v-else>Activées et personnalisées selon tes préférences.</template>
           </p>
         </div>
 
@@ -190,17 +190,17 @@ const planningGuidance = computed(() => {
               Visualisation
             </button>
           </div>
-          <p v-if="isMobile && planningMode === 'visualization'" class="planning__status-note">Visualisation simplifiee indisponible sur mobile : affichage automatique en timeline.</p>
+          <p v-if="isMobile && planningMode === 'visualization'" class="planning__status-note">Visualisation simplifiée indisponible sur mobile : affichage automatique en timeline.</p>
         </div>
 
         <div class="planning__control-group">
           <p class="eyebrow">Filtre</p>
-          <div class="planning__mode-switch" role="tablist" aria-label="Filtre des seances">
+          <div class="planning__mode-switch" role="tablist" aria-label="Filtre des séances">
             <button class="planning__mode-button" :class="{ 'planning__mode-button--active': screeningFilter === 'all' }" type="button" @click="screeningFilter = 'all'">
               Toutes
             </button>
             <button class="planning__mode-button" :class="{ 'planning__mode-button--active': screeningFilter === 'confirmed' }" type="button" @click="screeningFilter = 'confirmed'">
-              Confirmees uniquement
+              Confirmées uniquement
             </button>
           </div>
         </div>
@@ -214,14 +214,14 @@ const planningGuidance = computed(() => {
             <p class="eyebrow">Jour courant</p>
             <h3>{{ activeDay === FESTIVAL_VIEW_KEY ? 'Festival entier' : activeDay ? formatDayLabel(activeDay) : 'Aucun jour' }}</h3>
           </div>
-          <span>{{ daySummary.selected }} choisi(es) · {{ daySummary.conflicts }} conflit(s) · {{ daySummary.total }} seance(s)</span>
+          <span>{{ daySummary.selected }} séances retenues · {{ daySummary.conflicts }} conflit(s) · {{ daySummary.total }} séance(s)</span>
         </header>
 
         <div v-if="effectivePlanningMode === 'timeline' && dayScreenings.length" class="planning__timeline">
           <template v-for="group in timelineGroups" :key="group.dayKey || 'empty'">
             <header v-if="activeDay === FESTIVAL_VIEW_KEY" class="planning__timeline-day-header">
               <strong>{{ formatDayLabel(group.dayKey) }}</strong>
-              <span>{{ group.screenings.filter((screening) => screening.isSelected).length }} retenue(s)</span>
+              <span>{{ group.screenings.filter((screening) => screening.isSelected).length }} séances retenues</span>
             </header>
 
             <article
@@ -256,14 +256,14 @@ const planningGuidance = computed(() => {
                     <a v-if="screening.ticket_url" :href="screening.ticket_url" target="_blank" rel="noopener">billetterie</a>
                     <a href="#" @click="exportScreeningIcal(screening, $event)">agenda</a>
                   </div>
-                  <div class="planning__detail-actions" aria-label="Actions sur la seance">
+                  <div class="planning__detail-actions" aria-label="Actions sur la séance">
                     <button
                       v-if="screening.selection_status === 'tentative'"
                       type="button"
                       class="planning__action planning__action--primary"
                       @click="setScreeningSelection(screening.id, 'confirmed')"
                     >
-                      Confirmer cette seance
+                      Confirmer cette séance
                     </button>
                     <button
                       v-else-if="screening.selection_status !== 'confirmed'"
@@ -296,7 +296,7 @@ const planningGuidance = computed(() => {
                       class="planning__action planning__action--ghost"
                       @click="setScreeningSelection(screening.id, 'rejected')"
                     >
-                      Ignorer cette seance
+                      Ignorer cette séance
                     </button>
                   </div>
                 </div>
@@ -347,17 +347,17 @@ const planningGuidance = computed(() => {
               </div>
             </div>
 
-            <p v-else class="planning__empty">Aucune seance choisie a visualiser pour cette plage.</p>
+            <p v-else class="planning__empty">Aucune séance choisie à visualiser pour cette plage.</p>
           </template>
         </div>
 
-        <p v-else class="planning__empty">Aucune seance visible pour ce jour.</p>
+        <p v-else class="planning__empty">Aucune séance visible pour ce jour.</p>
       </section>
 
       <aside v-if="detailScreening" class="planning__detail-panel">
         <header class="planning__panel-header">
           <div>
-            <p class="eyebrow">Detail film</p>
+            <p class="eyebrow">Détail film</p>
             <h3 class="planning__detail-title">
               <span>{{ detailScreening.film_title }}</span>
               <span v-if="filmPriorityDots(detailScreening.film?.priority)" class="planning__film-priority" aria-hidden="true">
@@ -390,18 +390,18 @@ const planningGuidance = computed(() => {
             </p>
           </div>
           <div>
-            <p class="planning__detail-line"><strong>Rea</strong> {{ detailScreening.film?.directors || 'Non renseigne' }}</p>
+            <p class="planning__detail-line"><strong>Réalisation</strong> {{ detailScreening.film?.directors || 'Non renseignée' }}</p>
             <p class="planning__detail-line"><strong>Infos</strong> {{ filmMeta(detailScreening) }}</p>
-            <p class="planning__detail-line"><strong>Genre</strong> {{ detailScreening.film?.tagline || 'Non renseigne' }}</p>
-            <p class="planning__detail-line"><strong>Langue</strong> {{ detailScreening.film?.language || 'Non renseignee' }}</p>
-            <p class="planning__detail-line"><strong>Age</strong> {{ detailScreening.film?.age_rating || 'Non renseigne' }}</p>
+            <p class="planning__detail-line"><strong>Tagline</strong> {{ detailScreening.film?.tagline || 'Non renseignée' }}</p>
+            <p class="planning__detail-line"><strong>Langue</strong> {{ detailScreening.film?.language || 'Non renseignée' }}</p>
+            <p class="planning__detail-line"><strong>Âge</strong> {{ detailScreening.film?.age_rating || 'Non renseigné' }}</p>
           </div>
         </div>
 
         <div v-if="relatedFilmScreenings.length" class="planning__detail-copy">
-          <p class="planning__detail-copy-title">{{ relatedFilmScreenings.length > 1 ? 'Comparer les seances de ce film' : 'Seance de ce film' }}</p>
+          <p class="planning__detail-copy-title">{{ relatedFilmScreenings.length > 1 ? 'Comparer les séances de ce film' : 'Séance de ce film' }}</p>
           <p class="planning__detail-copy-subtitle">
-            {{ relatedFilmScreenings.length > 1 ? 'Commencez par choisir ou remplacer une seance, puis ajustez son statut si besoin.' : 'Cette seance peut etre retenue telle quelle ou remplacee plus tard.' }}
+            {{ relatedFilmScreenings.length > 1 ? 'Commencez par choisir ou remplacer une séance, puis ajustez son statut si besoin.' : 'Cette séance peut être retenue telle quelle ou remplacée plus tard.' }}
           </p>
           <div class="planning__detail-screenings">
             <article
@@ -435,7 +435,7 @@ const planningGuidance = computed(() => {
                   class="planning__action planning__action--primary"
                   @click="setScreeningSelection(option.id, 'confirmed')"
                 >
-                  Confirmer cette seance
+                  Confirmer cette séance
                 </button>
                 <button
                   v-else-if="option.selection_status !== 'confirmed'"
@@ -468,7 +468,7 @@ const planningGuidance = computed(() => {
                   class="planning__action planning__action--ghost"
                   @click="setScreeningSelection(option.id, 'rejected')"
                 >
-                  Ignorer cette seance
+                  Ignorer cette séance
                 </button>
               </div>
               <div class="planning__session-links">
@@ -490,7 +490,7 @@ const planningGuidance = computed(() => {
         </div>
 
         <div class="planning__links">
-          <a href="#" @click="exportScreeningIcal(detailScreening, $event)">Ajouter cette seance a l agenda</a>
+          <a href="#" @click="exportScreeningIcal(detailScreening, $event)">Ajouter cette séance à l’agenda</a>
           <a v-if="detailScreening.ticket_url" :href="detailScreening.ticket_url" target="_blank" rel="noopener">Billetterie</a>
           <a v-if="detailScreening.film?.festival_url" :href="detailScreening.film.festival_url" target="_blank" rel="noopener">Ouvrir la fiche NIFFF</a>
           <a v-if="detailScreening.film?.imdb_url" :href="detailScreening.film.imdb_url" target="_blank" rel="noopener">IMDb</a>
@@ -499,9 +499,9 @@ const planningGuidance = computed(() => {
       </section>
 
       <section v-else class="empty-panel">
-        <h3>Aucun film a arbitrer pour le moment</h3>
-        <p class="page-copy">Vous devez d'abord marquer au moins un film comme `Immanquable` ou `Peut-etre` dans la vue `Films`.</p>
-        <RouterLink to="/films" class="ghost-button">Retourner a Films</RouterLink>
+        <h3>Aucun film à arbitrer pour le moment</h3>
+        <p class="page-copy">Tu dois d'abord marquer au moins un film comme `Immanquable` ou `Peut-être` dans la vue `Films`.</p>
+        <RouterLink to="/films" class="ghost-button">Retourner à Films</RouterLink>
       </section>
   </section>
 </template>

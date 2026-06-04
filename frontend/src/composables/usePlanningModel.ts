@@ -354,26 +354,26 @@ export function usePlanningModel() {
   }
 
   function screeningReason(screening: PlanningScreening): string {
-    if (screening.selection_status === 'rejected') return 'Ignoree'
+    if (screening.selection_status === 'rejected') return 'Ignorée'
     if (screening.isConflict || screening.derived_state === 'conflict') return 'Conflit'
-    if (screening.selection_status === 'confirmed') return 'Confirmee'
+    if (screening.selection_status === 'confirmed') return 'Confirmée'
     if (screening.selection_status === 'tentative') return 'Tentative'
-    if (screening.isSingleScreening) return 'Seance unique'
-    if (screening.isMustLock) return 'A securiser'
+    if (screening.isSingleScreening) return 'Séance unique'
+    if (screening.isMustLock) return 'À sécuriser'
     if (screening.isAlternative || screening.derived_state === 'disabled') {
-      return 'Autre seance choisie'
+      return 'Autre séance choisie'
     }
     return 'Disponible'
   }
 
   function screeningComparisonStatus(screening: PlanningScreening): string {
-    if (screening.selection_status === 'rejected') return 'Ignoree'
+    if (screening.selection_status === 'rejected') return 'Ignorée'
     if (screening.isConflict || screening.derived_state === 'conflict') return 'Conflit'
-    if (screening.selection_status === 'confirmed') return 'Confirmee'
+    if (screening.selection_status === 'confirmed') return 'Confirmée'
     if (screening.selection_status === 'tentative') return 'Tentative'
-    if (screening.isSingleScreening) return 'Seance unique'
-    if (screening.isMustLock) return 'A securiser'
-    if (screening.isAlternative || screening.derived_state === 'disabled') return 'Autre seance du film deja prevue'
+    if (screening.isSingleScreening) return 'Séance unique'
+    if (screening.isMustLock) return 'À sécuriser'
+    if (screening.isAlternative || screening.derived_state === 'disabled') return 'Autre séance du film déjà prévue'
     return 'Disponible'
   }
 
@@ -395,7 +395,7 @@ export function usePlanningModel() {
     if (screening.isAlternative || screening.derived_state === 'disabled') {
       const selectedSibling = findSelectedSibling(screening)
       if (selectedSibling?.starts_at) {
-        hints.push(`Tu as deja retenu ${formatDayChipLabel(selectedSibling.dayKey)} a ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}`)
+        hints.push(`Tu as déjà retenu ${formatDayChipLabel(selectedSibling.dayKey)} à ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}`)
       }
     } else if (conflictingSelected?.starts_at) {
       hints.push(`Conflit avec ${conflictingSelected.film_title}, ${formatDayChipLabel(conflictingSelected.dayKey)} ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}`)
@@ -409,38 +409,38 @@ export function usePlanningModel() {
     const conflictingSelected = findConflictingSelectedOtherFilm(screening)
 
     if (screening.selection_status === 'confirmed') {
-      return 'Cette seance est deja confirmee dans votre planning.'
+      return 'Cette séance est déjà confirmée dans votre planning.'
     }
 
     if (screening.selection_status === 'tentative') {
-      return 'Cette seance est deja retenue provisoirement.'
+      return 'Cette séance est déjà retenue provisoirement.'
     }
 
     if ((screening.isAlternative || screening.derived_state === 'disabled') && selectedSibling?.starts_at) {
-      return `Choisir cette seance remplacera votre autre choix du ${formatDayChipLabel(selectedSibling.dayKey)} a ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}.`
+      return `Choisir cette séance remplacera votre autre choix du ${formatDayChipLabel(selectedSibling.dayKey)} à ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}.`
     }
 
     if (conflictingSelected?.starts_at) {
-      return `Choisir cette seance entrera en conflit avec ${conflictingSelected.film_title}, ${formatDayChipLabel(conflictingSelected.dayKey)} ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}.`
+      return `Choisir cette séance entrera en conflit avec ${conflictingSelected.film_title}, ${formatDayChipLabel(conflictingSelected.dayKey)} ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}.`
     }
 
     if (screening.isMustLock) {
-      return 'C est la derniere option viable pour ce film prioritaire.'
+      return 'C’est la dernière option viable pour ce film prioritaire.'
     }
 
     if (screening.isSingleScreening) {
-      return 'C est la seule seance disponible pour ce film.'
+      return 'C’est la seule séance disponible pour ce film.'
     }
 
-    return 'Cette seance reste disponible sans collision immediate.'
+    return 'Cette séance reste disponible sans collision immédiate.'
   }
 
   function screeningPrimaryActionLabel(screening: PlanningScreening): string {
     if (screening.isAlternative || screening.derived_state === 'disabled') {
-      return 'Remplacer par cette seance'
+      return 'Remplacer par cette séance'
     }
 
-    return 'Choisir cette seance'
+    return 'Choisir cette séance'
   }
 
   function screeningStatusTone(screening: PlanningScreening): string {

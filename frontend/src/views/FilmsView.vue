@@ -108,7 +108,7 @@ const planningReady = computed(() => globalPriorityCounts.value.high > 0)
 const globalProgressLabel = computed(() => {
   const total = visibleFilms.value.length
   const { high, medium, pending } = globalPriorityCounts.value
-  return `${high} prioritaires, ${medium} moyens et ${pending} restant a trier sur ${total} films visibles`
+  return `${high} prioritaires, ${medium} intermédiaires et ${pending} restants à trier sur ${total} films visibles`
 })
 
 const hasPrioritySelection = computed(() =>
@@ -129,21 +129,21 @@ const filmsEmptyState = computed(() => {
 
   if (filtersAreActive.value) {
     return {
-      message: 'Aucun film ne correspond a vos filtres.',
-      action: 'Reinitialiser les filtres',
+      message: 'Aucun film ne correspond à vos filtres.',
+      action: 'Réinitialiser les filtres',
     }
   }
 
   if (!hasPrioritySelection.value) {
     return {
-      message: 'Commencez par qualifier quelques films pour construire votre selection.',
+      message: 'Commencez par qualifier quelques films pour construire votre sélection.',
       action: 'Voir tous les films',
     }
   }
 
   return {
     message: 'Aucun film visible pour le moment.',
-    action: 'Reinitialiser les filtres',
+    action: 'Réinitialiser les filtres',
   }
 })
 
@@ -209,10 +209,10 @@ function cycleScreeningLabel(films: Film[]): string | null {
   const uniqueCounts = [...new Set(counts)].sort((left, right) => left - right)
   if (uniqueCounts.length === 1) {
     const count = uniqueCounts[0]
-    return `${count} ${count > 1 ? 'seances' : 'seance'} par film`
+    return `${count} ${count > 1 ? 'séances' : 'séance'} par film`
   }
 
-  return `${uniqueCounts[0]} a ${uniqueCounts.at(-1)} seances par film`
+  return `${uniqueCounts[0]} à ${uniqueCounts.at(-1)} séances par film`
 }
 
 function cyclePriorityCounts(films: Film[]): { pending: number; high: number; medium: number; ignore: number } {
@@ -228,7 +228,7 @@ function cyclePriorityCounts(films: Film[]): { pending: number; high: number; me
 
 function cyclePriorityAccessibilityLabel(films: Film[]): string {
   const counts = cyclePriorityCounts(films)
-  return `${counts.pending} a traiter, ${counts.high} prioritaires, ${counts.medium} moyens et ${counts.ignore} ignores sur ${films.length} films dans ce cycle`
+  return `${counts.pending} à traiter, ${counts.high} prioritaires, ${counts.medium} intermédiaires et ${counts.ignore} ignorés sur ${films.length} films dans ce cycle`
 }
 
 function sortPriorityForCycle(left: Film, right: Film): number {
@@ -247,10 +247,10 @@ function resetFilters(): void {
   <section class="page">
     <header class="page-header films-hero">
       <div class="films-hero__main">
-        <p class="eyebrow">Etape 1 sur 2</p>
+        <p class="eyebrow">Étape 1 sur 2</p>
         <h2>Films</h2>
         <p class="page-copy">
-          Parcourez les cycles, qualifiez les films, puis passez au planning quand vos priorites sont claires.
+          Parcours les cycles, qualifie les films, puis passe au planning quand ta sélection devient assez claire.
         </p>
       </div>
 
@@ -262,16 +262,16 @@ function resetFilters(): void {
           </div>
           <div class="films-progress__stat">
             <span class="films-progress__value">{{ globalPriorityCounts.medium }}</span>
-            <span class="films-progress__label">Peut-etre</span>
+            <span class="films-progress__label">Peut-être</span>
           </div>
           <div class="films-progress__stat">
             <span class="films-progress__value">{{ globalPriorityCounts.pending }}</span>
-            <span class="films-progress__label">A traiter</span>
+            <span class="films-progress__label">À traiter</span>
           </div>
         </div>
 
         <p class="films-progress__hint page-copy">
-          {{ planningReady ? 'Vos choix sont assez clairs pour commencer l\'arbitrage des seances.' : 'Commencez par marquer au moins un film comme immanquable.' }}
+          {{ planningReady ? 'Ta sélection est assez claire pour commencer l\'arbitrage des séances.' : 'Commence par marquer au moins un film comme Immanquable.' }}
         </p>
 
         <RouterLink
@@ -288,25 +288,25 @@ function resetFilters(): void {
     </header>
 
     <section class="toolbar toolbar--filters">
-      <input v-model="filters.query" class="toolbar-input" type="search" placeholder="Rechercher un titre, un realisateur, un casting" />
+      <input v-model="filters.query" class="toolbar-input" type="search" placeholder="Rechercher un titre, un réalisateur ou un casting" />
 
       <select v-model="filters.priority" class="toolbar-select">
-        <option value="all">Toutes les priorites</option>
-        <option value="pending">A traiter</option>
+        <option value="all">Toutes les priorités</option>
+        <option value="pending">À traiter</option>
         <option value="high">Immanquable</option>
-        <option value="medium">Peut-etre</option>
+        <option value="medium">Peut-être</option>
         <option value="ignore">Non merci</option>
       </select>
 
       <select v-model="filters.sort" class="toolbar-select">
-        <option value="title">Tri alphabetique</option>
-        <option value="priority">Tri par priorite</option>
-        <option value="duration">Tri par duree</option>
+        <option value="title">Tri alphabétique</option>
+        <option value="priority">Tri par priorité</option>
+        <option value="duration">Tri par durée</option>
       </select>
 
       <label class="toolbar-toggle">
         <input v-model="filters.hideLowNoise" type="checkbox" />
-        <span>Masquer les films ignores</span>
+        <span>Masquer les films ignorés</span>
       </label>
     </section>
 
@@ -314,12 +314,12 @@ function resetFilters(): void {
       <div class="legend__group">
         <span class="legend__label">Cycles</span>
         <div class="legend__items">
-          <span class="legend__item">chaque cycle ouvre un bloc editorial distinct</span>
+          <span class="legend__item">chaque cycle ouvre un bloc éditorial distinct</span>
         </div>
       </div>
 
       <div class="legend__group">
-        <span class="legend__label">Priorites</span>
+        <span class="legend__label">Priorités</span>
         <div class="legend__items">
           <PriorityBadge priority="unreviewed" />
           <PriorityBadge priority="ignore" />
@@ -329,16 +329,16 @@ function resetFilters(): void {
       </div>
 
       <div class="legend__group">
-        <span class="legend__label">Seance</span>
+        <span class="legend__label">Séance</span>
         <div class="legend__items">
-          <span class="film-screenings__item">ven 04.07 18h30-21h00 = seance choisie</span>
-          <span class="film-screenings__item film-screenings__item--warning">pas de seance prevue = film prioritaire sans choix</span>
+          <span class="film-screenings__item">ven 04.07 18h30-21h00 = séance choisie</span>
+          <span class="film-screenings__item film-screenings__item--warning">pas de séance prévue = film prioritaire sans choix</span>
         </div>
       </div>
     </section>
 
     <section v-if="filmsEmptyState" class="empty-panel">
-      <h3>Aucun film a afficher</h3>
+      <h3>Aucun film à afficher</h3>
       <p class="page-copy">{{ filmsEmptyState.message }}</p>
       <button class="ghost-button" type="button" @click="resetFilters">{{ filmsEmptyState.action }}</button>
     </section>
@@ -366,9 +366,9 @@ function resetFilters(): void {
             </span>
             <span class="cycle-header__separator" aria-hidden="true">·</span>
             <span class="cycle-header__counters">
-              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).pending }}</strong> a traiter</span>
+              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).pending }}</strong> à traiter</span>
               <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).high }}</strong> prioritaires</span>
-              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).medium }}</strong> moyens</span>
+              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).medium }}</strong> intermédiaires</span>
             </span>
           </small>
         </div>
@@ -385,11 +385,11 @@ function resetFilters(): void {
           <div class="film-card-stack">
             <div class="film-card-primary">
               <div class="film-card-heading">
-                <h4>{{ film.title }} <span class="film-title-year">({{ film.year || 'annee ?' }})</span></h4>
+                <h4>{{ film.title }} <span class="film-title-year">({{ film.year || 'année ?' }})</span></h4>
                 <PrioritySelect :model-value="film.priority" dense @update:model-value="store.updateFilmPriority(film.id, $event)" />
               </div>
-              <p class="film-tagline film-tagline--inline">{{ film.tagline || 'Tagline NIFFF a importer' }}</p>
-              <p class="film-meta">{{ film.directors || 'Real non renseigne' }}</p>
+              <p class="film-tagline film-tagline--inline">{{ film.tagline || 'Tagline NIFFF à importer' }}</p>
+               <p class="film-meta">{{ film.directors || 'Réalisation non renseignée' }}</p>
               <p v-if="film.cast" class="film-cast film-cast--inline">{{ film.cast }}</p>
               <p class="film-meta film-meta--compact">
                 {{ film.countries || 'Pays ?' }} · {{ film.duration_minutes || '?' }} min · {{ film.cycle_name || group.cycle.name }}
@@ -402,7 +402,7 @@ function resetFilters(): void {
               </span>
             </div>
             <div v-else-if="shouldWarnMissingScreening(film.priority)" class="film-screenings">
-              <span class="film-screenings__item film-screenings__item--warning">pas de seance prevue</span>
+               <span class="film-screenings__item film-screenings__item--warning">pas de séance prévue</span>
             </div>
           </div>
         </article>
@@ -411,7 +411,7 @@ function resetFilters(): void {
     </template>
 
     <footer class="page-footer">
-      <small>{{ store.usingMocks ? 'Donnees de preview : NIFFF 2025 croise PDF + Wayback' : 'Donnees : base locale / API courante' }}</small>
+      <small>{{ store.usingMocks ? 'Données de preview : NIFFF 2025 croisé PDF + Wayback' : 'Données : base locale / API courante' }}</small>
     </footer>
   </section>
 </template>

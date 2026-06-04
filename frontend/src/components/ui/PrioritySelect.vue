@@ -14,7 +14,7 @@ type SimplifiedPriority = 'ignore' | 'medium' | 'high'
 
 const options: Array<{ value: SimplifiedPriority; label: string }> = [
   { value: 'high', label: 'Immanquable' },
-  { value: 'medium', label: 'Peut-etre' },
+  { value: 'medium', label: 'Peut-être' },
   { value: 'ignore', label: 'Non merci' },
 ]
 
@@ -36,7 +36,7 @@ function normalizePriority(priority: Priority): SimplifiedPriority {
 </script>
 
 <template>
-  <div class="priority-select" :class="{ dense }" role="radiogroup" aria-label="Priorite">
+  <div class="priority-select" :class="{ dense }" role="radiogroup" aria-label="Priorité">
     <button
       v-for="option in options"
       :key="option.value"

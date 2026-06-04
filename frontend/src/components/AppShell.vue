@@ -6,9 +6,9 @@ const route = useRoute()
 const { exportHref, exportIcal } = useIcalExport()
 
 const tabs = [
-  { label: '1. Films', to: '/films', hint: 'Selection editoriale', step: true },
-  { label: '2. Planning', to: '/planning', hint: 'Arbitrer les conflits', step: true },
-  { label: 'Parametres', to: '/settings', hint: 'Hors parcours principal', step: false },
+  { label: '1. Films', to: '/films', hint: 'Qualifier les envies', step: true },
+  { label: '2. Planning', to: '/planning', hint: 'Arbitrer les séances', step: true },
+  { label: 'Paramètres', to: '/settings', hint: 'Hors parcours principal', step: false },
 ]
 </script>
 
