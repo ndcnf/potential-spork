@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
+
 import { useIcalExport } from '@/composables/useIcalExport'
 import { usePlanningModel } from '@/composables/usePlanningModel'
 
@@ -40,17 +43,78 @@ const {
   FESTIVAL_VIEW_KEY,
   isMobile,
 } = usePlanningModel()
+
+const hasPlanningCandidates = computed(() => summary.value.films > 0)
+const hasConflicts = computed(() => summary.value.conflicts > 0)
+const hasArbitrations = computed(() => summary.value.toPlace > 0)
+
+const planningGuidance = computed(() => {
+  if (!hasPlanningCandidates.value) {
+    return {
+      title: 'Commencez par qualifier quelques films',
+      copy: "Vous n'avez pas encore assez de films qualifies pour arbitrer votre planning.",
+      actionLabel: 'Retourner a Films',
+      actionTo: '/films',
+    }
+  }
+
+  if (!hasConflicts.value && !hasArbitrations.value) {
+    return {
+      title: 'Planning presque complet',
+      copy: "Aucun conflit pour l'instant. Votre planning est lisible sur cette plage.",
+      actionLabel: 'Voir les creneaux libres',
+      actionTo: '/gaps',
+    }
+  }
+
+  if (hasConflicts.value) {
+    return {
+      title: 'Arbitrage requis',
+      copy: 'Commencez par resoudre les collisions entre seances deja retenues avant d ajouter de nouveaux choix.',
+      actionLabel: null,
+      actionTo: null,
+    }
+  }
+
+  return {
+    title: 'Choisissez la meilleure seance par film',
+    copy: 'Vous pouvez maintenant confirmer ou remplacer les seances restantes sans surcharger le planning.',
+    actionLabel: null,
+    actionTo: null,
+  }
+})
 </script>
 
 <template>
   <section class="page planning">
     <header class="page-header">
       <div>
+        <p class="eyebrow">Etape 2 sur 3</p>
         <h2>Planning</h2>
-        <p class="page-copy">Visualiser le programme dans le temps pour choisir la meilleure seance film par film.</p>
+        <p class="page-copy">Arbitrez les collisions, puis choisissez ou remplacez la bonne seance film par film.</p>
       </div>
       <a class="planning__export" :href="exportHref" target="_blank" rel="noopener" @click="exportIcal">Exporter iCal</a>
     </header>
+
+    <section class="planning__guidance">
+      <div>
+        <p class="eyebrow">Action principale</p>
+        <h3>{{ planningGuidance.title }}</h3>
+        <p class="page-copy">{{ planningGuidance.copy }}</p>
+      </div>
+
+      <div class="planning__guidance-actions">
+        <button v-if="hasConflicts" type="button" class="planning__action planning__action--primary" @click="focusFirstConflict">
+          Voir le premier conflit
+        </button>
+        <button v-else-if="hasArbitrations" type="button" class="planning__action planning__action--primary" @click="focusFirstArbitration">
+          Voir la premiere seance a arbitrer
+        </button>
+        <RouterLink v-else-if="planningGuidance.actionLabel && planningGuidance.actionTo" :to="planningGuidance.actionTo" class="planning__action planning__action--secondary">
+          {{ planningGuidance.actionLabel }}
+        </RouterLink>
+      </div>
+    </section>
 
     <section class="planning__meta-panel">
       <div class="planning__summary">
@@ -140,7 +204,7 @@ const {
       </section>
     </section>
 
-    <section class="planning__focus-layout" :class="{ 'planning__focus-layout--with-panel': !!detailScreening }">
+      <section v-if="hasPlanningCandidates" class="planning__focus-layout" :class="{ 'planning__focus-layout--with-panel': !!detailScreening }">
       <section class="planning__panel planning__panel--day">
         <header class="planning__panel-header">
           <div>
@@ -403,6 +467,12 @@ const {
           <a v-if="detailScreening.film?.imdb_url" :href="detailScreening.film.imdb_url" target="_blank" rel="noopener">IMDb</a>
         </div>
       </aside>
-    </section>
+      </section>
+
+      <section v-else class="empty-panel">
+        <h3>Aucun film a arbitrer pour le moment</h3>
+        <p class="page-copy">Vous devez d'abord marquer au moins un film comme `Immanquable` ou `Peut-etre` dans la vue `Films`.</p>
+        <RouterLink to="/films" class="ghost-button">Retourner a Films</RouterLink>
+      </section>
   </section>
 </template>
