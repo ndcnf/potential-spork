@@ -90,6 +90,7 @@ export const useFestivalStore = defineStore('festival', {
     films: [] as Film[],
     screenings: [] as Screening[],
     loading: false,
+    loadError: null as string | null,
     usingMocks: false,
   }),
   getters: {
@@ -131,6 +132,7 @@ export const useFestivalStore = defineStore('festival', {
     },
     async bootstrap() {
       this.loading = true
+      this.loadError = null
       try {
         const [cycles, films, screenings] = await Promise.all([
           api.listCycles(),
@@ -156,6 +158,7 @@ export const useFestivalStore = defineStore('festival', {
         this.films = sanitizeFilms(mockFilms)
         this.screenings = mockScreenings
         this.usingMocks = true
+        this.loadError = "Impossible de joindre l'API. L'application utilise les données de prévisualisation."
       } finally {
         this.loading = false
       }

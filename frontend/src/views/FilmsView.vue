@@ -104,6 +104,7 @@ const visibleFilms = computed(() => filteredGroups.value.flatMap((group) => grou
 const globalPriorityCounts = computed(() => cyclePriorityCounts(visibleFilms.value))
 
 const planningReady = computed(() => globalPriorityCounts.value.high > 0)
+const initialLoading = computed(() => store.loading && !store.cycles.length && !store.films.length)
 
 const globalProgressLabel = computed(() => {
   const total = visibleFilms.value.length
@@ -245,6 +246,44 @@ function resetFilters(): void {
 
 <template>
   <section class="page">
+    <section v-if="initialLoading" class="page" aria-label="Chargement des films">
+      <header class="page-header films-hero">
+        <div class="films-hero__main skeleton-block">
+          <span class="skeleton-line skeleton-line--xs" />
+          <span class="skeleton-line skeleton-line--md" />
+          <span class="skeleton-line skeleton-line--lg" />
+        </div>
+        <div class="films-progress skeleton-block">
+          <div class="films-progress__stats">
+            <span class="skeleton-chip" />
+            <span class="skeleton-chip" />
+            <span class="skeleton-chip" />
+          </div>
+          <span class="skeleton-line skeleton-line--lg" />
+          <span class="skeleton-button" />
+        </div>
+      </header>
+
+      <section class="toolbar toolbar--filters skeleton-block">
+        <span class="skeleton-field skeleton-field--wide" />
+        <span class="skeleton-field" />
+        <span class="skeleton-field" />
+        <span class="skeleton-field" />
+      </section>
+
+      <section class="cycle-group skeleton-block">
+        <span class="skeleton-line skeleton-line--sm" />
+        <span class="skeleton-line skeleton-line--md" />
+        <div class="skeleton-list">
+          <span class="skeleton-card" />
+          <span class="skeleton-card" />
+          <span class="skeleton-card" />
+          <span class="skeleton-card" />
+        </div>
+      </section>
+    </section>
+
+    <template v-else>
     <header class="page-header films-hero">
       <div class="films-hero__main">
         <p class="eyebrow">Étape 1 sur 2</p>
@@ -286,6 +325,11 @@ function resetFilters(): void {
         </RouterLink>
       </div>
     </header>
+
+    <section v-if="store.loadError" class="notice-panel notice-panel--warning">
+      <h3>API indisponible</h3>
+      <p class="page-copy">{{ store.loadError }}</p>
+    </section>
 
     <section class="toolbar toolbar--filters">
       <input v-model="filters.query" class="toolbar-input" type="search" placeholder="Rechercher un titre, un·e réalisateurice, un pays ou un casting" />
@@ -413,5 +457,6 @@ function resetFilters(): void {
     <footer class="page-footer">
       <small>{{ store.usingMocks ? 'Données de preview : NIFFF 2025 croisé PDF + Wayback' : 'Données : base locale / API courante' }}</small>
     </footer>
+    </template>
   </section>
 </template>

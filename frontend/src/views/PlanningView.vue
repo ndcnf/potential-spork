@@ -8,6 +8,7 @@ import { usePlanningModel } from '@/composables/usePlanningModel'
 const { exportHref, exportIcal, exportScreeningIcal } = useIcalExport()
 
 const {
+  store,
   settingsStore,
   activeDay,
   planningMode,
@@ -50,6 +51,7 @@ const {
 const hasPlanningCandidates = computed(() => summary.value.films > 0)
 const hasConflicts = computed(() => summary.value.conflicts > 0)
 const hasArbitrations = computed(() => summary.value.toPlace > 0)
+const initialLoading = computed(() => store.loading && !store.screenings.length && !store.cycles.length)
 
 const planningGuidance = computed(() => {
   if (!hasPlanningCandidates.value) {
@@ -90,6 +92,45 @@ const planningGuidance = computed(() => {
 
 <template>
   <section class="page planning">
+    <section v-if="initialLoading" class="page planning" aria-label="Chargement du planning">
+      <header class="page-header skeleton-block">
+        <div>
+          <span class="skeleton-line skeleton-line--xs" />
+          <span class="skeleton-line skeleton-line--md" />
+          <span class="skeleton-line skeleton-line--lg" />
+        </div>
+        <span class="skeleton-button" />
+      </header>
+
+      <section class="planning__guidance skeleton-block">
+        <div>
+          <span class="skeleton-line skeleton-line--xs" />
+          <span class="skeleton-line skeleton-line--md" />
+          <span class="skeleton-line skeleton-line--lg" />
+        </div>
+        <span class="skeleton-button" />
+      </section>
+
+      <section class="planning__meta-panel skeleton-block">
+        <div class="planning__summary">
+          <span class="skeleton-card" />
+          <span class="skeleton-card" />
+          <span class="skeleton-card" />
+          <span class="skeleton-card" />
+        </div>
+      </section>
+
+      <section class="planning__panel planning__panel--day skeleton-block">
+        <span class="skeleton-line skeleton-line--md" />
+        <div class="skeleton-list">
+          <span class="skeleton-card" />
+          <span class="skeleton-card" />
+          <span class="skeleton-card" />
+        </div>
+      </section>
+    </section>
+
+    <template v-else>
     <header class="page-header">
       <div>
         <p class="eyebrow">Étape 2 sur 2</p>
@@ -98,6 +139,11 @@ const planningGuidance = computed(() => {
       </div>
       <a class="planning__export" :href="exportHref" target="_blank" rel="noopener" @click="exportIcal">Exporter iCal</a>
     </header>
+
+    <section v-if="store.loadError" class="notice-panel notice-panel--warning">
+      <h3>API indisponible</h3>
+      <p class="page-copy">{{ store.loadError }}</p>
+    </section>
 
     <section class="planning__guidance">
       <div>
@@ -503,5 +549,6 @@ const planningGuidance = computed(() => {
         <p class="page-copy">Tu dois d'abord marquer au moins un film comme `Immanquable` ou `Peut-être` dans la vue `Films`.</p>
         <RouterLink to="/films" class="ghost-button">Retourner à Films</RouterLink>
       </section>
+    </template>
   </section>
 </template>

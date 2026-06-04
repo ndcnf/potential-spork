@@ -41,6 +41,30 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
 
 <template>
   <section class="page settings">
+    <section v-if="festivalStore.loading && !festivalStore.cycles.length" class="page settings" aria-label="Chargement des paramètres">
+      <header class="page-header skeleton-block">
+        <div>
+          <span class="skeleton-line skeleton-line--md" />
+          <span class="skeleton-line skeleton-line--lg" />
+        </div>
+      </header>
+
+      <section class="settings__panel skeleton-block">
+        <span class="skeleton-line skeleton-line--sm" />
+        <span class="skeleton-field skeleton-field--wide" />
+      </section>
+
+      <section class="settings__panel skeleton-block">
+        <span class="skeleton-line skeleton-line--sm" />
+        <div class="skeleton-list">
+          <span class="skeleton-card" />
+          <span class="skeleton-card" />
+          <span class="skeleton-card" />
+        </div>
+      </section>
+    </section>
+
+    <template v-else>
     <header class="page-header">
       <div>
         <h2>Paramètres</h2>
@@ -49,6 +73,11 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
         </p>
       </div>
     </header>
+
+    <section v-if="festivalStore.loadError" class="notice-panel notice-panel--warning">
+      <h3>API indisponible</h3>
+      <p class="page-copy">{{ festivalStore.loadError }}</p>
+    </section>
 
     <section class="settings__panel">
       <header class="settings__section-header">
@@ -136,5 +165,6 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
     <section class="settings__panel settings__panel--danger">
       <button type="button" class="ghost-button" @click="settingsStore.resetRecommendationSettings()">Réinitialiser les recommandations</button>
     </section>
+    </template>
   </section>
 </template>
