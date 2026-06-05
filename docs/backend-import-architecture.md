@@ -2081,3 +2081,8 @@ Pas :
 `HTML -> BeautifulSoup -> SQLAlchemy direct`
 
 Le jour où une API apparaît, tu dois pouvoir changer l’adapter, pas le produit.
+
+
+## notes humaines
+
+le reset fonctionne, mais le resultat n'est pas le bon. Tous les films sont passe en "peut-etre". Il faut voir s'il reste un legacy sur les statuts quand on est passe a 3 au lieu de 5.
