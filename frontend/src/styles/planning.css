@@ -36,6 +36,11 @@
   gap: var(--space-sm);
 }
 
+.planning__status-note {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
 .planning__meta-panel,
 .planning__controls-panel,
 .planning__summary {
@@ -288,15 +293,15 @@
   transform: scaleX(1.04);
 }
 
-.planning__visual-block--confirmed { width: calc(100% - 2px); background: var(--color-state-confirmed); }
-.planning__visual-block--tentative { width: calc(100% - 2px); background: var(--color-state-tentative); }
+.planning__visual-block--confirmed { width: calc(100% - 2px); background: var(--color-accent-soft); border: 1px solid var(--color-accent-border); }
+.planning__visual-block--tentative { width: calc(100% - 2px); background: var(--color-neutral-soft); border: 1px solid var(--color-border-mid); }
 .planning__visual-block--confirmed-conflict { width: calc(100% - 2px); background: var(--color-state-conflict-soft); border: 1px solid var(--color-accent); }
 .planning__visual-block--tentative-conflict { width: calc(100% - 2px); background: var(--color-state-conflict-soft); border: 1px solid var(--color-accent); }
-.planning__visual-block--must-lock { width: 86%; background: var(--color-state-must-lock-soft); border: 1px solid var(--color-state-must-lock); }
+.planning__visual-block--must-lock { width: 86%; background: color-mix(in srgb, var(--color-accent) 10%, var(--color-background)); border: 1px solid var(--color-accent-border); }
 .planning__visual-block--recommended { width: 78%; background: var(--color-state-recommended-soft); border: 1px solid var(--color-accent-border); }
 .planning__visual-block--conflict { width: calc(100% - 2px); background: var(--color-state-conflict-soft); border: 1px solid var(--color-accent-border); }
-.planning__visual-block--available { width: 56%; background: var(--color-state-available); }
-.planning__visual-block--disabled { width: 16%; background: var(--color-state-disabled); }
+.planning__visual-block--available { width: 56%; background: var(--color-state-available); opacity: 0.9; }
+.planning__visual-block--disabled { width: 16%; background: var(--color-state-disabled); opacity: 0.75; }
 .planning__visual-block--rejected { width: 22%; background: var(--color-state-rejected); border: 1px solid var(--color-text-subtle); }
 
 .planning__timeline-item {
@@ -424,8 +429,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
-  position: sticky;
-  top: var(--space-lg);
+  position: static;
   padding: 0 0 0 var(--panel-padding-x);
   border-left: 1px solid var(--color-border-soft);
 }
@@ -512,12 +516,12 @@
   line-height: 1.2;
 }
 
-.planning__status-pill--confirmed { color: var(--color-state-confirmed); border-color: var(--color-accent-border); }
-.planning__status-pill--tentative { color: var(--color-state-tentative); }
+.planning__status-pill--confirmed { color: var(--color-text); border-color: var(--color-accent-border); background: var(--color-accent-soft); }
+.planning__status-pill--tentative { color: var(--color-text); border-color: var(--color-border-mid); background: var(--color-neutral-soft); }
 .planning__status-pill--rejected { color: var(--color-text-muted); }
-.planning__status-pill--conflict { color: var(--color-state-conflict); border-color: var(--color-accent-border); background: var(--color-state-conflict-soft); }
-.planning__status-pill--single { color: var(--color-accent); }
-.planning__status-pill--must-lock { color: var(--color-state-must-lock); border-color: var(--color-accent-border); background: var(--color-accent-soft); }
+.planning__status-pill--conflict { color: var(--color-text); border-color: var(--color-accent-border); background: var(--color-state-conflict-soft); }
+.planning__status-pill--single { color: var(--color-text); border-color: var(--color-border-mid); background: var(--color-neutral-soft); }
+.planning__status-pill--must-lock { color: var(--color-text); border-color: var(--color-accent-border); background: color-mix(in srgb, var(--color-accent) 10%, var(--color-background)); }
 .planning__status-pill--disabled { color: var(--color-text-subtle); }
 .planning__status-pill--available { color: var(--color-text-muted); }
 
@@ -551,17 +555,17 @@
   line-height: 1.2;
 }
 
-.planning__timeline-item--confirmed .planning__timeline-marker { background: var(--color-state-confirmed); }
-.planning__timeline-item--tentative .planning__timeline-marker { background: var(--color-state-tentative); }
-.planning__timeline-item--must-lock .planning__timeline-marker { background: var(--color-state-must-lock); }
+.planning__timeline-item--confirmed .planning__timeline-marker { background: var(--color-accent); }
+.planning__timeline-item--tentative .planning__timeline-marker { background: var(--color-state-neutral); }
+.planning__timeline-item--must-lock .planning__timeline-marker { background: var(--color-accent); }
 .planning__timeline-item--recommended .planning__timeline-marker { background: var(--color-state-recommended); }
-.planning__timeline-item--conflict .planning__timeline-marker,
-.planning__timeline-item--conflict { background: var(--color-state-conflict-soft); }
+.planning__timeline-item--conflict .planning__timeline-marker { background: var(--color-accent); }
+.planning__timeline-item--conflict .planning__timeline-content { background: color-mix(in srgb, var(--color-accent) 6%, transparent); border-bottom-color: var(--color-accent-border); }
 .planning__timeline-item--disabled { opacity: 0.5; }
 .planning__timeline-item--rejected { opacity: 0.55; }
 .planning__timeline-item--rejected .planning__timeline-marker { background: transparent; border: 1px solid var(--color-text-subtle); }
 .planning__timeline-item--blocked .planning__timeline-marker { background: var(--color-text-subtle); }
-.planning__timeline-item--must-lock .planning__timeline-content { border-bottom-color: var(--color-accent-border); }
+.planning__timeline-item--must-lock .planning__timeline-content { border-bottom-color: var(--color-accent-border); background: color-mix(in srgb, var(--color-accent) 4%, transparent); }
 .planning__timeline-item--recommended .planning__timeline-content { border-bottom-color: var(--color-accent-border); }
 .planning__timeline-item--rejected .planning__timeline-content { border-bottom-color: var(--color-neutral-soft-strong); }
 

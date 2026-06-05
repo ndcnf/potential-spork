@@ -9,7 +9,6 @@ const { exportHref, exportIcal, exportScreeningIcal } = useIcalExport()
 
 const {
   store,
-  settingsStore,
   activeDay,
   planningMode,
   screeningFilter,
@@ -191,7 +190,6 @@ async function removeScreeningSelection(screeningId: number) {
     <template v-else>
     <header class="page-header">
       <div>
-        <p class="eyebrow">Étape 2 sur 2</p>
         <h2>Planning</h2>
         <p class="page-copy">Arbitre les collisions et retiens la bonne séance pour chaque film déjà qualifié.</p>
       </div>
@@ -199,7 +197,7 @@ async function removeScreeningSelection(screeningId: number) {
     </header>
 
     <section v-if="store.loadError" class="notice-panel notice-panel--warning">
-      <h3>API indisponible</h3>
+      <h3>Mode démo</h3>
       <p class="page-copy">{{ store.loadError }}</p>
     </section>
 
@@ -267,15 +265,6 @@ async function removeScreeningSelection(screeningId: number) {
       </section>
 
       <section class="planning__controls-panel">
-        <div class="planning__control-group planning__control-group--status">
-          <p class="eyebrow">Recommandations</p>
-          <p class="planning__status-note">
-            <template v-if="settingsStore.recommendationMode === 'off'">Désactivées. L'arbitrage reste entièrement manuel.</template>
-            <template v-else-if="settingsStore.recommendationMode === 'neutral'">Activées, mais sans préférence définie : l'app reste neutre.</template>
-            <template v-else>Activées et personnalisées selon tes préférences.</template>
-          </p>
-        </div>
-
         <div class="planning__control-group">
           <p class="eyebrow">Jour</p>
           <div class="planning__day-picker">
@@ -364,10 +353,6 @@ async function removeScreeningSelection(screeningId: number) {
                   </div>
                   <p>{{ screening.venue_name }}</p>
                   <p>{{ filmMeta(screening) }}</p>
-                  <div class="planning__session-links">
-                    <a v-if="screening.ticket_url" :href="screening.ticket_url" target="_blank" rel="noopener">billetterie</a>
-                    <a href="#" @click="exportScreeningIcal(screening, $event)">agenda</a>
-                  </div>
                   <div class="planning__detail-actions" aria-label="Actions sur la séance">
                     <button
                       v-if="screening.selection_status === 'tentative'"
@@ -384,31 +369,6 @@ async function removeScreeningSelection(screeningId: number) {
                       @click="applyScreeningSelection(screening.id, 'tentative')"
                     >
                       {{ screeningPrimaryActionLabel(screening) }}
-                    </button>
-
-                    <button
-                      v-if="screening.selection_status === 'confirmed'"
-                      type="button"
-                      class="planning__action planning__action--secondary"
-                      @click="applyScreeningSelection(screening.id, 'tentative')"
-                    >
-                      Repasser en tentative
-                    </button>
-                    <button
-                      v-if="screening.selection_status === 'tentative' || screening.selection_status === 'confirmed'"
-                      type="button"
-                      class="planning__action planning__action--ghost"
-                      @click="removeScreeningSelection(screening.id)"
-                    >
-                      Retirer du planning
-                    </button>
-                    <button
-                      v-else-if="screening.selection_status !== 'rejected'"
-                      type="button"
-                      class="planning__action planning__action--ghost"
-                      @click="applyScreeningSelection(screening.id, 'rejected')"
-                    >
-                      Ignorer cette séance
                     </button>
                   </div>
                 </div>
@@ -481,10 +441,6 @@ async function removeScreeningSelection(screeningId: number) {
           <button type="button" class="planning__action planning__action--ghost" @click="closeDetailPanel">Fermer</button>
         </header>
 
-        <div v-if="detailScreening.film?.short_description" class="planning__detail-copy">
-          <p>{{ detailScreening.film.short_description }}</p>
-        </div>
-
         <div class="planning__detail-media" v-if="detailScreening.film?.poster_url">
           <img :src="detailScreening.film.poster_url" :alt="`Affiche ${detailScreening.film_title}`" />
         </div>
@@ -493,6 +449,7 @@ async function removeScreeningSelection(screeningId: number) {
           <div>
             <p class="planning__detail-line"><strong>Horaire</strong> {{ formatTimeRange(detailScreening) }}</p>
             <p class="planning__detail-line"><strong>Salle</strong> {{ detailScreening.venue_name || 'Salle inconnue' }}</p>
+            <p class="planning__detail-line"><strong>Cycle</strong> {{ detailScreening.film?.cycle_name || 'Non renseigné' }}</p>
             <p class="planning__detail-line planning__detail-line--status">
               <strong>Statut</strong>
               <span class="planning__status-pill" :class="`planning__status-pill--${screeningStatusTone(detailScreening)}`">
@@ -503,11 +460,18 @@ async function removeScreeningSelection(screeningId: number) {
           </div>
           <div>
             <p class="planning__detail-line"><strong>Réalisation</strong> {{ detailScreening.film?.directors || 'Non renseignée' }}</p>
-            <p class="planning__detail-line"><strong>Infos</strong> {{ filmMeta(detailScreening) }}</p>
             <p class="planning__detail-line"><strong>Tagline</strong> {{ detailScreening.film?.tagline || 'Non renseignée' }}</p>
-            <p class="planning__detail-line"><strong>Langue</strong> {{ detailScreening.film?.language || 'Non renseignée' }}</p>
-            <p class="planning__detail-line"><strong>Âge</strong> {{ detailScreening.film?.age_rating || 'Non renseigné' }}</p>
+            <p class="planning__detail-line"><strong>Infos</strong> {{ filmMeta(detailScreening) }} · {{ detailScreening.film?.year || 'année ?' }}</p>
           </div>
+        </div>
+
+        <div v-if="detailScreening.film?.cast" class="planning__detail-copy">
+          <p class="planning__detail-copy-title">Casting</p>
+          <p>{{ detailScreening.film.cast }}</p>
+        </div>
+
+        <div v-if="detailScreening.film?.short_description" class="planning__detail-copy">
+          <p>{{ detailScreening.film.short_description }}</p>
         </div>
 
         <div v-if="relatedFilmScreenings.length" class="planning__detail-copy">
@@ -589,16 +553,6 @@ async function removeScreeningSelection(screeningId: number) {
               </div>
             </article>
           </div>
-        </div>
-
-        <div v-if="detailScreening.film?.synopsis" class="planning__detail-copy">
-          <p class="planning__detail-copy-title">Synopsis</p>
-          <p>{{ detailScreening.film.synopsis }}</p>
-        </div>
-
-        <div v-if="detailScreening.film?.cast" class="planning__detail-copy">
-          <p class="planning__detail-copy-title">Casting</p>
-          <p>{{ detailScreening.film.cast }}</p>
         </div>
 
         <div class="planning__links">

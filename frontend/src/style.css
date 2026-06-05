@@ -93,6 +93,19 @@ a {
   background: transparent;
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.app-header__link:focus-visible,
+.mobile-tab:focus-visible,
+.priority-option:focus-visible,
+.planning__detail-trigger:focus-visible,
+.ghost-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .app-header__link--active,
 .app-header__export {
   background: var(--color-surface-strong);
@@ -440,6 +453,10 @@ a {
 .priority-option.active[data-priority='high'] { background: var(--color-accent-soft); border-color: var(--color-accent-border); color: var(--color-accent); }
 .priority-option.active[data-priority='medium'] { background: var(--color-neutral-soft); border-color: var(--color-border-soft); color: var(--color-text); }
 .priority-option.active[data-priority='ignore'] { background: transparent; border-color: var(--color-border-color); color: var(--color-priority-muted); }
+
+.priority-option:hover {
+  border-color: var(--color-border-mid);
+}
 
 .priority-select.dense .priority-option {
   min-width: auto;

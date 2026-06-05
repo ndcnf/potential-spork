@@ -36,7 +36,7 @@ function normalizePriority(priority: Priority): SimplifiedPriority {
 </script>
 
 <template>
-  <div class="priority-select" :class="{ dense }" role="radiogroup" aria-label="Priorité">
+  <div class="priority-select" :class="{ dense }" aria-label="Qualification du film">
     <button
       v-for="option in options"
       :key="option.value"
@@ -45,6 +45,7 @@ function normalizePriority(priority: Priority): SimplifiedPriority {
       :class="{ active: props.modelValue !== 'unreviewed' && props.modelValue !== 'low' && normalizePriority(props.modelValue) === option.value }"
       :data-priority="option.value"
       :aria-pressed="props.modelValue !== 'unreviewed' && props.modelValue !== 'low' && normalizePriority(props.modelValue) === option.value"
+      :aria-label="option.label"
       @click="$emit('update:modelValue', option.value)"
     >
       <span>{{ option.label }}</span>

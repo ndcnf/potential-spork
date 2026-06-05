@@ -158,7 +158,7 @@ export const useFestivalStore = defineStore('festival', {
         this.films = sanitizeFilms(mockFilms)
         this.screenings = mockScreenings
         this.usingMocks = true
-        this.loadError = "Impossible de joindre l'API. L'application utilise les données de prévisualisation."
+        this.loadError = 'Impossible de charger les données réelles. Mode démo activé.'
       } finally {
         this.loading = false
       }

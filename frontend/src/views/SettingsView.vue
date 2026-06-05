@@ -75,7 +75,7 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
     </header>
 
     <section v-if="festivalStore.loadError" class="notice-panel notice-panel--warning">
-      <h3>API indisponible</h3>
+      <h3>Mode démo</h3>
       <p class="page-copy">{{ festivalStore.loadError }}</p>
     </section>
 

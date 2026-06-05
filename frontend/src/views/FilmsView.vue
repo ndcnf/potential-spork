@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive } from 'vue'
-import { RouterLink } from 'vue-router'
 
 import { formatTimeRange, getFestivalDayKey } from '@/lib/planning'
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
@@ -110,13 +109,12 @@ const visibleFilms = computed(() => filteredGroups.value.flatMap((group) => grou
 
 const globalPriorityCounts = computed(() => cyclePriorityCounts(visibleFilms.value))
 
-const planningReady = computed(() => globalPriorityCounts.value.high > 0)
 const initialLoading = computed(() => store.loading && !store.cycles.length && !store.films.length)
 
 const globalProgressLabel = computed(() => {
   const total = visibleFilms.value.length
   const { high, medium, pending } = globalPriorityCounts.value
-  return `${high} prioritaires, ${medium} intermédiaires et ${pending} restants à trier sur ${total} films visibles`
+  return `${high} immanquables, ${medium} peut-être et ${pending} restants à trier sur ${total} films visibles`
 })
 
 const hasPrioritySelection = computed(() =>
@@ -236,7 +234,7 @@ function cyclePriorityCounts(films: Film[]): { pending: number; high: number; me
 
 function cyclePriorityAccessibilityLabel(films: Film[]): string {
   const counts = cyclePriorityCounts(films)
-  return `${counts.pending} à traiter, ${counts.high} prioritaires, ${counts.medium} intermédiaires et ${counts.ignore} ignorés sur ${films.length} films dans ce cycle`
+  return `${counts.pending} à traiter, ${counts.high} immanquables, ${counts.medium} peut-être et ${counts.ignore} non merci sur ${films.length} films dans ce cycle`
 }
 
 function sortPriorityForCycle(left: Film, right: Film): number {
@@ -295,7 +293,6 @@ function applyFilmPriority(film: Film, priority: Priority) {
             <span class="skeleton-chip" />
           </div>
           <span class="skeleton-line skeleton-line--lg" />
-          <span class="skeleton-button" />
         </div>
       </header>
 
@@ -329,10 +326,9 @@ function applyFilmPriority(film: Film, priority: Priority) {
 
     <header class="page-header films-hero">
       <div class="films-hero__main">
-        <p class="eyebrow">Étape 1 sur 2</p>
         <h2>Films</h2>
         <p class="page-copy">
-          Parcours les cycles, qualifie les films, puis passe au planning quand ta sélection devient assez claire.
+          Parcours les cycles et qualifie les films selon ce qui mérite vraiment ton attention.
         </p>
       </div>
 
@@ -353,24 +349,13 @@ function applyFilmPriority(film: Film, priority: Priority) {
         </div>
 
         <p class="films-progress__hint page-copy">
-          {{ planningReady ? 'Ta sélection est assez claire pour commencer l\'arbitrage des séances.' : 'Commence par marquer au moins un film comme Immanquable.' }}
+          {{ globalPriorityCounts.high > 0 ? 'Quelques films ressortent clairement. Tu peux arbitrer les séances quand tu veux.' : 'Commence par faire émerger quelques Immanquables.' }}
         </p>
-
-        <RouterLink
-          to="/planning"
-          class="films-progress__cta"
-          :class="{ 'films-progress__cta--disabled': !planningReady }"
-          :aria-disabled="!planningReady"
-          :tabindex="planningReady ? undefined : -1"
-          @click.prevent="!planningReady"
-        >
-          Passer au Planning
-        </RouterLink>
       </div>
     </header>
 
     <section v-if="store.loadError" class="notice-panel notice-panel--warning">
-      <h3>API indisponible</h3>
+      <h3>Mode démo</h3>
       <p class="page-copy">{{ store.loadError }}</p>
     </section>
 
@@ -419,7 +404,7 @@ function applyFilmPriority(film: Film, priority: Priority) {
         <span class="legend__label">Séance</span>
         <div class="legend__items">
           <span class="film-screenings__item">ven 04.07 18h30-21h00 = séance choisie</span>
-          <span class="film-screenings__item film-screenings__item--warning">pas de séance prévue = film prioritaire sans choix</span>
+          <span class="film-screenings__item film-screenings__item--warning">pas de séance prévue = film immanquable sans choix</span>
         </div>
       </div>
     </section>
@@ -454,8 +439,8 @@ function applyFilmPriority(film: Film, priority: Priority) {
             <span class="cycle-header__separator" aria-hidden="true">·</span>
             <span class="cycle-header__counters">
               <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).pending }}</strong> à traiter</span>
-              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).high }}</strong> prioritaires</span>
-              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).medium }}</strong> intermédiaires</span>
+              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).high }}</strong> immanquables</span>
+              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).medium }}</strong> peut-être</span>
             </span>
           </small>
         </div>
