@@ -13,11 +13,12 @@ def test_cycle_repository_creates_cycle_when_missing(db_session) -> None:
 
     assert result.created is True
     assert result.cycle.id is not None
+    assert result.cycle.source_key == "nifff:cycle:international-competition"
     assert result.cycle.slug == "international-competition"
 
 
 def test_cycle_repository_updates_existing_cycle(db_session, cycle_factory) -> None:
-    existing = cycle_factory(name="Old Name", slug="international-competition", color=None)
+    existing = cycle_factory(name="Old Name", slug="international-competition", color=None, source_key=None)
     repository = CycleRepository(db_session)
 
     result = repository.upsert(
@@ -31,5 +32,6 @@ def test_cycle_repository_updates_existing_cycle(db_session, cycle_factory) -> N
 
     assert result.created is False
     assert result.cycle.id == existing.id
+    assert result.cycle.source_key == "nifff:cycle:international-competition"
     assert result.cycle.name == "International Competition"
     assert result.cycle.color == "#ff00aa"

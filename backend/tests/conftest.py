@@ -69,6 +69,7 @@ def cycle_factory(db_session: Session) -> Callable[..., Cycle]:
     def create(**overrides: object) -> Cycle:
         index = next(sequence)
         cycle = Cycle(
+            source_key=overrides.pop("source_key", None),
             name=overrides.pop("name", f"Cycle {index}"),
             slug=overrides.pop("slug", f"cycle-{index}"),
             color=overrides.pop("color", None),
@@ -94,6 +95,7 @@ def film_factory(db_session: Session, cycle_factory: Callable[..., Cycle]) -> Ca
             cycle = cycle_factory()
 
         film = Film(
+            source_key=overrides.pop("source_key", None),
             title=overrides.pop("title", f"Film {index}"),
             slug=overrides.pop("slug", f"film-{index}"),
             directors=overrides.pop("directors", "Director Example"),

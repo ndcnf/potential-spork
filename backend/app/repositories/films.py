@@ -21,12 +21,20 @@ class FilmRepository:
         self._db = db
 
     def upsert(self, imported_film: ImportedFilm, *, cycle: Cycle | None = None) -> UpsertFilmResult:
-        film = self._db.scalar(select(Film).where(Film.slug == imported_film.slug))
+        film = self._db.scalar(select(Film).where(Film.source_key == imported_film.source_key))
+        if film is None:
+            film = self._db.scalar(select(Film).where(Film.slug == imported_film.slug))
         created = film is None
 
         if film is None:
-            film = Film(title=imported_film.title, slug=imported_film.slug, priority="medium")
+            film = Film(
+                source_key=imported_film.source_key,
+                title=imported_film.title,
+                slug=imported_film.slug,
+                priority="medium",
+            )
 
+        film.source_key = imported_film.source_key
         film.title = imported_film.title
         film.directors = imported_film.directors
         film.year = imported_film.year

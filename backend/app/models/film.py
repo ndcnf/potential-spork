@@ -8,6 +8,7 @@ class Film(Base):
     __tablename__ = "films"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    source_key: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
     title: Mapped[str] = mapped_column(String(255), index=True)
     slug: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     directors: Mapped[str | None] = mapped_column(Text, nullable=True)

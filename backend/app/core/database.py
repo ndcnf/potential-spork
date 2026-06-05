@@ -28,7 +28,11 @@ SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
 SQLITE_COMPATIBILITY_COLUMNS: dict[str, dict[str, str]] = {
+    "cycles": {
+        "source_key": "VARCHAR(255)"
+    },
     "films": {
+        "source_key": "VARCHAR(255)",
         "premiere_label": "VARCHAR(255)",
         "short_description": "TEXT",
         "poster_url": "TEXT",

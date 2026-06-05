@@ -765,6 +765,48 @@ Malgré cette limite, on a déjà réduit un anti-pattern concret :
 
 Le service devient donc plus simple à lire, plus testable, et plus facile à remplacer quand les `source_key` arriveront en base.
 
+## Source Key Transition Started
+
+La transition a commencé pour `Cycle` et `Film`.
+
+### Current state
+
+- `Cycle.source_key` ajouté
+- `Film.source_key` ajouté
+- compatibilité SQLite prévue via `run_sqlite_schema_upgrades()`
+- repositories mis à jour pour chercher d’abord par `source_key`, puis fallback sur `slug`
+
+### Why this fallback exists
+
+Le fallback `slug` est transitoire et volontaire.
+
+Il sert à :
+
+- reprendre des lignes legacy déjà importées
+- backfiller `source_key` au passage d’un réimport
+- éviter une rupture brutale pendant la migration
+
+### Explicit rule
+
+Ordre de lookup actuel :
+
+1. `source_key`
+2. `slug` en fallback legacy
+
+Règle future cible :
+
+1. `source_key`
+2. plus de fallback une fois la migration terminée
+
+### Important limitation
+
+Le modèle n’impose pas encore `source_key` non-null en base.
+
+C’est volontaire à ce stade, parce qu’on est encore dans une phase de transition SQLite/legacy. Une fois les données backfillées et les migrations stabilisées, il faudra durcir :
+
+- `source_key` obligatoire
+- index/contrainte réellement exploités comme clé d’upsert principale
+
 ## Screening Selection Rules
 
 Ces règles doivent être documentées et testées côté backend. Elles ne doivent pas dériver d’un comportement opportuniste du frontend.

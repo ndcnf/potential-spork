@@ -20,12 +20,20 @@ class CycleRepository:
         self._db = db
 
     def upsert(self, imported_cycle: ImportedCycle) -> UpsertCycleResult:
-        cycle = self._db.scalar(select(Cycle).where(Cycle.slug == imported_cycle.slug))
+        cycle = self._db.scalar(select(Cycle).where(Cycle.source_key == imported_cycle.source_key))
+        if cycle is None:
+            cycle = self._db.scalar(select(Cycle).where(Cycle.slug == imported_cycle.slug))
         created = cycle is None
 
         if cycle is None:
-            cycle = Cycle(name=imported_cycle.name, slug=imported_cycle.slug, color=imported_cycle.color)
+            cycle = Cycle(
+                source_key=imported_cycle.source_key,
+                name=imported_cycle.name,
+                slug=imported_cycle.slug,
+                color=imported_cycle.color,
+            )
         else:
+            cycle.source_key = imported_cycle.source_key
             cycle.name = imported_cycle.name
             cycle.color = imported_cycle.color
 

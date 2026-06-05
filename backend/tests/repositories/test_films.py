@@ -26,12 +26,13 @@ def test_film_repository_creates_film_from_imported_model(db_session, cycle_fact
 
     assert result.created is True
     assert result.film.id is not None
+    assert result.film.source_key == "nifff:film:a-cure-for-wellness"
     assert result.film.cycle_id == cycle.id
     assert result.film.priority == "medium"
 
 
 def test_film_repository_updates_existing_film_without_duplication(db_session, film_factory) -> None:
-    existing = film_factory(title="Old Title", slug="a-cure-for-wellness", priority="high")
+    existing = film_factory(title="Old Title", slug="a-cure-for-wellness", priority="high", source_key=None)
     repository = FilmRepository(db_session)
 
     result = repository.upsert(
@@ -48,6 +49,7 @@ def test_film_repository_updates_existing_film_without_duplication(db_session, f
 
     assert result.created is False
     assert result.film.id == existing.id
+    assert result.film.source_key == "nifff:film:a-cure-for-wellness"
     assert result.film.title == "A Cure for Wellness"
     assert result.film.short_description == "Updated description."
     assert result.film.priority == "high"

@@ -8,6 +8,7 @@ class Cycle(Base):
     __tablename__ = "cycles"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    source_key: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
     name: Mapped[str] = mapped_column(String(255), unique=True)
     slug: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     color: Mapped[str | None] = mapped_column(String(32), nullable=True)
