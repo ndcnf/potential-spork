@@ -411,17 +411,36 @@ Le code actuel fait des lookups DB dans la boucle film par film. C’est accepta
 
 ## Proposed Migration Path From Current Code
 
+Execution recommendation:
+
+- start with passes 1 and 2 only
+- keep behavior identical
+- do not refactor DB writes in the same pass
+- validate after each pass before introducing the canonical model
+
 ### Step 1
 
 Extraire le code HTTP de `import_nifff.py` vers :
 
 - `sources/nifff_html/client.py`
 
+Concrete result expected:
+
+- session builder centralisé
+- `User-Agent` centralisé
+- `fetch_html()` unique avec timeout explicite
+
 ### Step 2
 
 Extraire les helpers BeautifulSoup vers :
 
 - `sources/nifff_html/parser.py`
+
+Concrete result expected:
+
+- `ParsedFilm` déplacé
+- helpers DOM isolés
+- parsing listing / detail réutilisable et testable sans DB
 
 ### Step 3
 
