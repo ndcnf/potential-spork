@@ -675,6 +675,61 @@ Les tests API doivent :
 
 Tant que ce pattern n’est pas respecté, la suite API est fragile même si les assertions métier sont bonnes.
 
+## Current Skeleton Introduced
+
+Une première ossature source-agnostique a été posée pour éviter que la prochaine refactor reparte de zéro.
+
+### Added files
+
+- `backend/app/schemas/imported.py`
+- `backend/app/sources/base.py`
+- `backend/app/sources/nifff_html/source.py`
+- `backend/app/sources/nifff_html/normalizer.py`
+- `backend/app/services/import_catalog.py`
+
+### Current responsibility split
+
+#### `sources/nifff_html/source.py`
+
+Responsabilité :
+
+- fetch listing
+- parser les cartes
+- enrichir avec le détail si disponible
+- retourner une collection de `ParsedFilm`
+
+Cette couche connaît encore le HTML NIFFF, ce qui est normal.
+
+#### `sources/nifff_html/normalizer.py`
+
+Responsabilité :
+
+- transformer `ParsedFilm` en `ImportedFilm`
+- construire les `source_key`
+- construire les cycles canoniques associés
+
+Cette couche ne doit pas connaître SQLAlchemy.
+
+#### `services/import_catalog.py`
+
+Responsabilité :
+
+- dépendre d’un `FestivalSource`
+- normaliser le payload source
+- produire un `CanonicalImportBundle`
+- préparer un `ImportReport`
+
+À ce stade, l’écriture DB n’est pas encore extraite dans des repositories dédiés. Le service legacy `import_nifff.py` reste donc un wrapper transitoire entre bundle canonique et ORM.
+
+### Transitional rule
+
+Le but de cette ossature n’est pas encore de finir l’architecture. Le but est de couper la dépendance directe :
+
+- avant : `HTML -> parser -> SQLAlchemy direct`
+- maintenant : `HTML -> source -> normalizer -> bundle canonique -> wrapper ORM`
+
+Ce n’est pas l’état final, mais c’est déjà une dépendance bien moins fragile.
+
 ## Screening Selection Rules
 
 Ces règles doivent être documentées et testées côté backend. Elles ne doivent pas dériver d’un comportement opportuniste du frontend.
