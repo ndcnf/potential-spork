@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 import { formatTimeRange, getFestivalDayKey } from '@/lib/planning'
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
@@ -11,12 +11,7 @@ const store = useFestivalStore()
 
 type PriorityFilter = 'all' | 'pending' | 'ignore' | 'medium' | 'high'
 
-const filters = reactive({
-  query: '',
-  priority: 'all' as PriorityFilter,
-  hideLowNoise: false,
-  sort: 'title',
-})
+const activePriorityFilters = ref<Array<Exclude<PriorityFilter, 'all'>>>([])
 
 const transitionFeedback = reactive<{ message: string; tone: 'success' | 'info'; visible: boolean; timer: ReturnType<typeof setTimeout> | null }>({
   message: '',
@@ -50,7 +45,7 @@ function normalizePriority(priority: Priority): Exclude<PriorityFilter, 'all'> {
 }
 
 const filteredGroups = computed(() => {
-  const normalizedQuery = filters.query.trim().toLowerCase()
+  const priorityFilters = new Set(activePriorityFilters.value)
 
   return store.groupedFilms
     .map((group) => ({
@@ -59,22 +54,13 @@ const filteredGroups = computed(() => {
         .filter((film) => {
           const simplifiedPriority = normalizePriority(film.priority)
 
-          if (filters.hideLowNoise && simplifiedPriority === 'ignore') {
-            return false
-          }
-
-          if (filters.priority !== 'all' && simplifiedPriority !== filters.priority) {
-            return false
-          }
-
-          if (!normalizedQuery) {
+          if (!priorityFilters.size) {
             return true
           }
 
-          const haystack = [film.title, film.directors, film.countries, film.cast].filter(Boolean).join(' ').toLowerCase()
-          return haystack.includes(normalizedQuery)
+          return priorityFilters.has(simplifiedPriority)
         })
-        .sort((left, right) => sortFilms(left, right, filters.sort)),
+        .sort((left, right) => sortPriorityForCycle(left, right)),
     }))
     .filter((group) => group.films.length > 0)
 })
@@ -105,16 +91,16 @@ const screeningCountByFilmId = computed(() => {
   return counts
 })
 
-const visibleFilms = computed(() => filteredGroups.value.flatMap((group) => group.films))
+const allFilms = computed(() => store.groupedFilms.flatMap((group) => group.films))
 
-const globalPriorityCounts = computed(() => cyclePriorityCounts(visibleFilms.value))
+const globalPriorityCounts = computed(() => cyclePriorityCounts(allFilms.value))
 
 const initialLoading = computed(() => store.loading && !store.cycles.length && !store.films.length)
 
 const globalProgressLabel = computed(() => {
-  const total = visibleFilms.value.length
+  const total = allFilms.value.length
   const { high, medium, pending, ignore } = globalPriorityCounts.value
-  return `${high} immanquables, ${medium} peut-être, ${pending} à traiter et ${ignore} non merci sur ${total} films visibles`
+  return `${pending} à traiter, ${high} immanquables, ${medium} peut-être et ${ignore} non merci sur ${total} films`
 })
 
 const hasPrioritySelection = computed(() =>
@@ -124,9 +110,7 @@ const hasPrioritySelection = computed(() =>
   }),
 )
 
-const filtersAreActive = computed(() =>
-  filters.query.trim().length > 0 || filters.priority !== 'all' || filters.hideLowNoise || filters.sort !== 'title',
-)
+const filtersAreActive = computed(() => activePriorityFilters.value.length > 0)
 
 const filmsEmptyState = computed(() => {
   if (filteredGroups.value.length > 0) {
@@ -152,16 +136,6 @@ const filmsEmptyState = computed(() => {
     action: 'Réinitialiser les filtres',
   }
 })
-
-function sortFilms(left: Film, right: Film, mode: string): number {
-  if (mode === 'priority') {
-    return priorityRank(right.priority) - priorityRank(left.priority) || left.title.localeCompare(right.title)
-  }
-  if (mode === 'duration') {
-    return (left.duration_minutes ?? 999) - (right.duration_minutes ?? 999) || left.title.localeCompare(right.title)
-  }
-  return left.title.localeCompare(right.title)
-}
 
 function priorityRank(priority: Priority): number {
   return {
@@ -242,14 +216,13 @@ function sortPriorityForCycle(left: Film, right: Film): number {
 }
 
 function resetFilters(): void {
-  filters.query = ''
-  filters.priority = 'all'
-  filters.hideLowNoise = false
-  filters.sort = 'title'
+  activePriorityFilters.value = []
 }
 
 function togglePriorityFilter(priority: Exclude<PriorityFilter, 'all'>): void {
-  filters.priority = filters.priority === priority ? 'all' : priority
+  activePriorityFilters.value = activePriorityFilters.value.includes(priority)
+    ? activePriorityFilters.value.filter((entry) => entry !== priority)
+    : [...activePriorityFilters.value, priority]
 }
 
 function priorityFilterButtonLabel(priority: Exclude<PriorityFilter, 'all'>): string {
@@ -311,13 +284,6 @@ function applyFilmPriority(film: Film, priority: Priority) {
         </div>
       </header>
 
-      <section class="toolbar toolbar--filters skeleton-block">
-        <span class="skeleton-field skeleton-field--wide" />
-        <span class="skeleton-field" />
-        <span class="skeleton-field" />
-        <span class="skeleton-field" />
-      </section>
-
       <section class="cycle-group skeleton-block">
         <span class="skeleton-line skeleton-line--sm" />
         <span class="skeleton-line skeleton-line--md" />
@@ -352,8 +318,18 @@ function applyFilmPriority(film: Film, priority: Priority) {
           <button
             type="button"
             class="films-progress__stat"
+            data-priority-filter="pending"
+            :class="{ 'films-progress__stat--active': activePriorityFilters.includes('pending') }"
+            @click="togglePriorityFilter('pending')"
+          >
+            <span class="films-progress__value">{{ globalPriorityCounts.pending }}</span>
+            <span class="films-progress__label">À traiter</span>
+          </button>
+          <button
+            type="button"
+            class="films-progress__stat"
             data-priority-filter="high"
-            :class="{ 'films-progress__stat--active': filters.priority === 'high' }"
+            :class="{ 'films-progress__stat--active': activePriorityFilters.includes('high') }"
             @click="togglePriorityFilter('high')"
           >
             <span class="films-progress__value">{{ globalPriorityCounts.high }}</span>
@@ -363,7 +339,7 @@ function applyFilmPriority(film: Film, priority: Priority) {
             type="button"
             class="films-progress__stat"
             data-priority-filter="medium"
-            :class="{ 'films-progress__stat--active': filters.priority === 'medium' }"
+            :class="{ 'films-progress__stat--active': activePriorityFilters.includes('medium') }"
             @click="togglePriorityFilter('medium')"
           >
             <span class="films-progress__value">{{ globalPriorityCounts.medium }}</span>
@@ -371,19 +347,9 @@ function applyFilmPriority(film: Film, priority: Priority) {
           </button>
           <button
             type="button"
-            class="films-progress__stat"
-            data-priority-filter="pending"
-            :class="{ 'films-progress__stat--active': filters.priority === 'pending' }"
-            @click="togglePriorityFilter('pending')"
-          >
-            <span class="films-progress__value">{{ globalPriorityCounts.pending }}</span>
-            <span class="films-progress__label">À traiter</span>
-          </button>
-          <button
-            type="button"
             class="films-progress__stat films-progress__stat--muted"
             data-priority-filter="ignore"
-            :class="{ 'films-progress__stat--active': filters.priority === 'ignore' }"
+            :class="{ 'films-progress__stat--active': activePriorityFilters.includes('ignore') }"
             @click="togglePriorityFilter('ignore')"
           >
             <span class="films-progress__value">{{ globalPriorityCounts.ignore }}</span>
@@ -392,7 +358,7 @@ function applyFilmPriority(film: Film, priority: Priority) {
         </div>
 
         <p class="films-progress__hint page-copy">
-          {{ filters.priority === 'all' ? 'Clique sur un compteur pour filtrer la sélection sans quitter les cycles.' : `${priorityFilterButtonLabel(filters.priority)} filtrés. Reclique pour revenir à toute la sélection.` }}
+          {{ activePriorityFilters.length === 0 ? 'Clique sur un ou plusieurs compteurs pour filtrer sans quitter les cycles.' : `${activePriorityFilters.map(priorityFilterButtonLabel).join(' + ')} filtrés. Reclique pour revenir à l’ensemble.` }}
         </p>
       </div>
     </header>
@@ -400,29 +366,6 @@ function applyFilmPriority(film: Film, priority: Priority) {
     <section v-if="store.loadError" class="notice-panel notice-panel--warning">
       <h3>Mode démo</h3>
       <p class="page-copy">{{ store.loadError }}</p>
-    </section>
-
-    <section class="toolbar toolbar--filters">
-      <input v-model="filters.query" class="toolbar-input" type="search" placeholder="Rechercher un titre, un·e réalisateurice, un pays ou un casting" />
-
-      <select v-model="filters.priority" class="toolbar-select">
-        <option value="all">Toutes les priorités</option>
-        <option value="pending">À traiter</option>
-        <option value="high">Immanquable</option>
-        <option value="medium">Peut-être</option>
-        <option value="ignore">Non merci</option>
-      </select>
-
-      <select v-model="filters.sort" class="toolbar-select">
-        <option value="title">Tri alphabétique</option>
-        <option value="priority">Tri par priorité</option>
-        <option value="duration">Tri par durée</option>
-      </select>
-
-      <label class="toolbar-toggle">
-        <input v-model="filters.hideLowNoise" type="checkbox" />
-        <span>Masquer les films ignorés</span>
-      </label>
     </section>
 
     <section class="legend">
@@ -484,6 +427,7 @@ function applyFilmPriority(film: Film, priority: Priority) {
               <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).pending }}</strong> à traiter</span>
               <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).high }}</strong> immanquables</span>
               <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).medium }}</strong> peut-être</span>
+              <span class="cycle-header__counter"><strong>{{ cyclePriorityCounts(group.films).ignore }}</strong> non merci</span>
             </span>
           </small>
         </div>

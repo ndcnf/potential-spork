@@ -1,6 +1,5 @@
 .planning {
-  width: min(100%, 72rem);
-  margin-inline: auto;
+  width: 100%;
 }
 
 .planning__export {

@@ -15,8 +15,10 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, var(--color-accent-soft), transparent 24%),
-    radial-gradient(circle at top right, var(--color-state-tentative-soft), transparent 20%),
+    linear-gradient(180deg, color-mix(in srgb, black 72%, transparent), transparent 18%),
+    linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 15%, transparent), transparent 38%),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 28%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--color-state-tentative) 10%, transparent), transparent 24%),
     var(--color-bg);
 }
 
@@ -58,17 +60,34 @@ a {
   backdrop-filter: blur(18px);
 }
 
-.app-header__inner,
-.main-panel__inner {
+.content-frame {
   width: min(100%, var(--breakpoint-content-max));
   margin-inline: auto;
 }
 
 .app-header__inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-xl);
+}
+
+.main-panel__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+.app-header__brand {
+  min-width: 0;
+}
+
+.app-header__brand .eyebrow {
+  margin-bottom: var(--space-2xs);
+}
+
+.app-header__brand h1 {
+  letter-spacing: -0.04em;
 }
 
 .app-header__brand h1 {
@@ -82,8 +101,11 @@ a {
   gap: 0.35rem;
 }
 
-.app-header__link,
-.app-header__export {
+.app-header__nav--secondary {
+  justify-content: flex-end;
+}
+
+.app-header__link {
   display: inline-flex;
   flex-direction: column;
   gap: var(--space-2xs);
@@ -91,6 +113,19 @@ a {
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
+}
+
+.app-header__link-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  display: inline-flex;
+  color: currentColor;
+  opacity: 0.85;
+}
+
+.app-header__link-icon :is(svg) {
+  width: 100%;
+  height: 100%;
 }
 
 a:focus-visible,
@@ -107,12 +142,14 @@ select:focus-visible,
 }
 
 .app-header__link--active,
-.app-header__export {
+.app-header__link--secondary.app-header__link--active {
   background: var(--color-surface-strong);
 }
 
 .app-header__link--secondary {
+  align-items: flex-end;
   opacity: 0.72;
+  text-align: right;
 }
 
 .app-header__link small {
@@ -131,12 +168,6 @@ select:focus-visible,
   opacity: 1;
 }
 
-.app-header__export {
-  color: var(--color-accent);
-  border: 1px solid var(--color-border-mid);
-  background: var(--color-bg-soft);
-}
-
 .eyebrow {
   margin: 0 0 var(--space-sm);
   color: var(--color-text-subtle);
@@ -150,7 +181,20 @@ select:focus-visible,
 }
 
 .main-panel {
-  padding: var(--space-2xl);
+  padding: var(--space-2xl) var(--space-2xl) calc(var(--space-2xl) * 1.2);
+}
+
+.app-footer {
+  padding: 0 var(--space-2xl) var(--space-lg);
+}
+
+.app-footer__inner {
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border-faint);
+}
+
+.app-footer small {
+  color: var(--color-text-subtle);
 }
 
 .page {
@@ -476,17 +520,22 @@ select:focus-visible,
   }
 
   .app-header__inner,
-  .main-panel__inner {
+  .main-panel__inner,
+  .content-frame {
     width: 100%;
   }
 
   .app-header__nav,
-  .app-header__actions {
+  .app-header__nav--secondary {
     display: none;
   }
 
   .main-panel {
     padding: var(--space-lg) var(--space-lg) 5.5rem;
+  }
+
+  .app-footer {
+    padding: 0 var(--space-lg) calc(5.5rem + var(--space-lg));
   }
 
   .page-header {
