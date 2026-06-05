@@ -508,6 +508,12 @@ async function removeScreeningSelection(screeningId: number) {
                  <div class="planning__detail-hints">
                    <span v-for="reason in option.recommendationDrawbacks" :key="reason" class="planning__detail-hint planning__detail-hint--warning">{{ reason }}</span>
                  </div>
+                </div>
+               <div v-if="option.recommendationBlockedBy" class="planning__detail-recommendation-block">
+                 <p class="planning__detail-copy-title">Pour pas cette séance</p>
+                 <div class="planning__detail-hints">
+                   <span class="planning__detail-hint planning__detail-hint--warning">{{ option.recommendationBlockedBy }}</span>
+                 </div>
                </div>
                <p class="planning__detail-note">{{ screeningDecisionNote(option) }}</p>
               <div class="planning__detail-actions">

@@ -563,6 +563,7 @@
 .planning__status-pill--tentative { color: var(--color-text); border-color: var(--color-border-mid); background: var(--color-neutral-soft); }
 .planning__status-pill--rejected { color: var(--color-text-muted); }
 .planning__status-pill--conflict { color: var(--color-text); border-color: var(--color-accent-border); background: var(--color-state-conflict-soft); }
+.planning__status-pill--warning { color: var(--color-text); border-color: var(--color-border-mid); background: color-mix(in srgb, var(--color-neutral-soft) 72%, transparent); }
 .planning__status-pill--single { color: var(--color-text); border-color: var(--color-border-mid); background: var(--color-neutral-soft); }
 .planning__status-pill--must-lock { color: var(--color-text); border-color: var(--color-accent-border); background: color-mix(in srgb, var(--color-accent) 10%, var(--color-background)); }
 .planning__status-pill--disabled { color: var(--color-text-subtle); }
