@@ -521,6 +521,243 @@ Minimum requis :
 - HTML incomplet
 - collision de clé source
 
+## API Contracts To Stabilize
+
+Le backend a besoin de contrats HTTP explicites pour éviter que le frontend dépende d’implémentations implicites ou de champs accidentels.
+
+Principe :
+
+- les routes exposent des schémas stables
+- les services portent la logique métier
+- les erreurs applicatives sont traduites explicitement en erreurs HTTP
+- un router ne contient ni heuristique de scraping, ni logique d’upsert, ni SQL complexe dispersé
+
+### Current Routes To Formalize
+
+#### `GET /health`
+
+But : vérifier que l’application répond.
+
+Réponse minimale :
+
+```json
+{"status": "ok"}
+```
+
+#### `GET /api/films`
+
+Entrées :
+
+- `q`: recherche libre optionnelle
+- `cycle_id`: filtre optionnel
+- `priority`: filtre optionnel
+
+Sortie : collection ordonnée de films enrichis avec leur cycle.
+
+Contrat attendu :
+
+- ordre stable
+- aucun champ source-specific NIFFF
+- priorité issue du modèle produit, pas d’un vocabulaire vendor-specific
+
+#### `PATCH /api/films/{film_id}`
+
+Entrée : mise à jour partielle bornée aux champs éditables côté produit.
+
+Version actuelle minimale :
+
+- `priority`
+
+Erreurs attendues :
+
+- `404` film introuvable
+- `422` payload invalide
+
+#### `GET /api/screenings`
+
+Sortie : liste des séances avec état dérivé calculé côté backend.
+
+Le frontend ne doit pas réimplémenter :
+
+- détection de conflit
+- statut `past`
+- désactivation d’une autre séance du même film
+
+#### `PATCH /api/screenings/{screening_id}`
+
+Entrée : changement de `selection_status`.
+
+Erreurs attendues :
+
+- `404` séance introuvable
+- `422` statut invalide
+- plus tard potentiellement `409` si une règle métier bloque l’opération
+
+#### `GET /api/planning`
+
+Sortie : séances groupées par jour.
+
+Le groupement temporel doit rester côté backend pour garantir une lecture cohérente du planning.
+
+#### `GET /api/exports/confirmed.ics`
+
+Sortie : calendrier iCal construit uniquement à partir des séances confirmées.
+
+Exigences :
+
+- timezone explicite
+- fallback explicite si `ends_at` est absent
+- exclusion des séances sans `starts_at`
+
+### Error Mapping Recommendation
+
+Créer à terme des exceptions applicatives explicites, par exemple :
+
+- `SourceFetchError`
+- `SourceParseError`
+- `ImportConflictError`
+- `EntityNotFoundError`
+
+Puis les mapper proprement vers :
+
+- `502` si la source distante est indisponible
+- `422` si l’entrée client est invalide
+- `404` si l’entité demandée n’existe pas
+- `409` si une règle métier ou une collision stable empêche l’opération
+
+## Screening Selection Rules
+
+Ces règles doivent être documentées et testées côté backend. Elles ne doivent pas dériver d’un comportement opportuniste du frontend.
+
+### Current States
+
+Pour l’état persistant de sélection, le backend porte actuellement :
+
+- `none`
+- `tentative`
+- `confirmed`
+
+Le backend dérive ensuite un état de lecture, par exemple :
+
+- `past`
+- `selected`
+- `disabled`
+- `conflict`
+- `available`
+
+### Rules To Preserve
+
+#### 1. Past dominates
+
+Si une séance est déjà passée, son état dérivé doit être `past` même si d’autres signaux existent.
+
+#### 2. Selected dominates for the current row
+
+Si une séance est `tentative` ou `confirmed`, son état dérivé doit être `selected` pour cette ligne.
+
+#### 3. Same-film exclusivity
+
+Si une autre séance du même film est déjà `tentative` ou `confirmed`, la séance courante doit devenir `disabled`.
+
+But :
+
+- éviter plusieurs choix concurrents pour le même film
+- centraliser la règle d’exclusivité au backend
+
+#### 4. Time conflict detection
+
+Si une séance chevauche une autre séance déjà retenue, son état dérivé doit être `conflict`.
+
+La règle de chevauchement doit être pure, testable et indépendante du transport HTTP.
+
+#### 5. Confirmed sibling reset
+
+Lorsqu’une séance passe à `confirmed`, les autres séances du même film ne doivent pas rester dans un état concurrent.
+
+Politique actuelle :
+
+- les séances soeurs non rejetées sont remises à `none`
+
+Cette règle doit rester documentée tant qu’un autre workflow n’est pas défini.
+
+### Rule Gap To Clarify
+
+Le backend actuel ne documente pas encore :
+
+- si `tentative` doit aussi réinitialiser les autres séances du même film
+- si un statut `rejected` doit exister explicitement dans le contrat public
+- si une opération invalide doit être refusée ou simplement normalisée
+
+Ces points doivent être verrouillés avant d’étoffer la logique planning.
+
+## Data Model And Persistence Invariants
+
+Le backend a besoin d’invariants documentés. Sans eux, les imports deviennent fragiles et l’idempotence devient accidentelle.
+
+### Domain Entities
+
+Entités métier visées :
+
+- `Cycle`
+- `Film`
+- `Venue`
+- `Screening`
+
+### Mandatory Distinction
+
+Toujours distinguer :
+
+- identifiant interne de base (`id`)
+- identifiant stable de source (`source_key`)
+
+Le `slug` peut aider, mais il ne doit pas être confondu avec une clé d’import garantie.
+
+### Invariants To Document And Test
+
+#### `Cycle`
+
+- porte un rôle éditorial
+- ne porte pas la priorité produit
+- doit avoir un `source_key` stable si la source en fournit un ou si une clé dérivée est construite
+
+#### `Film`
+
+- la priorité existe uniquement au niveau film
+- un film doit pouvoir être réimporté sans changer d’identité interne
+- `source_url` ne suffit pas toujours comme clé stable ; documenter le vrai `source_key`
+
+#### `Venue`
+
+- nécessite aussi un identifiant stable
+- le nom seul peut être insuffisant si la source varie légèrement son libellé
+
+#### `Screening`
+
+- doit être identifiable indépendamment du `id` SQL
+- devrait porter à terme un `source_key`
+- devrait porter à terme `source_url` si la source fournit une page ou un lien stable
+
+### Import Invariants
+
+- un import relancé ne doit pas dupliquer les entités déjà connues
+- un import partiel ne doit pas corrompre les données existantes
+- les warnings d’enrichissement détail ne doivent pas être silencieux
+- la transaction d’import doit être bornée explicitement
+- la politique de disparition d’une entité source doit être documentée avant toute suppression automatique
+
+### Legacy Compatibility To Phase Out
+
+Le backend porte encore des traces legacy qui contredisent la cible produit :
+
+- `Cycle.priority` alors que la priorité doit vivre uniquement sur `Film`
+- valeurs de priorité `ignore / low / medium / high / must-see`
+
+Recommandation :
+
+- documenter une phase de compatibilité
+- définir un mapping de migration explicite
+- supprimer progressivement les états legacy du contrat public
+
 ## Current Model Gaps To Anticipate
 
 Le modèle SQLAlchemy actuel n’est pas encore idéal pour ce design.
