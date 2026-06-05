@@ -1,6 +1,6 @@
 from collections.abc import Generator
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.config import settings
@@ -10,21 +10,36 @@ class Base(DeclarativeBase):
     pass
 
 
-engine = create_engine(settings.database_url, connect_args={"check_same_thread": False})
+def _is_sqlite_url(database_url: str) -> bool:
+    return database_url.startswith("sqlite")
+
+
+def _engine_connect_args(database_url: str) -> dict[str, bool]:
+    if _is_sqlite_url(database_url):
+        return {"check_same_thread": False}
+    return {}
+
+
+engine = create_engine(
+    settings.database_url,
+    connect_args=_engine_connect_args(settings.database_url),
+)
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
-def run_sqlite_schema_upgrades() -> None:
-    if not settings.database_url.startswith("sqlite"):
-        return
-
-    film_column_upgrades = {
+SQLITE_COMPATIBILITY_COLUMNS: dict[str, dict[str, str]] = {
+    "films": {
         "premiere_label": "VARCHAR(255)",
         "short_description": "TEXT",
         "poster_url": "TEXT",
     }
+}
 
-    with engine.begin() as connection:
+
+def _ensure_missing_nullable_columns(
+    target_engine: Engine, table_name: str, expected_columns: dict[str, str]
+) -> None:
+    with target_engine.begin() as connection:
         existing_tables = {
             row[0]
             for row in connection.execute(
@@ -32,19 +47,32 @@ def run_sqlite_schema_upgrades() -> None:
             )
         }
 
-        if "films" not in existing_tables:
+        if table_name not in existing_tables:
             return
 
-        existing_film_columns = {
-            row[1] for row in connection.execute(text("PRAGMA table_info(films)"))
+        existing_columns = {
+            row[1]
+            for row in connection.execute(text(f"PRAGMA table_info({table_name})"))
         }
 
-        for column_name, column_type in film_column_upgrades.items():
-            if column_name in existing_film_columns:
+        for column_name, column_type in expected_columns.items():
+            if column_name in existing_columns:
                 continue
             connection.execute(
-                text(f"ALTER TABLE films ADD COLUMN {column_name} {column_type}")
+                text(
+                    f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"
+                )
             )
+
+
+def run_sqlite_schema_upgrades(target_engine: Engine | None = None) -> None:
+    engine_to_use = target_engine or engine
+
+    if not _is_sqlite_url(str(engine_to_use.url)):
+        return
+
+    for table_name, expected_columns in SQLITE_COMPATIBILITY_COLUMNS.items():
+        _ensure_missing_nullable_columns(engine_to_use, table_name, expected_columns)
 
 
 def get_db() -> Generator[Session, None, None]:
