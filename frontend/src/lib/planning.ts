@@ -19,6 +19,12 @@ function parseDate(value: string | null): Date | null {
   return date
 }
 
+export function toClockMinutes(value: string | null): number {
+  const date = parseDate(value)
+  if (!date) return 0
+  return date.getHours() * 60 + date.getMinutes()
+}
+
 function toRealTimestamp(value: string | null): number {
   if (!value) return 0
   return parseDate(value)?.getTime() ?? new Date(value).getTime()

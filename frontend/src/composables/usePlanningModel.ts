@@ -1,6 +1,6 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import { formatMinutes, formatTimeRange as formatTimeRangeValue, getFestivalDisplayInfo, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
+import { FESTIVAL_DAY_CUTOFF_HOUR, formatMinutes, formatTimeRange as formatTimeRangeValue, getFestivalDisplayInfo, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
 import { useSettingsStore } from '@/stores/settings'
 import type { Film, Screening } from '@/types'
@@ -50,11 +50,45 @@ export function usePlanningModel() {
     return priority === 'high' || priority === 'must-see'
   }
 
-  function clockMinutes(value: string | null): number {
-    if (!value) return 0
-    const hours = Number(value.slice(11, 13))
-    const minutes = Number(value.slice(14, 16))
-    return hours * 60 + minutes
+  function toFestivalPreferenceMinutes(minutes: number | null): number | null {
+    if (minutes === null) return null
+    const hours = Math.floor(minutes / 60)
+    return hours < FESTIVAL_DAY_CUTOFF_HOUR ? minutes + (24 * 60) : minutes
+  }
+
+  function classifyTimePreference(startMinutes: number, avoidBeforeMinutes: number | null, avoidAfterMinutes: number | null): 'early' | 'late' | null {
+    const festivalAvoidBeforeMinutes = toFestivalPreferenceMinutes(avoidBeforeMinutes)
+    const festivalAvoidAfterMinutes = toFestivalPreferenceMinutes(avoidAfterMinutes)
+
+    if (festivalAvoidBeforeMinutes === null && festivalAvoidAfterMinutes === null) {
+      return null
+    }
+
+    if (festivalAvoidBeforeMinutes !== null && festivalAvoidAfterMinutes === null) {
+      return startMinutes < festivalAvoidBeforeMinutes ? 'early' : null
+    }
+
+    if (festivalAvoidBeforeMinutes === null && festivalAvoidAfterMinutes !== null) {
+      return startMinutes >= festivalAvoidAfterMinutes ? 'late' : null
+    }
+
+    if (festivalAvoidBeforeMinutes === festivalAvoidAfterMinutes) {
+      return null
+    }
+
+    if (festivalAvoidBeforeMinutes! < festivalAvoidAfterMinutes!) {
+      if (startMinutes < festivalAvoidBeforeMinutes!) return 'early'
+      if (startMinutes >= festivalAvoidAfterMinutes!) return 'late'
+      return null
+    }
+
+    if (startMinutes < festivalAvoidBeforeMinutes! && startMinutes >= festivalAvoidAfterMinutes!) {
+      const distanceToLateBoundary = startMinutes - festivalAvoidAfterMinutes!
+      const distanceToEarlyBoundary = festivalAvoidBeforeMinutes! - startMinutes
+      return distanceToLateBoundary <= distanceToEarlyBoundary ? 'late' : 'early'
+    }
+
+    return null
   }
 
   function screeningRecommendationScore(screening: Screening, selectedScreenings: Screening[]): { score: number; note: string; reasons: string[]; drawbacks: string[] } {
@@ -63,10 +97,10 @@ export function usePlanningModel() {
     const drawbacks: string[] = []
     const conflictPenalty = selectedScreenings.some((other) => other.id !== screening.id && other.film_id !== screening.film_id && screeningsOverlapWithBuffer(screening, other)) ? -100 : 0
     const comfortBonus = settings.preferredVenueScores[screening.venue_name ?? ''] ?? 0
-    const startMinutes = clockMinutes(screening.starts_at)
-    const latenessPenalty = settings.avoidAfterMinutes !== null && startMinutes >= settings.avoidAfterMinutes ? -1 : 0
-    const earlyPenalty = settings.avoidBeforeMinutes !== null && startMinutes < settings.avoidBeforeMinutes ? -1 : 0
-    const total = conflictPenalty + comfortBonus + latenessPenalty + earlyPenalty
+    const startMinutes = toMinutes(screening.starts_at)
+    const timePreference = classifyTimePreference(startMinutes, settings.avoidBeforeMinutes, settings.avoidAfterMinutes)
+    const timePenalty = timePreference ? -1 : 0
+    const total = conflictPenalty + comfortBonus + timePenalty
 
     if (conflictPenalty < 0) {
       drawbacks.push('conflit avec une autre séance déjà retenue')
@@ -78,12 +112,12 @@ export function usePlanningModel() {
       drawbacks.push(`salle ${screening.venue_name || 'inconnue'} marquée comme inconfortable`)
     }
 
-    if (earlyPenalty < 0 && settings.avoidBeforeMinutes !== null) {
-      drawbacks.push('trop tot')
+    if (timePreference === 'early') {
+      drawbacks.push('un peu tot')
     }
 
-    if (latenessPenalty < 0 && settings.avoidAfterMinutes !== null) {
-      drawbacks.push('trop tard')
+    if (timePreference === 'late') {
+      drawbacks.push('un peu tard')
     }
 
     return {
