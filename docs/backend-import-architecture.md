@@ -1072,6 +1072,476 @@ Si tu dois maximiser le ratio valeur / risque, l’ordre strict recommandé est 
 
 Cet ordre évite le refactor cosmétique. Il sécurise d’abord le comportement, puis coupe les dépendances fragiles, puis aligne enfin le modèle produit.
 
+## Pytest Test Matrix By File
+
+Objectif : avoir une cartographie concrète des tests à écrire pour détecter les régressions utiles, sans tester des détails d’implémentation triviaux.
+
+Principe :
+
+- un fichier de tests cible une responsabilité
+- on teste le comportement observable
+- les fixtures HTML servent à figer les cas réalistes de parsing
+- les mocks servent à isoler le réseau, pas à masquer la logique métier
+
+### `backend/tests/sources/nifff_html/test_client.py`
+
+Responsabilité : couche transport HTTP.
+
+Déjà présent :
+
+- `build_session()` positionne le `User-Agent`
+- `fetch_html()` renvoie `response.text`
+- propagation d’erreur HTTP
+
+À ajouter :
+
+- timeout personnalisé transmis à `session.get()`
+- propagation de `requests.Timeout`
+- propagation de `requests.ConnectionError`
+- vérification qu’aucune logique de parsing ne vit dans le client
+
+Nom de tests recommandés :
+
+- `test_fetch_html_uses_custom_timeout`
+- `test_fetch_html_propagates_timeout`
+- `test_fetch_html_propagates_connection_error`
+
+### `backend/tests/sources/nifff_html/test_parser.py`
+
+Responsabilité : parsing HTML pur, sans DB.
+
+Déjà présent :
+
+- `slugify()`
+- `extract_runtime()`
+- `extract_year()`
+- `clean_text()`
+- `field_after_heading()`
+- `extract_table_value()`
+- `extract_archive_cards()`
+- `parse_listing_card()`
+- `enrich_from_detail()`
+
+À ajouter :
+
+- `slugify()` sur chaîne vide ou accentuée
+- `extract_runtime()` quand le format est non reconnu
+- `extract_year()` quand plusieurs années apparaissent
+- `extract_poster_url()` avec `data-src`, `src`, `og:image`, puis fallback
+- `extract_short_description()` fallback meta description
+- `parse_listing_card()` quand le lien est absent
+- `parse_listing_card()` quand le titre est absent
+- `parse_listing_card()` avec infos partielles
+- `enrich_from_detail()` quand certains champs ne sont pas présents
+- `field_after_heading()` si plusieurs blocs non pertinents s’intercalent
+
+Nom de tests recommandés :
+
+- `test_slugify_returns_unknown_for_empty_value`
+- `test_extract_runtime_returns_none_for_unrecognized_format`
+- `test_extract_poster_url_prefers_header_image_data_src`
+- `test_extract_poster_url_falls_back_to_og_image`
+- `test_extract_short_description_falls_back_to_meta_description`
+- `test_parse_listing_card_returns_none_without_link`
+- `test_parse_listing_card_returns_none_without_title`
+- `test_enrich_from_detail_preserves_existing_values_when_missing`
+
+### `backend/tests/sources/nifff_html/test_parser_fixtures.py`
+
+Responsabilité : parser sur snapshots HTML réalistes versionnés.
+
+À créer :
+
+- fixtures de listing réel simplifié
+- fixtures de détail réel simplifié
+- fixtures volontairement dégradées
+
+Cas à couvrir :
+
+- listing nominal multi-cartes
+- page détail nominale
+- page détail sans distribution
+- page détail sans poster
+- structure HTML légèrement modifiée
+
+Nom de tests recommandés :
+
+- `test_listing_snapshot_extracts_expected_number_of_cards`
+- `test_listing_snapshot_parses_expected_film_fields`
+- `test_detail_snapshot_extracts_expected_optional_fields`
+- `test_detail_snapshot_tolerates_missing_distribution`
+- `test_detail_snapshot_tolerates_missing_poster`
+
+### `backend/tests/core/test_database.py`
+
+Responsabilité : compatibilité SQLite et upgrades de schéma.
+
+Déjà présent :
+
+- ajout des colonnes manquantes
+- idempotence de l’upgrade
+
+À ajouter :
+
+- aucun effet si la table n’existe pas
+- aucun effet sur une URL non SQLite
+- `_engine_connect_args()` renvoie bien `check_same_thread=False` pour SQLite
+
+Nom de tests recommandés :
+
+- `test_run_sqlite_schema_upgrades_skips_missing_tables`
+- `test_run_sqlite_schema_upgrades_noops_for_non_sqlite_engine`
+- `test_engine_connect_args_enable_check_same_thread_for_sqlite`
+
+### `backend/tests/services/test_screenings.py`
+
+Responsabilité : logique métier de disponibilité et de sélection des séances.
+
+À créer.
+
+Cas à couvrir :
+
+- `screenings_overlap()` faux si même `id`
+- `screenings_overlap()` faux si date manquante
+- `screenings_overlap()` vrai si chevauchement réel
+- `derive_screening_state()` retourne `past`
+- `derive_screening_state()` retourne `selected` pour `tentative`
+- `derive_screening_state()` retourne `selected` pour `confirmed`
+- `derive_screening_state()` retourne `disabled` si une autre séance du même film est retenue
+- `derive_screening_state()` retourne `conflict` si chevauchement avec séance retenue
+- `derive_screening_state()` retourne `available` sinon
+- `sync_film_screening_status()` remet les séances soeurs à `none` après un `confirmed`
+- `sync_film_screening_status()` ne modifie rien si la séance n’est pas `confirmed`
+
+Nom de tests recommandés :
+
+- `test_screenings_overlap_returns_false_for_same_screening`
+- `test_screenings_overlap_returns_false_when_boundaries_missing`
+- `test_screenings_overlap_returns_true_for_overlapping_ranges`
+- `test_derive_screening_state_returns_past_for_elapsed_screening`
+- `test_derive_screening_state_returns_selected_for_confirmed_screening`
+- `test_derive_screening_state_returns_disabled_when_sibling_is_selected`
+- `test_derive_screening_state_returns_conflict_when_selected_screening_overlaps`
+- `test_sync_film_screening_status_resets_siblings_when_confirmed`
+
+### `backend/tests/services/test_export_ics.py`
+
+Responsabilité : export iCal pur.
+
+À créer.
+
+Cas à couvrir :
+
+- création d’un calendrier valide avec une séance
+- exclusion d’une séance sans `starts_at`
+- fallback sur `film_duration_minutes` si `ends_at` absent
+- fallback à `120` minutes si durée absente
+- conservation de la timezone festival
+- compatibilité avec dict et objet attributaire
+
+Nom de tests recommandés :
+
+- `test_build_calendar_creates_event_for_valid_screening`
+- `test_build_calendar_skips_screening_without_start`
+- `test_build_calendar_uses_duration_fallback_when_end_missing`
+- `test_build_calendar_uses_default_duration_when_missing_everywhere`
+- `test_ensure_local_datetime_converts_aware_datetime_to_festival_timezone`
+- `test_row_value_supports_mapping_and_object_inputs`
+
+### `backend/tests/services/test_import_nifff.py`
+
+Responsabilité : service legacy actuel tant qu’il existe.
+
+À créer.
+
+Cas à couvrir :
+
+- import nominal avec création cycle + film
+- import relancé sans duplication film
+- mise à jour d’un film existant
+- enrichissement détail indisponible mais import listing conservé
+- plusieurs cartes avec même cycle
+- carte invalide ignorée
+
+Important :
+
+- mocker le réseau
+- utiliser une DB SQLite de test
+- vérifier le résultat métier en base, pas le détail des appels internes
+
+Nom de tests recommandés :
+
+- `test_import_nifff_catalog_creates_cycles_and_films`
+- `test_import_nifff_catalog_is_idempotent_for_existing_film`
+- `test_import_nifff_catalog_updates_existing_film_fields`
+- `test_import_nifff_catalog_keeps_listing_data_when_detail_fetch_fails`
+- `test_import_nifff_catalog_skips_invalid_cards`
+
+### `backend/tests/services/test_import_catalog.py`
+
+Responsabilité : futur orchestrateur source-agnostic.
+
+À créer quand `services/import_catalog.py` existe.
+
+Cas à couvrir :
+
+- sélection de la source attendue
+- orchestration `fetch -> parse -> normalize -> persist`
+- remontée des warnings du normalizer
+- import report final complet
+- erreur source traduite en erreur applicative explicite
+
+Nom de tests recommandés :
+
+- `test_import_catalog_orchestrates_source_parser_normalizer_and_repositories`
+- `test_import_catalog_collects_warnings_in_report`
+- `test_import_catalog_raises_explicit_error_when_source_fetch_fails`
+
+### `backend/tests/repositories/test_cycles.py`
+
+Responsabilité : upsert cycle par clé stable.
+
+À créer quand les repositories existent.
+
+Cas à couvrir :
+
+- création sur clé inconnue
+- réutilisation sur clé existante
+- mise à jour des champs autorisés
+- conservation des champs non pilotés par la source si nécessaire
+
+Nom de tests recommandés :
+
+- `test_cycle_repository_creates_cycle_when_source_key_unknown`
+- `test_cycle_repository_updates_existing_cycle_when_source_key_known`
+
+### `backend/tests/repositories/test_films.py`
+
+Responsabilité : upsert film.
+
+Cas à couvrir :
+
+- création film initiale
+- mise à jour film existant
+- rattachement au cycle attendu
+- non-duplication sur réimport
+- gestion d’un champ optionnel manquant
+
+Nom de tests recommandés :
+
+- `test_film_repository_creates_film_from_imported_model`
+- `test_film_repository_updates_existing_film_without_duplication`
+- `test_film_repository_preserves_identity_across_reimports`
+
+### `backend/tests/repositories/test_venues.py`
+
+Responsabilité : upsert venue.
+
+Cas à couvrir :
+
+- création venue
+- réutilisation venue existante par clé stable
+- variation de nom traitée selon la règle définie
+
+### `backend/tests/repositories/test_screenings.py`
+
+Responsabilité : upsert screening.
+
+Cas à couvrir :
+
+- création screening initiale
+- mise à jour horaire d’une screening existante
+- rattachement film / venue correct
+- non-duplication sur même `source_key`
+- collision de clé détectée proprement
+
+### `backend/tests/api/test_health.py`
+
+Responsabilité : contrat minimal de santé.
+
+À créer.
+
+Cas à couvrir :
+
+- `200 OK`
+- payload exact attendu
+
+Nom de test recommandé :
+
+- `test_healthcheck_returns_ok_status`
+
+### `backend/tests/api/test_films.py`
+
+Responsabilité : contrat HTTP des films.
+
+À créer.
+
+Cas à couvrir :
+
+- liste ordonnée de films
+- filtre `q`
+- filtre `cycle_id`
+- filtre `priority`
+- `PATCH` met à jour la priorité
+- `PATCH` sur id inconnu renvoie `404`
+- `PATCH` invalide renvoie `422`
+
+Nom de tests recommandés :
+
+- `test_list_films_returns_ordered_films`
+- `test_list_films_filters_by_query`
+- `test_list_films_filters_by_cycle_id`
+- `test_list_films_filters_by_priority`
+- `test_update_film_updates_priority`
+- `test_update_film_returns_404_for_unknown_id`
+
+### `backend/tests/api/test_screenings.py`
+
+Responsabilité : contrat HTTP des séances.
+
+À créer.
+
+Cas à couvrir :
+
+- liste avec `derived_state`
+- `PATCH` met à jour `selection_status`
+- `PATCH` répercute la règle sur les séances soeurs
+- `PATCH` sur id inconnu renvoie `404`
+- `PATCH` invalide renvoie `422`
+
+Nom de tests recommandés :
+
+- `test_list_screenings_returns_derived_states`
+- `test_update_screening_updates_selection_status`
+- `test_update_screening_resets_sibling_states_when_confirmed`
+- `test_update_screening_returns_404_for_unknown_id`
+
+### `backend/tests/api/test_planning.py`
+
+Responsabilité : groupement planning.
+
+À créer.
+
+Cas à couvrir :
+
+- groupement par date ISO
+- exclusion des séances sans `starts_at`
+- ordre stable des jours
+
+Nom de tests recommandés :
+
+- `test_get_planning_groups_screenings_by_day`
+- `test_get_planning_skips_screenings_without_start`
+- `test_get_planning_returns_days_in_sorted_order`
+
+### `backend/tests/api/test_export.py`
+
+Responsabilité : contrat HTTP de l’export iCal.
+
+À créer.
+
+Cas à couvrir :
+
+- `200 OK`
+- `media_type` correct
+- header `Content-Disposition`
+- seules les séances `confirmed` sont exportées
+
+Nom de tests recommandés :
+
+- `test_export_confirmed_ics_returns_calendar_response`
+- `test_export_confirmed_ics_only_contains_confirmed_screenings`
+
+### `backend/tests/api/test_imports.py`
+
+Responsabilité : contrat HTTP de lancement d’import.
+
+À créer.
+
+Cas à couvrir :
+
+- payload minimal valide
+- `schedule_url` valide accepté
+- payload invalide renvoie `422`
+- service appelé avec les bons paramètres
+- propagation propre d’une erreur métier d’import
+
+Nom de tests recommandés :
+
+- `test_import_catalog_accepts_minimal_payload`
+- `test_import_catalog_accepts_schedule_url`
+- `test_import_catalog_returns_422_for_invalid_payload`
+
+### `backend/tests/api/conftest.py`
+
+Responsabilité : fixtures partagées API.
+
+À créer.
+
+Doit fournir :
+
+- application de test
+- session DB isolée
+- override de dépendance `db_session`
+- helpers de seed (`film`, `cycle`, `venue`, `screening`)
+
+Règle :
+
+- pas de dépendance à la base locale développeur
+- base de test recréée ou rollbackée proprement pour chaque test
+
+### `backend/tests/conftest.py`
+
+Responsabilité : fixtures transverses backend.
+
+À créer ou enrichir.
+
+Doit fournir selon besoin :
+
+- factory de datetime timezone-aware
+- snapshots HTML chargés depuis `tests/fixtures/`
+- factory d’objets `ImportedFilm` futurs
+- utilitaires de session SQLite de test
+
+## Fixtures Directory Recommendation
+
+Structure recommandée :
+
+```text
+backend/tests/
+  fixtures/
+    nifff_html/
+      listing_nominal.html
+      listing_missing_title.html
+      detail_nominal.html
+      detail_missing_distribution.html
+      detail_missing_poster.html
+```
+
+Règles :
+
+- nommer les fixtures par scénario métier, pas par date arbitraire
+- garder les fixtures assez petites pour rester lisibles
+- ne pas anonymiser au point de casser la structure DOM utile
+
+## Minimum Test Pack To Build First
+
+Si le temps est court, commencer exactement par ces fichiers :
+
+1. `backend/tests/services/test_screenings.py`
+2. `backend/tests/services/test_export_ics.py`
+3. `backend/tests/services/test_import_nifff.py`
+4. `backend/tests/api/conftest.py`
+5. `backend/tests/api/test_films.py`
+6. `backend/tests/api/test_screenings.py`
+7. `backend/tests/api/test_export.py`
+
+Pourquoi :
+
+- ce sont les zones où une régression aurait un impact produit direct
+- ce sont aussi les zones actuellement les moins couvertes
+- elles sécurisent le futur refactor vers un backend source-agnostic
+
 ## Current Model Gaps To Anticipate
 
 Le modèle SQLAlchemy actuel n’est pas encore idéal pour ce design.
