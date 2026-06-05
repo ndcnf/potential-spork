@@ -7,7 +7,9 @@ from app.sources.nifff_html.parser import (
     clean_text,
     enrich_from_detail,
     extract_archive_cards,
+    extract_poster_url,
     extract_runtime,
+    extract_short_description,
     extract_table_value,
     extract_year,
     field_after_heading,
@@ -20,10 +22,18 @@ def test_slugify_normalizes_text() -> None:
     assert slugify("A Cure for Wellness!!!") == "a-cure-for-wellness"
 
 
+def test_slugify_returns_unknown_for_empty_value() -> None:
+    assert slugify("!!!") == "unknown"
+
+
 def test_extract_runtime_reads_minutes() -> None:
     assert extract_runtime("2h26 · 146 minutes") == 146
     assert extract_runtime("146 mins") == 146
     assert extract_runtime(None) is None
+
+
+def test_extract_runtime_returns_none_for_unrecognized_format() -> None:
+    assert extract_runtime("2h26") is None
 
 
 def test_extract_year_reads_four_digit_year() -> None:
@@ -59,6 +69,27 @@ def test_extract_table_value_reads_value_from_table() -> None:
     soup = BeautifulSoup(html, "html.parser")
 
     assert extract_table_value(soup, "Distribution") == "Dane DeHaan, Mia Goth"
+
+
+def test_extract_poster_url_prefers_header_image_data_src() -> None:
+    html = '<div class="header-page__image"><img data-src="/images/poster.jpg" /></div>'
+    soup = BeautifulSoup(html, "html.parser")
+
+    assert extract_poster_url(soup, "https://nifff.ch/prog/2025/film/a-cure-for-wellness") == "https://nifff.ch/images/poster.jpg"
+
+
+def test_extract_poster_url_falls_back_to_og_image() -> None:
+    html = '<meta property="og:image" content="/images/og.jpg" />'
+    soup = BeautifulSoup(html, "html.parser")
+
+    assert extract_poster_url(soup, "https://nifff.ch/prog/2025/film/a-cure-for-wellness") == "https://nifff.ch/images/og.jpg"
+
+
+def test_extract_short_description_falls_back_to_meta_description() -> None:
+    html = '<meta name="description" content="Short description." />'
+    soup = BeautifulSoup(html, "html.parser")
+
+    assert extract_short_description(soup) == "Short description."
 
 
 def test_extract_archive_cards_returns_unique_cards() -> None:
@@ -109,6 +140,30 @@ def test_parse_listing_card_extracts_expected_fields() -> None:
     assert parsed.year == 2016
     assert parsed.duration_minutes == 146
     assert parsed.countries == "DE/LU/US"
+
+
+def test_parse_listing_card_returns_none_without_link() -> None:
+    soup = BeautifulSoup('<div class="card"><div>No link here</div></div>', "html.parser")
+
+    assert parse_listing_card(soup.select_one(".card"), "https://nifff.ch/archives/2025/schedule?type=film", 2025) is None
+
+
+def test_parse_listing_card_returns_none_without_title() -> None:
+    html = """
+    <div class="card">
+      <div>International Competition</div>
+      <div>unused line</div>
+      <div>Gore Verbinski</div>
+      <div>Mind-bending wellness horror</div>
+      <div>DE/LU/US, 2016, 146 mins</div>
+      <a href="/prog/2025/film/a-cure-for-wellness"></a>
+      <img src="poster.jpg" />
+      <p>Enough text to make the parent container qualify as a card.</p>
+    </div>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    assert parse_listing_card(soup.select_one(".card"), "https://nifff.ch/archives/2025/schedule?type=film", 2025) is None
 
 
 def test_enrich_from_detail_updates_parsed_film_from_detail_html() -> None:
@@ -168,3 +223,24 @@ def test_enrich_from_detail_updates_parsed_film_from_detail_html() -> None:
     assert enriched.language == "English"
     assert enriched.age_rating == "16+"
     assert enriched.poster_url == "https://nifff.ch/images/cure.jpg"
+
+
+def test_enrich_from_detail_preserves_existing_values_when_missing() -> None:
+    parsed = ParsedFilm(
+        title="A Cure for Wellness",
+        slug="a-cure-for-wellness",
+        source_url="https://nifff.ch/prog/2025/film/a-cure-for-wellness",
+        cycle_name="International Competition",
+        year=2016,
+        countries="DE/LU/US",
+        duration_minutes=146,
+        tagline="Existing tagline",
+    )
+    detail_html = "<html><body><h2>Section</h2><p>International Competition</p></body></html>"
+
+    enriched = enrich_from_detail(detail_html, parsed)
+
+    assert enriched.year == 2016
+    assert enriched.countries == "DE/LU/US"
+    assert enriched.duration_minutes == 146
+    assert enriched.tagline == "Existing tagline"
