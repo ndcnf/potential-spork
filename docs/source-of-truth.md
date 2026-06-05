@@ -198,6 +198,11 @@ Règles :
 - pas de surcharge de badges, d’icônes ou de tags,
 - les conséquences d’une action doivent être explicites.
 
+Exception admise :
+- une action directe `Ignorer` peut rester disponible dans la timeline,
+- si elle évite un détour inutile par le panneau détail,
+- et si elle reste visuellement secondaire.
+
 ---
 
 ## 6. Position verrouillée sur la navigation

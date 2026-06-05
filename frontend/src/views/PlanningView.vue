@@ -203,7 +203,6 @@ async function removeScreeningSelection(screeningId: number) {
 
     <section class="planning__guidance">
       <div>
-        <p class="eyebrow">Action principale</p>
         <h3>{{ planningGuidance.title }}</h3>
         <p class="page-copy">{{ planningGuidance.copy }}</p>
       </div>
@@ -255,11 +254,8 @@ async function removeScreeningSelection(screeningId: number) {
           <div class="legend__items legend__items--compact">
             <span class="legend__item"><span class="legend__marker legend__marker--confirmed" /> confirmée</span>
             <span class="legend__item"><span class="legend__marker legend__marker--tentative" /> tentative</span>
-            <span class="legend__item"><span class="legend__marker legend__marker--must-lock" /> à sécuriser</span>
             <span class="legend__item"><span class="legend__marker legend__marker--conflict" /> conflit</span>
-            <span class="legend__item"><span class="legend__marker legend__marker--disabled" /> autre séance déjà choisie</span>
             <span class="legend__item"><span class="legend__marker legend__marker--rejected" /> séance écartée</span>
-            <span class="legend__item"><span class="legend__marker legend__marker--available" /> disponible</span>
           </div>
         </div>
       </section>
@@ -315,14 +311,12 @@ async function removeScreeningSelection(screeningId: number) {
             <p class="eyebrow">Jour courant</p>
             <h3>{{ activeDay === FESTIVAL_VIEW_KEY ? 'Festival entier' : activeDay ? formatDayLabel(activeDay) : 'Aucun jour' }}</h3>
           </div>
-          <span>{{ daySummary.selected }} séances retenues · {{ daySummary.conflicts }} conflit(s) · {{ daySummary.total }} séance(s)</span>
         </header>
 
         <div v-if="effectivePlanningMode === 'timeline' && dayScreenings.length" class="planning__timeline">
           <template v-for="group in timelineGroups" :key="group.dayKey || 'empty'">
             <header v-if="activeDay === FESTIVAL_VIEW_KEY" class="planning__timeline-day-header">
               <strong>{{ formatDayLabel(group.dayKey) }}</strong>
-              <span>{{ group.screenings.filter((screening) => screening.isSelected).length }} séances retenues</span>
             </header>
 
             <article
@@ -347,12 +341,10 @@ async function removeScreeningSelection(screeningId: number) {
                       </span>
                     </div>
                     <span class="planning__status-pill" :class="`planning__status-pill--${screeningStatusTone(screening)}`">
-                      <span class="planning__status-pill-dot" />
                       {{ screeningReason(screening) }}
                     </span>
                   </div>
-                  <p>{{ screening.venue_name }}</p>
-                  <p>{{ filmMeta(screening) }}</p>
+                  <p class="planning__timeline-meta">{{ screening.venue_name || 'Salle inconnue' }} · {{ filmMeta(screening) }}</p>
                   <div class="planning__detail-actions" aria-label="Actions sur la séance">
                     <button
                       v-if="screening.selection_status === 'tentative'"
@@ -380,6 +372,9 @@ async function removeScreeningSelection(screeningId: number) {
                       Ignorer
                     </button>
                   </div>
+                  <p v-if="screening.isConflict || screening.isAlternative || screening.isMustLock" class="planning__timeline-note">
+                    {{ screeningDecisionNote(screening) }}
+                  </p>
                 </div>
               </div>
             </article>
@@ -390,7 +385,6 @@ async function removeScreeningSelection(screeningId: number) {
           <template v-for="group in visualizationGroups" :key="group.dayKey || 'visual-empty'">
             <header v-if="activeDay === FESTIVAL_VIEW_KEY" class="planning__timeline-day-header">
               <strong>{{ formatDayLabel(group.dayKey) }}</strong>
-              <span>{{ group.lanes.length }} salle(s)</span>
             </header>
 
             <div v-if="group.lanes.length" class="planning__visual-grid" :style="{ '--planning-buckets': String(group.bucketCount), '--planning-venues': String(group.lanes.length) }">
@@ -462,7 +456,6 @@ async function removeScreeningSelection(screeningId: number) {
             <p class="planning__detail-line planning__detail-line--status">
               <strong>Statut</strong>
               <span class="planning__status-pill" :class="`planning__status-pill--${screeningStatusTone(detailScreening)}`">
-                <span class="planning__status-pill-dot" />
                 {{ screeningReason(detailScreening) }}
               </span>
             </p>
@@ -505,7 +498,6 @@ async function removeScreeningSelection(screeningId: number) {
                   <span>{{ option.venue_name }}</span>
                 </div>
                 <span class="planning__status-pill" :class="`planning__status-pill--${screeningStatusTone(option)}`">
-                  <span class="planning__status-pill-dot" />
                   {{ screeningComparisonStatus(option) }}
                 </span>
               </div>

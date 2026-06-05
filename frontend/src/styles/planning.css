@@ -109,6 +109,10 @@
   font-weight: 600;
 }
 
+.legend--planning {
+  padding-top: 0;
+}
+
 .planning__mode-switch,
 .planning__day-picker {
   display: flex;
@@ -343,7 +347,7 @@
 .planning__timeline-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   padding-bottom: var(--space-xs);
   border-bottom: 1px solid var(--control-border-color);
 }
@@ -364,6 +368,17 @@
 .planning__timeline-day-header strong,
 .planning__timeline-day-header span {
   margin: 0;
+}
+
+.planning__timeline-meta,
+.planning__timeline-note {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  line-height: 1.35;
+}
+
+.planning__timeline-note {
+  color: var(--color-text-subtle);
 }
 
 .planning__timeline-day-header {
@@ -416,7 +431,6 @@
   text-underline-offset: 0.15em;
 }
 
-.planning__status-pill-dot,
 .planning__film-priority-dot {
   width: var(--dot-size-sm);
   height: var(--dot-size-sm);
@@ -503,16 +517,25 @@
   gap: var(--space-sm);
 }
 
+.planning__timeline .planning__detail-actions {
+  margin-top: var(--space-2xs);
+}
+
+.planning__timeline .planning__action {
+  min-height: 2rem;
+  padding: var(--space-xs) var(--space-md);
+}
+
 .planning__status-pill {
   display: inline-flex;
   align-items: center;
   gap: var(--pill-gap);
-  min-height: 1.7rem;
+  min-height: 1.55rem;
   padding: 0.12rem calc(var(--field-padding-x) - var(--space-2xs));
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-pill);
   color: var(--color-text);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
   line-height: 1.2;
 }
 
@@ -568,6 +591,11 @@
 .planning__timeline-item--must-lock .planning__timeline-content { border-bottom-color: var(--color-accent-border); background: color-mix(in srgb, var(--color-accent) 4%, transparent); }
 .planning__timeline-item--recommended .planning__timeline-content { border-bottom-color: var(--color-accent-border); }
 .planning__timeline-item--rejected .planning__timeline-content { border-bottom-color: var(--color-neutral-soft-strong); }
+
+.planning__timeline-item--available .planning__timeline-content,
+.planning__timeline-item--disabled .planning__timeline-content {
+  border-bottom-color: var(--color-border-faint);
+}
 
 .planning__panel {
   display: flex;

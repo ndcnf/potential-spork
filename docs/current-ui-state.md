@@ -137,12 +137,12 @@ Déjà fait :
 - cohérence sémantique restaurée sur `tentative` / `confirmed`
 - logique accent + opacité en place
 - encore la vue à plus forte valeur produit
-- étape `2 sur 2` désormais explicite dans l'UI
 - guidage en tête de vue désormais orienté arbitrage
 - panneau de détail recentré sur la comparaison de séances et leurs conséquences
 - hiérarchie d'actions simplifiée dans la timeline et dans le panneau : une action principale, puis actions secondaires limitées
 - ton désormais homogénéisé au `tu`
 - feedback de transition désormais visible lors des actions sur les séances
+- timeline relue plus compactement : légende raccourcie, méta des séances regroupée, note de conséquence visible seulement quand elle aide vraiment
 
 Déjà fait :
 - réalignement CSS / markup
@@ -151,11 +151,13 @@ Déjà fait :
 - documentation détaillée de P2 dans `docs/ux-roadmap.md`
 - suppression des anciennes grilles d'actions de même poids dans `Planning`
 - recentrage des CTA sur `choisir / remplacer`, puis `confirmer` en second temps
+- exception désormais assumée : action directe `Ignorer` conservée dans la timeline pour écarter vite une séance non souhaitée
 
 À garder en tête :
 - ne pas recharger la timeline avec trop de signaux
 - limiter les CTA par séance
 - continuer à penser “arbitrage” et non “catalogue”
+- garder la méta séance courte dans la vue principale
 
 ### `Trous / Créneaux libres`
 Statut actuel :
@@ -242,6 +244,7 @@ Déjà acté et implémenté dans le frontend :
 - skeletons de chargement ajoutés sur les vues actives
 - feedbacks de transition ajoutés sur les changements de priorité et les actions sur les séances
 - persistance locale minimale en place pour les priorités film et les sélections de séances
+- `Planning` a encore été allégé : légende raccourcie, méta regroupée, et conséquence affichée seulement dans les cas utiles
 - `Films` expose désormais aussi un compteur `Non merci`
 - les compteurs du header `Films` servent maintenant aussi de filtres légers
 - les films `Non merci` sont visuellement plus discrets dans la liste
