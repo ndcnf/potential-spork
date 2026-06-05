@@ -113,8 +113,8 @@ const initialLoading = computed(() => store.loading && !store.cycles.length && !
 
 const globalProgressLabel = computed(() => {
   const total = visibleFilms.value.length
-  const { high, medium, pending } = globalPriorityCounts.value
-  return `${high} immanquables, ${medium} peut-être et ${pending} restants à trier sur ${total} films visibles`
+  const { high, medium, pending, ignore } = globalPriorityCounts.value
+  return `${high} immanquables, ${medium} peut-être, ${pending} à traiter et ${ignore} non merci sur ${total} films visibles`
 })
 
 const hasPrioritySelection = computed(() =>
@@ -248,6 +248,21 @@ function resetFilters(): void {
   filters.sort = 'title'
 }
 
+function togglePriorityFilter(priority: Exclude<PriorityFilter, 'all'>): void {
+  filters.priority = filters.priority === priority ? 'all' : priority
+}
+
+function priorityFilterButtonLabel(priority: Exclude<PriorityFilter, 'all'>): string {
+  const labels = {
+    pending: 'À traiter',
+    high: 'Immanquables',
+    medium: 'Peut-être',
+    ignore: 'Non merci',
+  } as const
+
+  return labels[priority]
+}
+
 function showTransitionFeedback(message: string, tone: 'success' | 'info' = 'success') {
   if (transitionFeedback.timer) {
     clearTimeout(transitionFeedback.timer)
@@ -334,22 +349,46 @@ function applyFilmPriority(film: Film, priority: Priority) {
 
       <div class="films-progress" :aria-label="globalProgressLabel">
         <div class="films-progress__stats">
-          <div class="films-progress__stat">
+          <button
+            type="button"
+            class="films-progress__stat"
+            :class="{ 'films-progress__stat--active': filters.priority === 'high' }"
+            @click="togglePriorityFilter('high')"
+          >
             <span class="films-progress__value">{{ globalPriorityCounts.high }}</span>
             <span class="films-progress__label">Immanquables</span>
-          </div>
-          <div class="films-progress__stat">
+          </button>
+          <button
+            type="button"
+            class="films-progress__stat"
+            :class="{ 'films-progress__stat--active': filters.priority === 'medium' }"
+            @click="togglePriorityFilter('medium')"
+          >
             <span class="films-progress__value">{{ globalPriorityCounts.medium }}</span>
             <span class="films-progress__label">Peut-être</span>
-          </div>
-          <div class="films-progress__stat">
+          </button>
+          <button
+            type="button"
+            class="films-progress__stat"
+            :class="{ 'films-progress__stat--active': filters.priority === 'pending' }"
+            @click="togglePriorityFilter('pending')"
+          >
             <span class="films-progress__value">{{ globalPriorityCounts.pending }}</span>
             <span class="films-progress__label">À traiter</span>
-          </div>
+          </button>
+          <button
+            type="button"
+            class="films-progress__stat films-progress__stat--muted"
+            :class="{ 'films-progress__stat--active': filters.priority === 'ignore' }"
+            @click="togglePriorityFilter('ignore')"
+          >
+            <span class="films-progress__value">{{ globalPriorityCounts.ignore }}</span>
+            <span class="films-progress__label">Non merci</span>
+          </button>
         </div>
 
         <p class="films-progress__hint page-copy">
-          {{ globalPriorityCounts.high > 0 ? 'Quelques films ressortent clairement. Tu peux arbitrer les séances quand tu veux.' : 'Commence par faire émerger quelques Immanquables.' }}
+          {{ filters.priority === 'all' ? 'Clique sur un compteur pour filtrer la sélection sans quitter les cycles.' : `${priorityFilterButtonLabel(filters.priority)} filtrés. Reclique pour revenir à toute la sélection.` }}
         </p>
       </div>
     </header>
@@ -453,7 +492,7 @@ function applyFilmPriority(film: Film, priority: Priority) {
       </header>
 
       <div v-if="isCycleOpen(group.cycle.id)" class="cycle-group__body">
-        <article v-for="film in group.films" :key="film.id" class="film-card" :data-priority="normalizePriority(film.priority)">
+         <article v-for="film in group.films" :key="film.id" class="film-card" :data-priority="normalizePriority(film.priority)">
           <div class="film-card-stack">
             <div class="film-card-primary">
               <div class="film-card-heading">

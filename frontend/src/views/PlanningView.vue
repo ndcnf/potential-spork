@@ -370,6 +370,15 @@ async function removeScreeningSelection(screeningId: number) {
                     >
                       {{ screeningPrimaryActionLabel(screening) }}
                     </button>
+
+                    <button
+                      v-if="screening.selection_status !== 'rejected'"
+                      type="button"
+                      class="planning__action planning__action--ghost"
+                      @click="applyScreeningSelection(screening.id, 'rejected')"
+                    >
+                      Ignorer
+                    </button>
                   </div>
                 </div>
               </div>

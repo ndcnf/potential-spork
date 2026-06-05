@@ -242,6 +242,9 @@ Déjà acté et implémenté dans le frontend :
 - skeletons de chargement ajoutés sur les vues actives
 - feedbacks de transition ajoutés sur les changements de priorité et les actions sur les séances
 - persistance locale minimale en place pour les priorités film et les sélections de séances
+- `Films` expose désormais aussi un compteur `Non merci`
+- les compteurs du header `Films` servent maintenant aussi de filtres légers
+- les films `Non merci` sont visuellement plus discrets dans la liste
 
 Pour la suite immédiate, la roadmap de référence reste :
 
@@ -300,6 +303,7 @@ Règle produit :
 
 Décisions UI désormais actées :
 - header global avec progression visible
+- compteurs du header utilisables comme filtres légers, sans resegmenter la vue
 - dots de progression conservées au niveau cycle comme **signal de synthèse**, pas comme contrôle
 - pas de sous-sections visuelles `À traiter / Prioritaires / Moyens / Ignorés` dans chaque cycle
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
@@ -310,6 +314,7 @@ Décisions UI désormais actées :
 - à l'initialisation, les films arrivent en état **`À traiter`**, sans sélection préalable
 - le rappel `pas de séance prévue` ne concerne que les films `Immanquables`
 - le statut reste lisible via le contrôle dans la carte, les dots et les compteurs, sans bruit structurel supplémentaire
+- `Non merci` peut être traité plus discrètement visuellement, tant que l'état reste lisible
 
 Rappel critique :
 - ne pas aplatir la carte en ligne de tableau utilitaire

@@ -478,6 +478,9 @@ Lecture :
 - tant que cela reste un **filtre léger**,
 - et non une re-segmentation structurelle lourde de la page.
 
+Statut :
+- désormais **implémenté** dans le header `Films` sous forme de filtres légers.
+
 Point de vigilance :
 - il ne faut pas retomber dans des sous-sections permanentes par statut,
 - le geste doit filtrer la liste, pas changer la nature éditoriale de la vue.
@@ -492,6 +495,9 @@ Piste :
 Lecture :
 - compatible avec la hiérarchie actuelle,
 - probablement utile si cela n’abîme pas trop la lisibilité.
+
+Statut :
+- désormais **partiellement implémenté** avec un traitement plus discret dans la liste.
 
 Point de vigilance :
 - il faut éviter un rendu trop faible qui ferait disparaître l’information,
