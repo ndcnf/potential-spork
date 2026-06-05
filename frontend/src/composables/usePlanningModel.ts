@@ -91,11 +91,12 @@ export function usePlanningModel() {
     return null
   }
 
-  function screeningRecommendationScore(screening: Screening, selectedScreenings: Screening[]): { score: number; note: string; reasons: string[]; drawbacks: string[] } {
+  function screeningRecommendationScore(screening: Screening, selectedScreenings: Screening[]): { score: number; note: string; reasons: string[]; drawbacks: string[]; hasConflict: boolean } {
     const settings = settingsStore.recommendationSettings
     const reasons: string[] = []
     const drawbacks: string[] = []
-    const conflictPenalty = selectedScreenings.some((other) => other.id !== screening.id && other.film_id !== screening.film_id && screeningsOverlapWithBuffer(screening, other)) ? -100 : 0
+    const hasConflict = selectedScreenings.some((other) => other.id !== screening.id && other.film_id !== screening.film_id && screeningsOverlapWithBuffer(screening, other))
+    const conflictPenalty = hasConflict ? -100 : 0
     const comfortBonus = settings.preferredVenueScores[screening.venue_name ?? ''] ?? 0
     const startMinutes = toMinutes(screening.starts_at)
     const timePreference = classifyTimePreference(startMinutes, settings.avoidBeforeMinutes, settings.avoidAfterMinutes)
@@ -125,6 +126,7 @@ export function usePlanningModel() {
       note: total > 0 ? 'option favorable selon tes préférences' : 'option neutre selon tes préférences',
       reasons,
       drawbacks,
+      hasConflict,
     }
   }
 
@@ -193,6 +195,8 @@ export function usePlanningModel() {
       candidatesByFilmId.set(screening.film_id, [...(candidatesByFilmId.get(screening.film_id) ?? []), screening])
     }
 
+    const scoredCandidatesByFilmId = new Map<number, Array<ReturnType<typeof screeningRecommendationScore> & { screening: Screening }>>()
+
     for (const [filmId, screenings] of candidatesByFilmId.entries()) {
       if (settingsStore.recommendationMode === 'personalized') {
         const hasSelected = screenings.some((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')
@@ -200,6 +204,8 @@ export function usePlanningModel() {
         const scored = [...screenings]
           .map((screening) => ({ screening, ...screeningRecommendationScore(screening, selectedOtherFilmScreenings) }))
           .sort((left, right) => right.score - left.score || (left.screening.starts_at ?? '').localeCompare(right.screening.starts_at ?? ''))
+
+        scoredCandidatesByFilmId.set(filmId, scored)
 
         scored.forEach((entry, index) => {
           recommendationRankByScreeningId.set(entry.screening.id, index + 1)
@@ -209,10 +215,28 @@ export function usePlanningModel() {
           recommendationDrawbacksByScreeningId.set(entry.screening.id, entry.drawbacks)
         })
 
-        if (!hasSelected && scored[0]) {
-          recommendationByFilmId.set(filmId, scored[0].screening.id)
-        }
+        if (hasSelected) continue
       }
+    }
+
+    const recommendedScreenings: Screening[] = []
+
+    const filmIdsToRecommend = [...scoredCandidatesByFilmId.entries()]
+      .filter(([filmId, scored]) => {
+        const hasSelected = scored.some((entry) => entry.screening.selection_status === 'tentative' || entry.screening.selection_status === 'confirmed')
+        return !hasSelected && scored.length > 0
+      })
+      .sort((left, right) => {
+        const leftBestScore = left[1][0]?.score ?? Number.NEGATIVE_INFINITY
+        const rightBestScore = right[1][0]?.score ?? Number.NEGATIVE_INFINITY
+        return left[1].length - right[1].length || rightBestScore - leftBestScore
+      })
+
+    for (const [filmId, scored] of filmIdsToRecommend) {
+      const recommendable = scored.find((entry) => !entry.hasConflict && !recommendedScreenings.some((other) => screeningsOverlapWithBuffer(entry.screening, other)))
+      if (!recommendable) continue
+      recommendationByFilmId.set(filmId, recommendable.screening.id)
+      recommendedScreenings.push(recommendable.screening)
     }
 
     return baseScreenings
