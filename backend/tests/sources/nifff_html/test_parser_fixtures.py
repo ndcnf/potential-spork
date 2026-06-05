@@ -41,6 +41,8 @@ def test_detail_snapshot_extracts_expected_optional_fields(fixture_text_loader) 
     assert enriched.short_description == "A young executive discovers a terrifying secret."
     assert enriched.cast == "Dane DeHaan, Mia Goth"
     assert enriched.poster_url == "https://nifff.ch/images/cure.jpg"
+    assert len(enriched.screenings) == 1
+    assert enriched.screenings[0].venue_name == "Théâtre"
 
 
 def test_detail_snapshot_tolerates_missing_distribution(fixture_text_loader) -> None:

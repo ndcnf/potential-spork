@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from app.schemas.imported import CanonicalImportBundle, ImportedCycle, ImportedFilm
-from app.sources.nifff_html.parser import ParsedFilm, slugify
+from app.schemas.imported import CanonicalImportBundle, ImportedCycle, ImportedFilm, ImportedScreening, ImportedVenue
+from app.sources.nifff_html.parser import ParsedFilm, ParsedScreening, slugify
 
 
 def build_cycle_source_key(cycle_name: str) -> str:
@@ -12,9 +12,21 @@ def build_film_source_key(parsed: ParsedFilm) -> str:
     return f"nifff:film:{parsed.slug}"
 
 
+def build_venue_source_key(venue_name: str) -> str:
+    return f"nifff:venue:{slugify(venue_name)}"
+
+
+def build_screening_source_key(parsed_film: ParsedFilm, parsed_screening: ParsedScreening) -> str:
+    starts_at_token = parsed_screening.starts_at.isoformat() if parsed_screening.starts_at else "unknown"
+    venue_token = slugify(parsed_screening.venue_name or "unknown")
+    return f"nifff:screening:{parsed_film.slug}:{venue_token}:{starts_at_token}"
+
+
 def normalize_parsed_films(*, parsed_films: list[ParsedFilm], year: int) -> CanonicalImportBundle:
     cycles_by_key: dict[str, ImportedCycle] = {}
+    venues_by_key: dict[str, ImportedVenue] = {}
     imported_films: list[ImportedFilm] = []
+    imported_screenings: list[ImportedScreening] = []
 
     for parsed in parsed_films:
         cycle_source_key: str | None = None
@@ -51,9 +63,32 @@ def normalize_parsed_films(*, parsed_films: list[ParsedFilm], year: int) -> Cano
             )
         )
 
+        for parsed_screening in parsed.screenings:
+            venue_source_key: str | None = None
+            if parsed_screening.venue_name:
+                venue_source_key = build_venue_source_key(parsed_screening.venue_name)
+                venues_by_key.setdefault(
+                    venue_source_key,
+                    ImportedVenue(source_key=venue_source_key, name=parsed_screening.venue_name),
+                )
+
+            imported_screenings.append(
+                ImportedScreening(
+                    source_key=build_screening_source_key(parsed, parsed_screening),
+                    film_source_key=build_film_source_key(parsed),
+                    venue_source_key=venue_source_key,
+                    starts_at=parsed_screening.starts_at,
+                    ends_at=parsed_screening.ends_at,
+                    source_url=parsed_screening.source_url,
+                    ticket_url=parsed_screening.ticket_url,
+                )
+            )
+
     return CanonicalImportBundle(
         source_name="nifff_html",
         year=year,
         cycles=list(cycles_by_key.values()),
         films=imported_films,
+        venues=list(venues_by_key.values()),
+        screenings=imported_screenings,
     )

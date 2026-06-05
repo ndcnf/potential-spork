@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 
 from app.sources.nifff_html.parser import (
     ParsedFilm,
+    extract_screenings_from_detail,
     clean_text,
     enrich_from_detail,
     extract_archive_cards,
@@ -90,6 +91,20 @@ def test_extract_short_description_falls_back_to_meta_description() -> None:
     soup = BeautifulSoup(html, "html.parser")
 
     assert extract_short_description(soup) == "Short description."
+
+
+def test_extract_screenings_from_detail_reads_screening_nodes() -> None:
+    html = """
+    <div class="screening" data-screening-start="2025-07-05T18:00:00+02:00" data-screening-end="2025-07-05T20:00:00+02:00" data-venue-name="Théâtre" data-source-url="/screenings/1" data-ticket-url="/tickets/1"></div>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    screenings = extract_screenings_from_detail(soup, "https://nifff.ch/prog/2025/film/a-cure-for-wellness")
+
+    assert len(screenings) == 1
+    assert screenings[0].venue_name == "Théâtre"
+    assert screenings[0].source_url == "https://nifff.ch/screenings/1"
+    assert screenings[0].ticket_url == "https://nifff.ch/tickets/1"
 
 
 def test_extract_archive_cards_returns_unique_cards() -> None:
@@ -223,6 +238,7 @@ def test_enrich_from_detail_updates_parsed_film_from_detail_html() -> None:
     assert enriched.language == "English"
     assert enriched.age_rating == "16+"
     assert enriched.poster_url == "https://nifff.ch/images/cure.jpg"
+    assert enriched.screenings == []
 
 
 def test_enrich_from_detail_preserves_existing_values_when_missing() -> None:

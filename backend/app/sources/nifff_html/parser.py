@@ -1,10 +1,20 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, Tag
+
+
+@dataclass(slots=True)
+class ParsedScreening:
+    starts_at: datetime | None
+    ends_at: datetime | None
+    venue_name: str | None = None
+    ticket_url: str | None = None
+    source_url: str | None = None
 
 
 @dataclass(slots=True)
@@ -25,6 +35,7 @@ class ParsedFilm:
     language: str | None = None
     age_rating: str | None = None
     poster_url: str | None = None
+    screenings: list[ParsedScreening] = field(default_factory=list)
 
 
 def slugify(value: str) -> str:
@@ -51,6 +62,17 @@ def extract_year(value: str | None) -> int | None:
         return None
     match = re.search(r"(19|20)\d{2}", value)
     return int(match.group(0)) if match else None
+
+
+def parse_iso_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+
+    normalized = value.strip().replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
 
 
 def field_after_heading(soup: BeautifulSoup, heading: str) -> str | None:
@@ -138,6 +160,41 @@ def extract_archive_cards(soup: BeautifulSoup, year: int) -> list[Tag]:
     return cards
 
 
+def extract_screenings_from_detail(soup: BeautifulSoup, base_url: str) -> list[ParsedScreening]:
+    screening_nodes = soup.select("[data-screening-start], .screening")
+    screenings: list[ParsedScreening] = []
+    seen: set[tuple[datetime | None, str | None, str | None]] = set()
+
+    for node in screening_nodes:
+        starts_at = parse_iso_datetime(node.get("data-screening-start"))
+        ends_at = parse_iso_datetime(node.get("data-screening-end"))
+        venue_name = node.get("data-venue-name") or clean_text(node.select_one(".screening__venue, .venue"))
+        ticket_href = node.get("data-ticket-url")
+        if ticket_href is None:
+            ticket_link = node.select_one('a[href*="ticket"], a[href*="billet"], a[href*="reservation"]')
+            ticket_href = ticket_link.get("href") if ticket_link is not None else None
+
+        source_href = node.get("data-source-url")
+        if source_href is None:
+            source_link = node.select_one('a[href]')
+            source_href = source_link.get("href") if source_link is not None else None
+
+        screening = ParsedScreening(
+            starts_at=starts_at,
+            ends_at=ends_at,
+            venue_name=venue_name,
+            ticket_url=urljoin(base_url, ticket_href) if ticket_href else None,
+            source_url=urljoin(base_url, source_href) if source_href else None,
+        )
+        screening_key = (screening.starts_at, screening.venue_name, screening.source_url)
+        if screening_key in seen:
+            continue
+        seen.add(screening_key)
+        screenings.append(screening)
+
+    return screenings
+
+
 def parse_listing_card(card: Tag, base_url: str, year: int) -> ParsedFilm | None:
     link = card.select_one(f'a[href*="/prog/{year}/film/"]')
     if link is None or not link.get("href"):
@@ -187,4 +244,5 @@ def enrich_from_detail(html: str, parsed: ParsedFilm) -> ParsedFilm:
         language=field_after_heading(soup, "Langue"),
         age_rating=field_after_heading(soup, "Âge"),
         poster_url=extract_poster_url(soup, parsed.source_url),
+        screenings=extract_screenings_from_detail(soup, parsed.source_url),
     )

@@ -867,6 +867,38 @@ Pourquoi :
 
 La source HTML NIFFF actuelle ne produit pas encore réellement ces screenings dans le pipeline standard. La persistence est prête, la collecte source ne l’est pas encore totalement.
 
+## Screening Parsing Skeleton Started
+
+Le parsing HTML commence maintenant à exposer une structure de screenings côté source-specific.
+
+### Current shape
+
+Le parser NIFFF peut désormais produire, au niveau d’un film enrichi :
+
+- une liste de `ParsedScreening`
+
+Chaque `ParsedScreening` porte au minimum :
+
+- `starts_at`
+- `ends_at`
+- `venue_name`
+- `ticket_url`
+- `source_url`
+
+### Important scope
+
+Ce parsing reste volontairement un squelette heuristique. Il sert à poser le contrat entre parser et normalizer, pas à prétendre que le DOM NIFFF est déjà totalement maîtrisé sur les screenings.
+
+### Immediate benefit
+
+Grâce à cette étape :
+
+- le normalizer peut produire des `ImportedVenue`
+- le normalizer peut produire des `ImportedScreening`
+- le service d’import peut persister ces objets si la source les fournit
+
+Autrement dit, le pipeline complet existe maintenant conceptuellement aussi pour les screenings, même si les heuristiques HTML devront encore être durcies sur de vrais cas source.
+
 ## Screening Selection Rules
 
 Ces règles doivent être documentées et testées côté backend. Elles ne doivent pas dériver d’un comportement opportuniste du frontend.
