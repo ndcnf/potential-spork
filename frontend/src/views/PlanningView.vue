@@ -371,13 +371,17 @@ async function removeScreeningSelection(screeningId: number) {
                     >
                       Ignorer
                     </button>
-                  </div>
-                  <p v-if="screening.isConflict || screening.isAlternative || screening.isMustLock" class="planning__timeline-note">
-                    {{ screeningDecisionNote(screening) }}
-                  </p>
-                </div>
-              </div>
-            </article>
+                   </div>
+                   <p v-if="screening.isConflict || screening.isAlternative || screening.isMustLock" class="planning__timeline-note">
+                     {{ screeningDecisionNote(screening) }}
+                   </p>
+                   <div v-if="screening.isRecommended && screening.recommendationReasons.length" class="planning__recommendation-strip">
+                     <span class="planning__recommendation-title">Pourquoi cette séance</span>
+                     <span v-for="reason in screening.recommendationReasons" :key="reason" class="planning__detail-hint planning__detail-hint--recommended">{{ reason }}</span>
+                   </div>
+                 </div>
+               </div>
+             </article>
           </template>
         </div>
 
@@ -476,6 +480,14 @@ async function removeScreeningSelection(screeningId: number) {
           <p>{{ detailScreening.film.short_description }}</p>
         </div>
 
+        <div v-if="detailScreening.isRecommended && detailScreening.recommendationReasons.length" class="planning__detail-copy planning__detail-copy--recommended">
+          <p class="planning__detail-copy-title">Pourquoi cette séance ressort</p>
+          <p class="planning__detail-copy-subtitle">{{ detailScreening.recommendationNote }}</p>
+          <div class="planning__detail-hints">
+            <span v-for="reason in detailScreening.recommendationReasons" :key="reason" class="planning__detail-hint planning__detail-hint--recommended">{{ reason }}</span>
+          </div>
+        </div>
+
         <div v-if="relatedFilmScreenings.length" class="planning__detail-copy">
           <p class="planning__detail-copy-title">{{ relatedFilmScreenings.length > 1 ? 'Comparer les séances de ce film' : 'Séance de ce film' }}</p>
           <p class="planning__detail-copy-subtitle">
@@ -501,10 +513,13 @@ async function removeScreeningSelection(screeningId: number) {
                   {{ screeningComparisonStatus(option) }}
                 </span>
               </div>
-              <div v-if="screeningComparisonHints(option).length" class="planning__detail-hints">
-                <span v-for="hint in screeningComparisonHints(option)" :key="hint" class="planning__detail-hint">{{ hint }}</span>
-              </div>
-              <p class="planning__detail-note">{{ screeningDecisionNote(option) }}</p>
+               <div v-if="screeningComparisonHints(option).length" class="planning__detail-hints">
+                 <span v-for="hint in screeningComparisonHints(option)" :key="hint" class="planning__detail-hint">{{ hint }}</span>
+               </div>
+               <div v-if="option.recommendationReasons.length" class="planning__detail-hints">
+                 <span v-for="reason in option.recommendationReasons" :key="reason" class="planning__detail-hint planning__detail-hint--recommended">{{ reason }}</span>
+               </div>
+               <p class="planning__detail-note">{{ screeningDecisionNote(option) }}</p>
               <div class="planning__detail-actions">
                 <button
                   v-if="option.selection_status === 'tentative'"

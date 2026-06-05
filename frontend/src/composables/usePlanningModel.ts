@@ -51,6 +51,7 @@ export function usePlanningModel() {
 
   function screeningRecommendationScore(screening: Screening, selectedScreenings: Screening[], candidateCount: number): { score: number; note: string; reasons: string[] } {
     const settings = settingsStore.recommendationSettings
+    const reasons: string[] = []
     const conflictPenalty = selectedScreenings.some((other) => other.id !== screening.id && other.film_id !== screening.film_id && screeningsOverlapWithBuffer(screening, other)) ? -100 : 0
     const rarityBonus = candidateCount === 1 ? 40 : candidateCount === 2 ? 20 : 0
     const comfortBonus = settings.preferredVenueScores[screening.venue_name ?? ''] ?? 0
@@ -60,10 +61,36 @@ export function usePlanningModel() {
     const total = conflictPenalty + rarityBonus + comfortBonus + latenessPenalty + earlyPenalty
 
     if (conflictPenalty < 0) {
-      return { score: total, note: 'moins favorable: conflit', reasons: [] }
+      return { score: total, note: 'moins favorable: conflit avec une autre séance déjà retenue', reasons: [] }
     }
 
-    return { score: total, note: 'option favorable', reasons: [] }
+    if (rarityBonus > 0) {
+      reasons.push(candidateCount === 1 ? 'seule séance disponible' : 'peu d’options restantes pour ce film')
+    }
+
+    if (comfortBonus > 0) {
+      reasons.push(`salle ${screening.venue_name || 'inconnue'} marquée comme favorable`)
+    } else if (comfortBonus < 0) {
+      reasons.push(`salle ${screening.venue_name || 'inconnue'} plutôt à éviter`)
+    }
+
+    if (earlyPenalty < 0 && settings.avoidBeforeMinutes !== null) {
+      reasons.push(`horaire avant ${formatMinutes(settings.avoidBeforeMinutes)}`)
+    }
+
+    if (latenessPenalty < 0 && settings.avoidAfterMinutes !== null) {
+      reasons.push(`horaire après ${formatMinutes(settings.avoidAfterMinutes)}`)
+    }
+
+    if (!reasons.length) {
+      reasons.push('aucune contrainte particulière sur cette séance')
+    }
+
+    return {
+      score: total,
+      note: total > 0 ? 'option favorable selon tes préférences' : 'option neutre selon tes préférences',
+      reasons,
+    }
   }
 
   function countConflictPairs(screenings: Screening[]): number {
@@ -360,6 +387,7 @@ export function usePlanningModel() {
     if (screening.selection_status === 'tentative') return 'Tentative'
     if (screening.isSingleScreening) return 'Séance unique'
     if (screening.isMustLock) return 'À sécuriser'
+    if (screening.isRecommended) return 'Recommandée'
     if (screening.isAlternative || screening.derived_state === 'disabled') {
       return 'Autre séance choisie'
     }
@@ -373,6 +401,7 @@ export function usePlanningModel() {
     if (screening.selection_status === 'tentative') return 'Tentative'
     if (screening.isSingleScreening) return 'Séance unique'
     if (screening.isMustLock) return 'À sécuriser'
+    if (screening.isRecommended) return 'Recommandée'
     if (screening.isAlternative || screening.derived_state === 'disabled') return 'Autre séance du film déjà prévue'
     return 'Disponible'
   }
@@ -385,6 +414,7 @@ export function usePlanningModel() {
     if (screening.selection_status === 'rejected') return 'planning__timeline-item--rejected'
     if (screening.isAlternative || screening.derived_state === 'disabled') return 'planning__timeline-item--disabled'
     if (screening.derived_state === 'conflict') return 'planning__timeline-item--blocked'
+    if (screening.isRecommended) return 'planning__timeline-item--recommended'
     return 'planning__timeline-item--available'
   }
 
@@ -432,6 +462,10 @@ export function usePlanningModel() {
       return 'C’est la seule séance disponible pour ce film.'
     }
 
+    if (screening.isRecommended && screening.recommendationNote) {
+      return `${screening.recommendationNote}.`
+    }
+
     return 'Cette séance reste disponible sans collision immédiate.'
   }
 
@@ -451,6 +485,7 @@ export function usePlanningModel() {
     if (screening.isSingleScreening) return 'single'
     if (screening.isMustLock) return 'must-lock'
     if (screening.isAlternative || screening.derived_state === 'disabled') return 'disabled'
+    if (screening.isRecommended) return 'recommended'
     return 'available'
   }
 
@@ -463,6 +498,7 @@ export function usePlanningModel() {
     if (screening.selection_status === 'rejected') return 'planning__visual-block--rejected'
     if (screening.isAlternative || screening.derived_state === 'disabled') return 'planning__visual-block--disabled'
     if (screening.isMustLock) return 'planning__visual-block--must-lock'
+    if (screening.isRecommended) return 'planning__visual-block--recommended'
     if (screening.derived_state === 'conflict' || screening.isConflict) return 'planning__visual-block--conflict'
     return 'planning__visual-block--available'
   }

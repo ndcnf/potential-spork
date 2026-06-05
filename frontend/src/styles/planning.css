@@ -472,6 +472,12 @@
 .planning__detail-copy p { margin: 0; }
 .planning__detail-copy-title { color: var(--color-text); }
 .planning__detail-copy-subtitle { color: var(--color-text-muted); }
+.planning__detail-copy--recommended {
+  padding: var(--space-md);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-accent-soft) 48%, transparent);
+}
 .planning__detail-list { margin: 0; padding-left: 1rem; color: var(--color-text-muted); }
 .planning__detail-list li + li { margin-top: var(--space-xs); }
 
@@ -565,6 +571,18 @@
   gap: var(--space-tight);
 }
 
+.planning__recommendation-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-tight);
+  align-items: center;
+}
+
+.planning__recommendation-title {
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-sm);
+}
+
 .planning__detail-hint {
   display: inline-flex;
   align-items: center;
@@ -575,6 +593,11 @@
   color: var(--color-text);
   font-size: var(--font-size-sm);
   line-height: 1.2;
+}
+
+.planning__detail-hint--recommended {
+  border-color: var(--color-accent-border);
+  background: color-mix(in srgb, var(--color-accent-soft) 36%, transparent);
 }
 
 .planning__timeline-item--confirmed .planning__timeline-marker { background: var(--color-accent); }

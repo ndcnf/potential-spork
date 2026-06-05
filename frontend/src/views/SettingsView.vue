@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import { useFestivalStore } from '@/stores/festival'
 import { useSettingsStore } from '@/stores/settings'
@@ -17,6 +18,24 @@ onMounted(() => {
 const knownVenues = computed(() => {
   const names = festivalStore.visibleScreenings.map((screening) => screening.venue_name).filter(Boolean) as string[]
   return [...new Set(names)].sort((left, right) => left.localeCompare(right))
+})
+
+const activeRecommendationSignals = computed(() => {
+  const signals: string[] = []
+
+  if (Object.keys(settingsStore.recommendationSettings.preferredVenueScores).length > 0) {
+    signals.push('salles pondérées')
+  }
+
+  if (settingsStore.recommendationSettings.avoidBeforeMinutes !== null) {
+    signals.push(`éviter avant ${formatMinutesForInput(settingsStore.recommendationSettings.avoidBeforeMinutes)}`)
+  }
+
+  if (settingsStore.recommendationSettings.avoidAfterMinutes !== null) {
+    signals.push(`éviter après ${formatMinutesForInput(settingsStore.recommendationSettings.avoidAfterMinutes)}`)
+  }
+
+  return signals
 })
 
 function formatMinutesForInput(minutes: number | null | undefined): string {
@@ -83,7 +102,7 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
       <header class="settings__section-header">
         <div>
           <h3>Recommandations du planning</h3>
-          <p class="page-copy">Active ou non l'aide à la décision dans le planning.</p>
+          <p class="page-copy">Active ou non l'aide à la décision dans le planning. Les séances recommandées sont ensuite expliquées directement dans `Planning`.</p>
         </div>
         <label class="settings__switch" :class="{ 'settings__switch--active': settingsStore.recommendationSettings.enabled }">
           <input
@@ -101,13 +120,25 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
         <template v-else-if="settingsStore.recommendationMode === 'neutral'">Recommandations activées, mais sans préférence définie : l'app reste neutre.</template>
         <template v-else>Recommandations activées avec préférences personnalisées.</template>
       </p>
+
+      <div class="settings__impact">
+        <p class="settings__impact-title">Ce qui peut faire remonter une séance</p>
+        <div class="settings__impact-list">
+          <span class="settings__impact-pill">moins de conflits avec le planning</span>
+          <span class="settings__impact-pill">peu d’options restantes pour un film</span>
+          <span class="settings__impact-pill">salle mieux notée</span>
+          <span class="settings__impact-pill">horaire plus compatible</span>
+        </div>
+        <p v-if="activeRecommendationSignals.length" class="settings__status">Préférences actives : {{ activeRecommendationSignals.join(' · ') }}</p>
+        <RouterLink to="/planning" class="ghost-button settings__impact-link">Voir le rendu dans Planning</RouterLink>
+      </div>
     </section>
 
     <section class="settings__panel" :class="{ 'settings__panel--inactive': !settingsStore.recommendationSettings.enabled }">
       <header class="settings__section-header">
         <div>
           <h3>Confort des salles</h3>
-          <p class="page-copy">Tu peux favoriser ou pénaliser certaines salles. Laisse vide pour rester neutre.</p>
+          <p class="page-copy">Tu peux favoriser ou pénaliser certaines salles. Ce signal sert seulement à départager les séances quand plusieurs options restent possibles.</p>
         </div>
       </header>
 
