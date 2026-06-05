@@ -1,28 +1,55 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
-
-import requests
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.cycle import Cycle
 from app.models.film import Film
+from app.models.screening import Screening
+from app.models.venue import Venue
+from app.schemas.imported import CanonicalImportBundle, ImportReport, ImportedCycle, ImportedFilm, ImportedScreening, ImportedVenue
 from app.services.import_nifff import import_nifff_catalog
 
 
-def test_import_nifff_catalog_creates_cycles_and_films(db_session: Session, fixture_text_loader, monkeypatch) -> None:
-    listing_html = fixture_text_loader("nifff_html/listing_nominal.html")
-    detail_html = fixture_text_loader("nifff_html/detail_nominal.html")
+def build_bundle(*, short_description: str | None, tagline: str = "Psychological horror") -> CanonicalImportBundle:
+    return CanonicalImportBundle(
+        source_name="nifff_html",
+        year=2025,
+        cycles=[
+            ImportedCycle(
+                source_key="nifff:cycle:international-competition",
+                name="International Competition",
+                slug="international-competition",
+            )
+        ],
+        films=[
+            ImportedFilm(
+                source_key="nifff:film:a-cure-for-wellness",
+                title="A Cure for Wellness",
+                slug="a-cure-for-wellness",
+                source_url="https://nifff.ch/prog/2025/film/a-cure-for-wellness",
+                cycle_source_key="nifff:cycle:international-competition",
+                directors="Gore Verbinski",
+                year=2016,
+                countries="DE/LU/US",
+                duration_minutes=146,
+                tagline=tagline,
+                short_description=short_description,
+                poster_url="https://nifff.ch/images/cure.jpg",
+            )
+        ],
+    )
 
-    monkeypatch.setattr("app.services.import_nifff.build_session", lambda: SimpleNamespace())
 
-    def fake_fetch_html(_session: object, url: str) -> str:
-        if "schedule" in url:
-            return listing_html
-        return detail_html
+def fake_report() -> ImportReport:
+    return ImportReport(source_name="nifff_html", year=2025)
 
-    monkeypatch.setattr("app.services.import_nifff.fetch_html", fake_fetch_html)
+
+def test_import_nifff_catalog_creates_cycles_and_films(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.services.import_nifff.import_catalog",
+        lambda source, year: (build_bundle(short_description="A young executive discovers a terrifying secret."), fake_report()),
+    )
 
     result = import_nifff_catalog(db=db_session, year=2025)
 
@@ -36,16 +63,13 @@ def test_import_nifff_catalog_creates_cycles_and_films(db_session: Session, fixt
     assert film is not None
     assert film.cycle_id == cycle.id
     assert film.poster_url == "https://nifff.ch/images/cure.jpg"
+    assert film.source_key == "nifff:film:a-cure-for-wellness"
 
 
-def test_import_nifff_catalog_is_idempotent_for_existing_film(db_session: Session, fixture_text_loader, monkeypatch) -> None:
-    listing_html = fixture_text_loader("nifff_html/listing_nominal.html")
-    detail_html = fixture_text_loader("nifff_html/detail_nominal.html")
-
-    monkeypatch.setattr("app.services.import_nifff.build_session", lambda: SimpleNamespace())
+def test_import_nifff_catalog_is_idempotent_for_existing_film(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.services.import_nifff.fetch_html",
-        lambda _session, url: listing_html if "schedule" in url else detail_html,
+        "app.services.import_nifff.import_catalog",
+        lambda source, year: (build_bundle(short_description="A young executive discovers a terrifying secret."), fake_report()),
     )
 
     first = import_nifff_catalog(db=db_session, year=2025)
@@ -61,24 +85,16 @@ def test_import_nifff_catalog_is_idempotent_for_existing_film(db_session: Sessio
     assert len(cycles) == 1
 
 
-def test_import_nifff_catalog_updates_existing_film_fields(db_session: Session, fixture_text_loader, monkeypatch) -> None:
-    listing_html = fixture_text_loader("nifff_html/listing_nominal.html")
-    detail_html = fixture_text_loader("nifff_html/detail_nominal.html")
-    updated_detail_html = detail_html.replace("Psychological horror", "Updated genre").replace(
-        "A young executive discovers a terrifying secret.",
-        "Updated description.",
-    )
-
-    monkeypatch.setattr("app.services.import_nifff.build_session", lambda: SimpleNamespace())
+def test_import_nifff_catalog_updates_existing_film_fields(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.services.import_nifff.fetch_html",
-        lambda _session, url: listing_html if "schedule" in url else detail_html,
+        "app.services.import_nifff.import_catalog",
+        lambda source, year: (build_bundle(short_description="A young executive discovers a terrifying secret."), fake_report()),
     )
     import_nifff_catalog(db=db_session, year=2025)
 
     monkeypatch.setattr(
-        "app.services.import_nifff.fetch_html",
-        lambda _session, url: listing_html if "schedule" in url else updated_detail_html,
+        "app.services.import_nifff.import_catalog",
+        lambda source, year: (build_bundle(short_description="Updated description.", tagline="Updated genre"), fake_report()),
     )
     result = import_nifff_catalog(db=db_session, year=2025)
 
@@ -90,70 +106,69 @@ def test_import_nifff_catalog_updates_existing_film_fields(db_session: Session, 
     assert film.short_description == "Updated description."
 
 
-def test_import_nifff_catalog_keeps_listing_data_when_detail_fetch_fails(db_session: Session, fixture_text_loader, monkeypatch) -> None:
-    listing_html = fixture_text_loader("nifff_html/listing_nominal.html")
-
-    monkeypatch.setattr("app.services.import_nifff.build_session", lambda: SimpleNamespace())
-
-    def fake_fetch_html(_session: object, url: str) -> str:
-        if "schedule" in url:
-            return listing_html
-        raise requests.RequestException("detail unavailable")
-
-    monkeypatch.setattr("app.services.import_nifff.fetch_html", fake_fetch_html)
+def test_import_nifff_catalog_persists_venues_and_screenings_from_bundle(db_session: Session, monkeypatch) -> None:
+    bundle = build_bundle(short_description="A young executive discovers a terrifying secret.")
+    bundle.venues.append(ImportedVenue(source_key="nifff:venue:theatre", name="Théâtre"))
+    bundle.screenings.append(
+        ImportedScreening(
+            source_key="nifff:screening:a-cure-theatre-2025-07-05t1800",
+            film_source_key="nifff:film:a-cure-for-wellness",
+            venue_source_key="nifff:venue:theatre",
+            starts_at=None,
+            ends_at=None,
+            source_url="https://nifff.ch/screening/1",
+        )
+    )
+    monkeypatch.setattr("app.services.import_nifff.import_catalog", lambda source, year: (bundle, fake_report()))
 
     result = import_nifff_catalog(db=db_session, year=2025)
     film = db_session.scalar(select(Film).where(Film.slug == "a-cure-for-wellness"))
+    venue = db_session.scalar(select(Venue).where(Venue.source_key == "nifff:venue:theatre"))
+    screening = db_session.scalar(
+        select(Screening).where(Screening.source_key == "nifff:screening:a-cure-theatre-2025-07-05t1800")
+    )
 
     assert result.films_created == 1
     assert film is not None
-    assert film.tagline == "Mind-bending wellness horror"
-    assert film.short_description is None
+    assert venue is not None
+    assert screening is not None
+    assert screening.film_id == film.id
+    assert screening.venue_id == venue.id
+    assert screening.source_url == "https://nifff.ch/screening/1"
 
 
-def test_import_nifff_catalog_logs_warning_when_detail_fetch_fails(
+def test_import_nifff_catalog_logs_warning_when_screening_film_is_unknown(
     db_session: Session,
-    fixture_text_loader,
     monkeypatch,
     caplog,
 ) -> None:
-    listing_html = fixture_text_loader("nifff_html/listing_nominal.html")
-
-    monkeypatch.setattr("app.services.import_nifff.build_session", lambda: SimpleNamespace())
-
-    def fake_fetch_html(_session: object, url: str) -> str:
-        if "schedule" in url:
-            return listing_html
-        raise requests.RequestException("detail unavailable")
-
-    monkeypatch.setattr("app.services.import_nifff.fetch_html", fake_fetch_html)
+    bundle = CanonicalImportBundle(
+        source_name="nifff_html",
+        year=2025,
+        screenings=[
+            ImportedScreening(
+                source_key="nifff:screening:unknown-film",
+                film_source_key="nifff:film:missing",
+                venue_source_key=None,
+                starts_at=None,
+                ends_at=None,
+                source_url=None,
+            )
+        ],
+    )
+    monkeypatch.setattr("app.services.import_nifff.import_catalog", lambda source, year: (bundle, fake_report()))
 
     with caplog.at_level("WARNING"):
         import_nifff_catalog(db=db_session, year=2025)
 
-    assert any("NIFFF detail fetch failed; keeping listing data" in message for message in caplog.messages)
+    assert any("Skipping screening import because film source key is unknown" in message for message in caplog.messages)
 
 
 def test_import_nifff_catalog_skips_invalid_cards(db_session: Session, monkeypatch) -> None:
-    listing_html = """
-    <html>
-      <body>
-        <div class="card">
-          <div>International Competition</div>
-          <div>unused line</div>
-          <div>Gore Verbinski</div>
-          <div>Mind-bending wellness horror</div>
-          <div>DE/LU/US, 2016, 146 mins</div>
-          <a href="/prog/2025/film/invalid-film"></a>
-          <img src="poster.jpg" />
-          <p>Enough descriptive text to satisfy the archive card extraction heuristic.</p>
-        </div>
-      </body>
-    </html>
-    """
-
-    monkeypatch.setattr("app.services.import_nifff.build_session", lambda: SimpleNamespace())
-    monkeypatch.setattr("app.services.import_nifff.fetch_html", lambda _session, _url: listing_html)
+    monkeypatch.setattr(
+        "app.services.import_nifff.import_catalog",
+        lambda source, year: (CanonicalImportBundle(source_name="nifff_html", year=2025), fake_report()),
+    )
 
     result = import_nifff_catalog(db=db_session, year=2025)
 

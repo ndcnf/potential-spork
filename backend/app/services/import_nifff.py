@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.repositories.cycles import CycleRepository
 from app.repositories.films import FilmRepository
+from app.repositories.screenings import ScreeningRepository
+from app.repositories.venues import VenueRepository
 from app.schemas.imports import ImportSummary
 from app.services.import_catalog import import_catalog
 from app.sources.nifff_html.source import NifffHtmlSource
@@ -21,6 +23,8 @@ def import_nifff_catalog(db: Session, year: int, schedule_url: str | None = None
     bundle, report = import_catalog(source=source, year=year)
     cycle_repository = CycleRepository(db)
     film_repository = FilmRepository(db)
+    venue_repository = VenueRepository(db)
+    screening_repository = ScreeningRepository(db)
     cycles_created = 0
     films_created = 0
     films_updated = 0
@@ -32,6 +36,7 @@ def import_nifff_catalog(db: Session, year: int, schedule_url: str | None = None
             cycles_created += 1
         cycles_by_source_key[imported_cycle.source_key] = result.cycle
 
+    films_by_source_key = {}
     for imported_film in bundle.films:
         cycle = None
         if imported_film.cycle_source_key:
@@ -42,6 +47,27 @@ def import_nifff_catalog(db: Session, year: int, schedule_url: str | None = None
             films_created += 1
         else:
             films_updated += 1
+        films_by_source_key[imported_film.source_key] = result.film
+
+    venues_by_source_key = {}
+    for imported_venue in bundle.venues:
+        result = venue_repository.upsert(imported_venue)
+        venues_by_source_key[imported_venue.source_key] = result.venue
+
+    for imported_screening in bundle.screenings:
+        film = films_by_source_key.get(imported_screening.film_source_key)
+        if film is None:
+            logger.warning(
+                "Skipping screening import because film source key is unknown",
+                extra={"screening_source_key": imported_screening.source_key, "film_source_key": imported_screening.film_source_key},
+            )
+            continue
+
+        venue = None
+        if imported_screening.venue_source_key:
+            venue = venues_by_source_key.get(imported_screening.venue_source_key)
+
+        screening_repository.upsert(imported_screening, film=film, venue=venue)
 
     db.commit()
     if report.warnings:

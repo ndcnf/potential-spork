@@ -835,6 +835,38 @@ Ces repositories sont encore minimaux, mais ils posent les invariants suivants :
 
 Le pipeline canonique ne persiste pas encore réellement `venues` et `screenings` depuis la source HTML actuelle. Cette étape prépare la suite. Le but ici est d’éviter de devoir improviser les contrats de persistence au moment où les screenings arriveront.
 
+## Bundle Persistence Extended
+
+Le wrapper legacy `import_nifff.py` persiste maintenant aussi les `venues` et `screenings` présents dans le bundle canonique.
+
+### Current behavior
+
+Si `import_catalog()` renvoie :
+
+- des `ImportedVenue`
+- des `ImportedScreening`
+
+alors le service :
+
+1. upsert les `Cycle`
+2. upsert les `Film`
+3. upsert les `Venue`
+4. upsert les `Screening`
+
+### Guard rail added
+
+Une `ImportedScreening` dont le `film_source_key` ne correspond à aucun film importé est ignorée avec warning explicite.
+
+Pourquoi :
+
+- éviter une ligne orpheline incohérente
+- éviter un plantage opaque plus bas dans la persistence
+- rendre le défaut visible en logs
+
+### Important limitation
+
+La source HTML NIFFF actuelle ne produit pas encore réellement ces screenings dans le pipeline standard. La persistence est prête, la collecte source ne l’est pas encore totalement.
+
 ## Screening Selection Rules
 
 Ces règles doivent être documentées et testées côté backend. Elles ne doivent pas dériver d’un comportement opportuniste du frontend.
