@@ -113,6 +113,14 @@ function readPersistedUiState(): PersistedFestivalUiState | null {
   }
 }
 
+function clearPersistedUiState() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.removeItem(STORAGE_KEY)
+}
+
 function persistUiState(films: Film[], screenings: Screening[]) {
   if (typeof window === 'undefined') {
     return
@@ -318,6 +326,31 @@ export const useFestivalStore = defineStore('festival', {
         this.lastImportSummary = summary
         this.effectiveSourceMode = mode
         await this.bootstrap()
+      } finally {
+        this.sourceSwitchPending = false
+      }
+    },
+    async resetUserChoices() {
+      clearPersistedUiState()
+
+      if (!this.usingMocks) {
+        const selectedScreenings = this.screenings.filter((screening) => screening.selection_status !== 'none')
+        for (const screening of selectedScreenings) {
+          await api.updateScreeningSelection(screening.id, 'none')
+        }
+      }
+
+      await this.bootstrap()
+    },
+    async reimportCurrentSource(mode: DataSourceMode) {
+      this.sourceSwitchPending = true
+      this.loadError = null
+      try {
+        clearPersistedUiState()
+        const summary = await api.importCatalog(2025, mode)
+        this.lastImportSummary = summary
+        this.effectiveSourceMode = mode
+        await this.resetUserChoices()
       } finally {
         this.sourceSwitchPending = false
       }

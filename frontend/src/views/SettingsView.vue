@@ -87,6 +87,12 @@ const sourceSwitchSummary = computed(() => {
     .join(' · ')
 })
 
+const resetChoicesSummary = computed(() =>
+  festivalStore.usingMocks
+    ? 'Les choix locaux seront effacés puis la démonstration sera rechargée.'
+    : 'Les choix locaux et les sélections de séances seront remis à zéro avant rechargement.',
+)
+
 async function switchDataSource(mode: DataSourceMode) {
   if (festivalStore.sourceSwitchPending || settingsStore.dataSourceMode === mode) {
     return
@@ -100,6 +106,30 @@ async function switchDataSource(mode: DataSourceMode) {
       mode === 'prod'
         ? 'Impossible de charger la source live pour le moment.'
         : 'Impossible de recharger la source démo archive pour le moment.'
+  }
+}
+
+async function resetChoices() {
+  if (festivalStore.sourceSwitchPending) {
+    return
+  }
+
+  try {
+    await festivalStore.resetUserChoices()
+  } catch {
+    festivalStore.loadError = 'Impossible de réinitialiser les choix pour le moment.'
+  }
+}
+
+async function reimportCurrentSource() {
+  if (festivalStore.sourceSwitchPending) {
+    return
+  }
+
+  try {
+    await festivalStore.reimportCurrentSource(settingsStore.dataSourceMode)
+  } catch {
+    festivalStore.loadError = 'Impossible de relancer un import propre pour le moment.'
   }
 }
 </script>
@@ -169,6 +199,26 @@ async function switchDataSource(mode: DataSourceMode) {
       <p v-if="festivalStore.sourceSwitchPending" class="settings__status">Import en cours puis rechargement du catalogue…</p>
       <p v-else-if="sourceSwitchSummary" class="settings__status">{{ sourceSwitchSummary }}</p>
       <p v-if="festivalStore.loadError" class="settings__status settings__status--error">{{ festivalStore.loadError }}</p>
+
+      <div class="settings__actions-row">
+        <button type="button" class="ghost-button" :disabled="festivalStore.sourceSwitchPending" @click="reimportCurrentSource()">
+          Refaire un import propre
+        </button>
+      </div>
+    </section>
+
+    <section class="settings__panel settings__panel--danger">
+      <header class="settings__section-header">
+        <div>
+          <h3>Réinitialiser mes choix</h3>
+          <p class="page-copy">Remet les films à `À traiter` côté interface et annule les sélections de séances pour repartir d’un état propre.</p>
+        </div>
+      </header>
+
+      <p class="settings__status">{{ resetChoicesSummary }}</p>
+      <div class="settings__actions-row">
+        <button type="button" class="ghost-button" :disabled="festivalStore.sourceSwitchPending" @click="resetChoices()">Reset les choix</button>
+      </div>
     </section>
 
     <section class="settings__panel">

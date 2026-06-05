@@ -90,6 +90,16 @@ const screeningCountByFilmId = computed(() => {
   return counts
 })
 
+function shouldShowDirectors(film: Film): boolean {
+  if (!film.directors) {
+    return false
+  }
+
+  const normalizedDirectors = film.directors.trim().toLocaleLowerCase()
+  const normalizedTagline = film.tagline?.trim().toLocaleLowerCase()
+  return normalizedDirectors.length > 0 && normalizedDirectors !== normalizedTagline
+}
+
 const allFilms = computed(() => store.groupedFilms.flatMap((group) => group.films))
 
 const globalPriorityCounts = computed(() => cyclePriorityCounts(allFilms.value))
@@ -445,10 +455,11 @@ function applyFilmPriority(film: Film, priority: Priority) {
 
             <div class="film-card-copy">
               <p class="film-tagline film-tagline--inline">{{ film.tagline || 'Tagline NIFFF à importer' }}</p>
-              <p class="film-meta">{{ film.directors || 'Réalisation non renseignée' }}</p>
+              <p v-if="shouldShowDirectors(film)" class="film-meta">{{ film.directors }}</p>
+              <p v-else class="film-meta">Réalisation non renseignée</p>
               <p v-if="film.cast" class="film-cast film-cast--inline">{{ film.cast }}</p>
               <p class="film-meta film-meta--compact">
-                {{ film.countries || 'Pays ?' }} · {{ formatMinutes(film.duration_minutes) }} · {{ film.cycle_name || group.cycle.name }}
+                {{ film.countries || 'Pays ?' }} · {{ formatMinutes(film.duration_minutes) }}
               </p>
             </div>
 

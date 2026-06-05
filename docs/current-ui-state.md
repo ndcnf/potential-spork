@@ -20,6 +20,7 @@ Le frontend courant assume :
 - `Paramètres` renvoyé en navigation secondaire avec icône
 - export iCal retiré du header global
 - fond plus noir avec shell partagé `content-frame`
+- statut de source de données visible dans le footer global
 - mention Solar dans le footer global
 - persistance locale au refresh pour :
   - priorités film
@@ -77,6 +78,9 @@ Le frontend courant assume :
 - vue secondaire
 - centrée sur les recommandations du planning
 - persistance locale déjà en place
+- bascule explicite `Démo (archive)` / `Live (prod)`
+- possibilité de relancer un import propre depuis la source active
+- possibilité de reset les choix utilisateur pour repartir d’un état propre
 - résumé visible des signaux qui font remonter une séance
 - préférences salles réduites à 3 états simples
 

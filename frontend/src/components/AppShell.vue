@@ -26,9 +26,6 @@ const sourceStatus = computed(() => festivalStore.sourceStatus)
         <div class="app-header__brand">
           <p class="eyebrow">Potential Spork</p>
           <h1>PLANIFFFICATEUR</h1>
-          <p v-if="sourceStatus.showBadge" class="app-header__source-chip" :class="`app-header__source-chip--${sourceStatus.tone}`">
-            {{ sourceStatus.label }}
-          </p>
         </div>
 
         <nav class="app-header__nav">
@@ -59,9 +56,6 @@ const sourceStatus = computed(() => festivalStore.sourceStatus)
         </nav>
       </div>
 
-      <div v-if="sourceStatus.showBadge && sourceStatus.description" class="content-frame app-header__status-row">
-        <small class="app-header__status-copy">{{ sourceStatus.description }}</small>
-      </div>
     </header>
 
     <main class="main-panel">
@@ -72,6 +66,10 @@ const sourceStatus = computed(() => festivalStore.sourceStatus)
 
     <footer class="app-footer">
       <div class="content-frame app-footer__inner">
+        <div class="app-footer__status" v-if="sourceStatus.showBadge || sourceStatus.description">
+          <span v-if="sourceStatus.showBadge" class="app-footer__source-chip" :class="`app-footer__source-chip--${sourceStatus.tone}`">{{ sourceStatus.label }}</span>
+          <small v-if="sourceStatus.description" class="app-footer__status-copy">{{ sourceStatus.description }}</small>
+        </div>
         <small>Icônes : Solar.</small>
       </div>
     </footer>

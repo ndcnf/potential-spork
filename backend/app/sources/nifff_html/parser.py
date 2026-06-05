@@ -214,6 +214,19 @@ def extract_listing_screenings(card: Tag, year: int, base_url: str) -> list[Pars
     return screenings
 
 
+def extract_title_without_director(title_node: Tag) -> str | None:
+    title_fragments: list[str] = []
+    for child in title_node.children:
+        if isinstance(child, Tag) and "d-block" in (child.get("class") or []):
+            continue
+        text = child.get_text(" ", strip=True) if isinstance(child, Tag) else str(child).strip()
+        if text:
+            title_fragments.append(text)
+
+    title = " ".join(title_fragments).strip()
+    return title or None
+
+
 def extract_screenings_from_detail(soup: BeautifulSoup, base_url: str) -> list[ParsedScreening]:
     screening_nodes = soup.select("[data-screening-start], .screening")
     screenings: list[ParsedScreening] = []
@@ -260,23 +273,19 @@ def parse_listing_card(card: Tag, base_url: str, year: int) -> ParsedFilm | None
 
     source_url = urljoin(base_url, program_path)
     title_node = card.select_one(".archive-movie__item__title")
-    if title_node is not None:
-        director_node = title_node.select_one(".d-block")
-        if director_node is not None:
-            director_node.extract()
-        title = clean_text(title_node)
-    else:
+    director_node = card.select_one(".archive-movie__item__title .d-block")
+    title = extract_title_without_director(title_node) if title_node is not None else None
+    if not title:
         title = clean_text(link) or clean_text(card.find(["h2", "h3"]))
     if not title:
         return None
 
+    text_lines = [text.strip() for text in card.stripped_strings if text.strip()]
     categories_node = card.select_one(".archive-movie__item__categories")
     info_left_node = card.select_one(".archive-movie__item__information--left")
     info_left = clean_text(info_left_node)
-    director_node = card.select_one(".archive-movie__item__title .d-block")
     genre_node = card.select_one(".archive-movie__item__genre")
 
-    text_lines = [text.strip() for text in card.stripped_strings if text.strip()]
     cycle_name = clean_text(categories_node) or (text_lines[0] if text_lines else None)
     directors = clean_text(director_node) or (text_lines[2] if len(text_lines) > 2 else None)
     tagline = clean_text(genre_node) or (text_lines[3] if len(text_lines) > 3 else None)

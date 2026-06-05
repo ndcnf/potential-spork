@@ -120,6 +120,12 @@
   width: fit-content;
 }
 
+.settings__actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
 .settings__panel--inactive {
   opacity: 0.52;
 }

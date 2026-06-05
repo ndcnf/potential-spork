@@ -95,6 +95,8 @@ def test_wayback_listing_snapshot_parses_inline_screenings_and_ignores_events(fi
     assert len(cards) == 2
     assert len(parsed_films) == 1
     assert parsed_films[0].title == "A Useful Ghost"
+    assert parsed_films[0].directors == "Ratchapoom Boonbunchachoke"
+    assert parsed_films[0].tagline == "Deadpan Haunting"
     assert parsed_films[0].premiere_label == "Swiss Premiere"
     assert len(parsed_films[0].screenings) == 3
     assert parsed_films[0].screenings[0].venue_name == "Arcades"
