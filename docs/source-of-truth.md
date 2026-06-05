@@ -320,3 +320,159 @@ Pour les prochaines itérations, cela implique :
 - vrais états `empty/loading/error` obligatoires
 
 Fin.
+
+---
+
+## 13. Annexe — pistes ouvertes non validées
+
+Cette rubrique sert à capturer des idées de travail retrouvées après coup.
+
+Important :
+- ces pistes **n'ont pas été validées**, 
+- elles **n'écrasent pas** les décisions verrouillées plus haut,
+- elles servent de matière pour les prochaines itérations et discussions.
+
+### 13.1 `Non merci` encore plus discret
+
+Piste :
+- garder uniquement la bordure pour `Non merci`,
+- retirer le fond,
+- aligner ce traitement avec la petite pastille liée à cet état.
+
+Lecture :
+- compatible avec la volonté de rendre `Non merci` plus discret,
+- compatible aussi avec l’idée que cet état doit rester visible sans prendre trop de poids.
+
+Point de vigilance :
+- l’état doit rester identifiable autrement que par une nuance trop faible,
+- il faudra préserver le contraste et éviter un rendu trop effacé.
+
+### 13.2 Contrôle de qualification moins envahissant dans `Films`
+
+Piste :
+- les boutons de sélection sont actuellement trop envahissants dans chaque fiche,
+- explorer une harmonisation du contrôle,
+- notamment une version en **stack verticale** plutôt qu’en ligne.
+
+Lecture :
+- compatible avec la décision que le contrôle doit rester visible et important,
+- compatible aussi avec la recherche d’une carte plus éditoriale.
+
+Point de vigilance :
+- il ne faut pas reléguer le contrôle,
+- il ne faut pas casser la lisibilité ou l’ergonomie clavier,
+- une stack verticale peut calmer la carte, mais elle peut aussi allonger visuellement chaque fiche.
+
+### 13.3 En-tête `Films` : ne pas afficher `À traiter` dans le bloc priorité
+
+Piste :
+- dans l’en-tête `Films`, la zone priorité n’a peut-être pas besoin d’afficher `À traiter`,
+- `À traiter` peut être lu comme un non-état plutôt qu’une vraie priorité visible.
+
+Lecture :
+- **point en tension** avec le cadre actuel.
+
+Pourquoi :
+- la vérité actuelle dit que `À traiter` est un vrai état initial de tri,
+- et que la progression doit aider à comprendre ce qu’il reste à qualifier.
+
+Conclusion provisoire :
+- on peut questionner sa **présence dans l’en-tête**,
+- mais pas nier son existence produit,
+- si ce compteur disparaît, il faudra conserver ailleurs un signal clair de ce qu’il reste à trier.
+
+### 13.4 En-tête `Films` : zone séance à rendre plus compréhensible
+
+Piste :
+- la partie séance de l’en-tête `Films` peut être retravaillée,
+- elle manque encore de clarté.
+
+Lecture :
+- compatible avec le cadre actuel,
+- à explorer sans rendre les signaux planning plus forts que les signaux film.
+
+### 13.5 Sauvegarde locale des choix utilisateur
+
+Piste :
+- s’assurer que les choix utilisateur soient sauvegardés localement,
+- éviter la perte de tout le travail après un refresh,
+- via cookie, localStorage, persistance Pinia ou mécanisme équivalent.
+
+Lecture :
+- totalement compatible,
+- même fortement recommandée.
+
+Note :
+- ce sujet est structurel, pas cosmétique,
+- il touche directement à la crédibilité du produit.
+
+### 13.6 Microcopy trop prescriptive dans `Films`
+
+Piste :
+- la phrase `Commencez par marquer au moins un film comme immanquable.` est trop précise,
+- un `Peut-être` peut aussi suffire selon le cas,
+- et l’utilisateur peut de toute façon naviguer vers `Planning` via le menu.
+
+Direction suggérée :
+- préférer une formulation plus souple,
+- moins prescriptive,
+- plus cohérente avec l’absence de tunnel rigide.
+
+Lecture :
+- compatible avec les décisions verrouillées sur la navigation.
+
+### 13.7 Zone de progression / sauvegarde / navigation légère
+
+Piste :
+- si une invitation vers `Planning` revient un jour,
+- elle pourrait vivre dans la même région que les infos de progression et de sauvegarde,
+- mais sous une forme légère, non bloquante.
+
+Lecture :
+- compatible **uniquement** si cela reste un signal léger,
+- incompatible si cela redevient un CTA dominant structurant.
+
+### 13.8 Direction visuelle à re-questionner
+
+Piste :
+- le fond en dégradé n’apporte peut-être pas assez de valeur,
+- il ajoute possiblement de la complexité visuelle sans gain clair.
+
+Lecture :
+- compatible avec le cadre actuel,
+- cohérent avec la volonté de réduire le bruit visuel.
+
+### 13.9 Compteurs cliquables comme filtres
+
+Piste :
+- les compteurs pourraient devenir cliquables,
+- leur clic appliquerait un filtre correspondant,
+- cela pourrait rendre le tri plus direct.
+
+Conséquence si exploré :
+- ajouter aussi un compteur pour les `Non merci`,
+- puisqu’il est utile de savoir combien de films ont été explicitement écartés.
+
+Lecture :
+- globalement compatible,
+- tant que cela reste un **filtre léger**,
+- et non une re-segmentation structurelle lourde de la page.
+
+Point de vigilance :
+- il ne faut pas retomber dans des sous-sections permanentes par statut,
+- le geste doit filtrer la liste, pas changer la nature éditoriale de la vue.
+
+### 13.10 Traitement visuel des `Non merci` dans la liste
+
+Piste :
+- rendre les films `Non merci` plus discrets,
+- par exemple avec un texte plus muted,
+- à la manière des éléments ignorés dans `Planning`.
+
+Lecture :
+- compatible avec la hiérarchie actuelle,
+- probablement utile si cela n’abîme pas trop la lisibilité.
+
+Point de vigilance :
+- il faut éviter un rendu trop faible qui ferait disparaître l’information,
+- et ne pas baser tout l’état sur une seule nuance de contraste.

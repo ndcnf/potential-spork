@@ -694,3 +694,15 @@ Une fois `Films` restructuré correctement, la prochaine étape cohérente sera 
 
 Pas avant.
 Sinon on recomplexifie le produit avant d’avoir verrouillé l’entrée du parcours.
+
+---
+
+## Notes ouvertes retrouvées après coup
+
+Des pistes plus libres, non validées, ont été ajoutées dans :
+
+- `docs/source-of-truth.md` → `## 13. Annexe — pistes ouvertes non validées`
+
+Règle :
+- ces notes servent de matière pour la suite,
+- elles ne remplacent pas les décisions verrouillées tant qu’un arbitrage explicite n’a pas eu lieu.
