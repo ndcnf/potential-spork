@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from bs4 import BeautifulSoup
 
 from app.sources.nifff_html.parser import (
     ParsedFilm,
     extract_screenings_from_detail,
+    extract_listing_screenings,
+    extract_program_path,
     clean_text,
     enrich_from_detail,
     extract_archive_cards,
@@ -15,6 +19,7 @@ from app.sources.nifff_html.parser import (
     extract_year,
     field_after_heading,
     parse_listing_card,
+    parse_listing_screening_line,
     slugify,
 )
 
@@ -105,6 +110,42 @@ def test_extract_screenings_from_detail_reads_screening_nodes() -> None:
     assert screenings[0].venue_name == "Théâtre"
     assert screenings[0].source_url == "https://nifff.ch/screenings/1"
     assert screenings[0].ticket_url == "https://nifff.ch/tickets/1"
+
+
+def test_extract_program_path_normalizes_wayback_program_url() -> None:
+    url = "https://web.archive.org/web/20250704120326/https://nifff.ch/prog/2025/film/a-useful-ghost"
+
+    assert extract_program_path(url) == "/prog/2025/film/a-useful-ghost"
+
+
+def test_parse_listing_screening_line_reads_inline_listing_screening() -> None:
+    screening = parse_listing_screening_line("05.07, Arcades, 19:00", 2025, "https://nifff.ch/prog/2025/film/a-useful-ghost")
+
+    assert screening is not None
+    assert screening.venue_name == "Arcades"
+    assert screening.starts_at == datetime(2025, 7, 5, 19, 0)
+
+
+def test_extract_listing_screenings_reads_multiple_lines_from_wayback_card() -> None:
+    html = """
+    <div class="archive-movie__item">
+      <div class="archive-movie__item__information--right">
+        <p>05.07, Arcades, 19:00</p>
+        <p>08.07, Arcades, 16:30</p>
+      </div>
+    </div>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    screenings = extract_listing_screenings(
+        soup.select_one(".archive-movie__item"),
+        2025,
+        "https://nifff.ch/prog/2025/film/a-useful-ghost",
+    )
+
+    assert len(screenings) == 2
+    assert screenings[0].venue_name == "Arcades"
+    assert screenings[1].starts_at == datetime(2025, 7, 8, 16, 30)
 
 
 def test_extract_archive_cards_returns_unique_cards() -> None:

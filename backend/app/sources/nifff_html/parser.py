@@ -38,6 +38,9 @@ class ParsedFilm:
     screenings: list[ParsedScreening] = field(default_factory=list)
 
 
+WAYBACK_PREFIX_RE = re.compile(r"https?://web\.archive\.org/web/\d+(?:[a-z_]+)?/")
+
+
 def slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return slug or "unknown"
@@ -73,6 +76,16 @@ def parse_iso_datetime(value: str | None) -> datetime | None:
         return datetime.fromisoformat(normalized)
     except ValueError:
         return None
+
+
+def normalize_wayback_url(url: str) -> str:
+    return WAYBACK_PREFIX_RE.sub("https://", url, count=1)
+
+
+def extract_program_path(url: str) -> str:
+    normalized_url = normalize_wayback_url(url)
+    match = re.search(r"https?://[^/]+(?P<path>/prog/\d+/(?:film|event|film-package)/[^?#/]+)", normalized_url)
+    return match.group("path") if match else normalized_url
 
 
 def field_after_heading(soup: BeautifulSoup, heading: str) -> str | None:
@@ -142,6 +155,10 @@ def extract_short_description(soup: BeautifulSoup) -> str | None:
 
 
 def extract_archive_cards(soup: BeautifulSoup, year: int) -> list[Tag]:
+    archive_items = soup.select(".archive-movie__list > .archive-movie__item")
+    if archive_items:
+        return archive_items
+
     links = soup.select(f'a[href*="/prog/{year}/film/"]')
     cards: list[Tag] = []
     seen: set[int] = set()
@@ -158,6 +175,41 @@ def extract_archive_cards(soup: BeautifulSoup, year: int) -> list[Tag]:
             seen.add(id(card))
             cards.append(card)
     return cards
+
+
+def parse_listing_screening_line(value: str, year: int, base_url: str) -> ParsedScreening | None:
+    text = " ".join(value.split())
+    match = re.match(r"(?P<day>\d{2})\.(?P<month>\d{2}),\s*(?P<venue>.+?),\s*(?P<hour>\d{2}):(\d{2})$", text)
+    if match is None:
+        return None
+
+    hour_minute = re.search(r"(?P<hour>\d{2}):(?P<minute>\d{2})$", text)
+    if hour_minute is None:
+        return None
+
+    starts_at = datetime(
+        year=year,
+        month=int(match.group("month")),
+        day=int(match.group("day")),
+        hour=int(hour_minute.group("hour")),
+        minute=int(hour_minute.group("minute")),
+    )
+    return ParsedScreening(
+        starts_at=starts_at,
+        ends_at=None,
+        venue_name=match.group("venue").strip(),
+        source_url=normalize_wayback_url(base_url),
+    )
+
+
+def extract_listing_screenings(card: Tag, year: int, base_url: str) -> list[ParsedScreening]:
+    screenings: list[ParsedScreening] = []
+    for node in card.select(".archive-movie__item__information--right p"):
+        text = clean_text(node)
+        screening = parse_listing_screening_line(text, year, base_url) if text else None
+        if screening is not None:
+            screenings.append(screening)
+    return screenings
 
 
 def extract_screenings_from_detail(soup: BeautifulSoup, base_url: str) -> list[ParsedScreening]:
@@ -196,20 +248,41 @@ def extract_screenings_from_detail(soup: BeautifulSoup, base_url: str) -> list[P
 
 
 def parse_listing_card(card: Tag, base_url: str, year: int) -> ParsedFilm | None:
-    link = card.select_one(f'a[href*="/prog/{year}/film/"]')
+    link = card.select_one(f'a.cover[href*="/prog/{year}/"], a[href*="/prog/{year}/"]')
     if link is None or not link.get("href"):
         return None
 
-    source_url = urljoin(base_url, link["href"])
-    title = clean_text(link) or clean_text(card.find(["h2", "h3"]))
+    program_path = extract_program_path(urljoin(base_url, link["href"]))
+    if f"/prog/{year}/film/" not in program_path:
+        return None
+
+    source_url = urljoin(base_url, program_path)
+    title_node = card.select_one(".archive-movie__item__title")
+    if title_node is not None:
+        director_node = title_node.select_one(".d-block")
+        if director_node is not None:
+            director_node.extract()
+        title = clean_text(title_node)
+    else:
+        title = clean_text(link) or clean_text(card.find(["h2", "h3"]))
     if not title:
         return None
 
+    categories_node = card.select_one(".archive-movie__item__categories")
+    info_left_node = card.select_one(".archive-movie__item__information--left")
+    info_left = clean_text(info_left_node)
+    director_node = card.select_one(".archive-movie__item__title .d-block")
+    genre_node = card.select_one(".archive-movie__item__genre")
+
     text_lines = [text.strip() for text in card.stripped_strings if text.strip()]
-    cycle_name = text_lines[0] if text_lines else None
-    directors = text_lines[2] if len(text_lines) > 2 else None
-    tagline = text_lines[3] if len(text_lines) > 3 else None
-    info_line = next((line for line in text_lines if re.search(r"(19|20)\d{2}", line) and re.search(r"\d+\s*(?:'|m|min|mins|minutes)", line)), None)
+    cycle_name = clean_text(categories_node) or (text_lines[0] if text_lines else None)
+    directors = clean_text(director_node) or (text_lines[2] if len(text_lines) > 2 else None)
+    tagline = clean_text(genre_node) or (text_lines[3] if len(text_lines) > 3 else None)
+    info_line = info_left or next((line for line in text_lines if re.search(r"(19|20)\d{2}", line) and re.search(r"\d+\s*(?:'|m|min|mins|minutes)", line)), None)
+    premiere_label = None
+    if info_left_node is not None:
+        info_parts = [part.strip() for part in info_left_node.stripped_strings if part.strip()]
+        premiere_label = info_parts[1] if len(info_parts) > 1 else None
 
     return ParsedFilm(
         title=title,
@@ -221,6 +294,8 @@ def parse_listing_card(card: Tag, base_url: str, year: int) -> ParsedFilm | None
         countries=info_line.split(",")[0] if info_line and "," in info_line else None,
         duration_minutes=extract_runtime(info_line),
         tagline=tagline,
+        premiere_label=premiere_label,
+        screenings=extract_listing_screenings(card, year, source_url),
     )
 
 

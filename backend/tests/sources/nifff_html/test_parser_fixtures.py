@@ -82,3 +82,19 @@ def test_listing_snapshot_returns_none_when_title_missing(fixture_text_loader) -
     parsed = parse_listing_card(card, "https://nifff.ch/archives/2025/schedule?type=film", 2025)
 
     assert parsed is None
+
+
+def test_wayback_listing_snapshot_parses_inline_screenings_and_ignores_events(fixture_text_loader) -> None:
+    html = fixture_text_loader("nifff_html/listing_wayback_programme.html")
+    soup = BeautifulSoup(html, "html.parser")
+
+    cards = extract_archive_cards(soup, 2025)
+    parsed_cards = [parse_listing_card(card, "https://web.archive.org/web/20250704120326/https://nifff.ch/programme/", 2025) for card in cards]
+    parsed_films = [parsed for parsed in parsed_cards if parsed is not None]
+
+    assert len(cards) == 2
+    assert len(parsed_films) == 1
+    assert parsed_films[0].title == "A Useful Ghost"
+    assert parsed_films[0].premiere_label == "Swiss Premiere"
+    assert len(parsed_films[0].screenings) == 3
+    assert parsed_films[0].screenings[0].venue_name == "Arcades"
