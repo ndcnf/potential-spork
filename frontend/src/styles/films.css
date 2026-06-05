@@ -11,10 +11,6 @@
   flex-direction: column;
   gap: var(--space-sm);
   min-width: min(100%, 22rem);
-  padding: var(--space-md);
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--color-surface-shell) 72%, transparent);
 }
 
 .films-progress__stats {
@@ -78,10 +74,6 @@
 .films-progress__label {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-}
-
-.films-progress__hint {
-  margin: 0;
 }
 
 .cycle-group {

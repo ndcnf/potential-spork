@@ -60,7 +60,6 @@ const filteredGroups = computed(() => {
 
           return priorityFilters.has(simplifiedPriority)
         })
-        .sort((left, right) => sortPriorityForCycle(left, right)),
     }))
     .filter((group) => group.films.length > 0)
 })
@@ -356,10 +355,6 @@ function applyFilmPriority(film: Film, priority: Priority) {
             <span class="films-progress__label">Non merci</span>
           </button>
         </div>
-
-        <p class="films-progress__hint page-copy">
-          {{ activePriorityFilters.length === 0 ? 'Clique sur un ou plusieurs compteurs pour filtrer sans quitter les cycles.' : `${activePriorityFilters.map(priorityFilterButtonLabel).join(' + ')} filtrés. Reclique pour revenir à l’ensemble.` }}
-        </p>
       </div>
     </header>
 
