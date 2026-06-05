@@ -30,6 +30,10 @@ app/services/__init__.py
 app/services/export_ics.py
 app/services/import_nifff.py
 app/services/screenings.py
+app/sources/__init__.py
+app/sources/nifff_html/__init__.py
+app/sources/nifff_html/client.py
+app/sources/nifff_html/parser.py
 potential_spork_backend.egg-info/PKG-INFO
 potential_spork_backend.egg-info/SOURCES.txt
 potential_spork_backend.egg-info/dependency_links.txt

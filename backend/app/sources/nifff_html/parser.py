@@ -152,7 +152,7 @@ def parse_listing_card(card: Tag, base_url: str, year: int) -> ParsedFilm | None
     cycle_name = text_lines[0] if text_lines else None
     directors = text_lines[2] if len(text_lines) > 2 else None
     tagline = text_lines[3] if len(text_lines) > 3 else None
-    info_line = next((line for line in text_lines if re.search(r"(19|20)\d{2}", line) and re.search(r"\d+['m]", line)), None)
+    info_line = next((line for line in text_lines if re.search(r"(19|20)\d{2}", line) and re.search(r"\d+\s*(?:'|m|min|mins|minutes)", line)), None)
 
     return ParsedFilm(
         title=title,

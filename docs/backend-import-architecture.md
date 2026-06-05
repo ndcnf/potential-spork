@@ -442,6 +442,25 @@ Concrete result expected:
 - helpers DOM isolés
 - parsing listing / detail réutilisable et testable sans DB
 
+### Test-first checkpoint before Step 3
+
+Avant d’introduire le modèle canonique et les repositories, priorité aux tests sur les passes 1 et 2.
+
+But :
+
+- figer le comportement actuel utile
+- sécuriser les prochains refactors
+- détecter vite une rupture liée au DOM ou aux helpers de parsing
+
+Minimum à couvrir tout de suite :
+
+- `build_session()`
+- `fetch_html()`
+- `extract_runtime()`
+- `extract_year()`
+- `parse_listing_card()`
+- `enrich_from_detail()`
+
 ### Step 3
 
 Introduire les modèles canoniques dans :
