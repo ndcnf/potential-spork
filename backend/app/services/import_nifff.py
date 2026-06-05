@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 import requests
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -10,6 +12,22 @@ from app.schemas.imports import ImportSummary
 from app.sources.nifff_html.client import build_session, fetch_html
 from app.sources.nifff_html.parser import ParsedFilm, enrich_from_detail, extract_archive_cards, parse_listing_card, slugify
 from bs4 import BeautifulSoup
+
+
+logger = logging.getLogger(__name__)
+
+
+def _enrich_with_detail_if_available(session: requests.Session, parsed: ParsedFilm) -> ParsedFilm:
+    try:
+        detail_html = fetch_html(session, parsed.source_url)
+    except requests.RequestException as exc:
+        logger.warning(
+            "NIFFF detail fetch failed; keeping listing data",
+            extra={"source_url": parsed.source_url, "film_slug": parsed.slug, "error": str(exc)},
+        )
+        return parsed
+
+    return enrich_from_detail(detail_html, parsed)
 
 
 def import_nifff_catalog(db: Session, year: int, schedule_url: str | None = None) -> ImportSummary:
@@ -28,11 +46,7 @@ def import_nifff_catalog(db: Session, year: int, schedule_url: str | None = None
         if parsed is None:
             continue
 
-        try:
-            detail_html = fetch_html(session, parsed.source_url)
-            parsed = enrich_from_detail(detail_html, parsed)
-        except requests.RequestException:
-            pass
+        parsed = _enrich_with_detail_if_available(session, parsed)
 
         cycle = None
         if parsed.cycle_name:

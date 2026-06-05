@@ -898,6 +898,26 @@ Livrables attendus :
 - erreurs réseau non silencieuses
 - base prête pour un vrai orchestrateur d’import
 
+### Transitional Hardening Rule
+
+Tant que le service legacy `import_nifff.py` existe encore, il ne doit plus contenir d’échec silencieux.
+
+Minimum acceptable :
+
+- conserver la donnée listing si le détail échoue
+- émettre un warning structuré côté logs
+- garder le comportement d’import principal inchangé
+
+Refus explicite :
+
+- `except requests.RequestException: pass`
+
+Pourquoi :
+
+- ce pattern masque une rupture source
+- il empêche de comprendre pourquoi un film est importé partiellement
+- il rend les régressions scraper beaucoup plus coûteuses à diagnostiquer
+
 ### Phase 3 — Introduire le modèle canonique d’import
 
 But : couper le lien direct entre parsing source-specific et modèle métier SQLAlchemy.

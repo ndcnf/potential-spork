@@ -111,6 +111,29 @@ def test_import_nifff_catalog_keeps_listing_data_when_detail_fetch_fails(db_sess
     assert film.short_description is None
 
 
+def test_import_nifff_catalog_logs_warning_when_detail_fetch_fails(
+    db_session: Session,
+    fixture_text_loader,
+    monkeypatch,
+    caplog,
+) -> None:
+    listing_html = fixture_text_loader("nifff_html/listing_nominal.html")
+
+    monkeypatch.setattr("app.services.import_nifff.build_session", lambda: SimpleNamespace())
+
+    def fake_fetch_html(_session: object, url: str) -> str:
+        if "schedule" in url:
+            return listing_html
+        raise requests.RequestException("detail unavailable")
+
+    monkeypatch.setattr("app.services.import_nifff.fetch_html", fake_fetch_html)
+
+    with caplog.at_level("WARNING"):
+        import_nifff_catalog(db=db_session, year=2025)
+
+    assert any("NIFFF detail fetch failed; keeping listing data" in message for message in caplog.messages)
+
+
 def test_import_nifff_catalog_skips_invalid_cards(db_session: Session, monkeypatch) -> None:
     listing_html = """
     <html>
