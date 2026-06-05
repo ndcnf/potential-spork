@@ -900,6 +900,37 @@ Une première séparation explicite a été posée :
 
 Ce n’est pas encore le choix runtime final, mais l’intention d’architecture est maintenant claire et codée.
 
+### API import contract
+
+Le payload d’import peut explicitement porter :
+
+- `source_mode="demo"` pour archive
+- `source_mode="prod"` pour live
+
+But :
+
+- éviter une logique implicite côté backend
+- permettre plus tard une bascule contrôlée depuis l’UI ou la config
+
+### UI recommendation for Settings
+
+Oui, un CTA dans `Settings` est possible.
+
+Mais il doit rester :
+
+- secondaire
+- explicite sur son impact
+- formulé comme une bascule de source de données, pas comme une décision produit centrale
+
+Recommandation de wording :
+
+- `Source de données : Démo (archive) / Live (prod)`
+
+Règle UX :
+
+- ne pas mettre ce CTA au coeur du parcours principal
+- le laisser dans `Settings`, car c’est une capacité technique/opérationnelle
+
 ## Bundle Persistence Extended
 
 Le wrapper legacy `import_nifff.py` persiste maintenant aussi les `venues` et `screenings` présents dans le bundle canonique.

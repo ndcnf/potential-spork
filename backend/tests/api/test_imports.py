@@ -3,7 +3,7 @@ from __future__ import annotations
 
 def test_import_catalog_accepts_minimal_payload(client, monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.api.routes.imports.import_nifff_catalog",
+        "app.api.routes.imports.import_nifff_catalog_from_archive",
         lambda db, year, schedule_url=None: {
             "cycles_created": 1,
             "films_created": 2,
@@ -51,7 +51,7 @@ def test_import_catalog_accepts_schedule_url(client, monkeypatch) -> None:
             "errors_count": 0,
         }
 
-    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog", fake_import_nifff_catalog)
+    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog_from_archive", fake_import_nifff_catalog)
 
     response = client.post(
         "/api/imports/nifff/catalog",
@@ -65,6 +65,42 @@ def test_import_catalog_accepts_schedule_url(client, monkeypatch) -> None:
     assert captured == {
         "year": 2025,
         "schedule_url": "https://example.test/schedule?type=film",
+    }
+
+
+def test_import_catalog_routes_to_live_source_mode(client, monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_import_nifff_catalog(db, year, schedule_url=None):
+        captured["year"] = year
+        captured["schedule_url"] = schedule_url
+        return {
+            "cycles_created": 0,
+            "films_created": 0,
+            "films_updated": 0,
+            "venues_created": 0,
+            "venues_updated": 0,
+            "screenings_created": 0,
+            "screenings_updated": 0,
+            "warnings_count": 0,
+            "errors_count": 0,
+        }
+
+    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog_from_live", fake_import_nifff_catalog)
+
+    response = client.post(
+        "/api/imports/nifff/catalog",
+        json={
+            "year": 2025,
+            "source_mode": "prod",
+            "schedule_url": "https://example.test/programme?type=film",
+        },
+    )
+
+    assert response.status_code == 200
+    assert captured == {
+        "year": 2025,
+        "schedule_url": "https://example.test/programme?type=film",
     }
 
 
