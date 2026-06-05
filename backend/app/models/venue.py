@@ -8,6 +8,7 @@ class Venue(Base):
     __tablename__ = "venues"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    source_key: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
     name: Mapped[str] = mapped_column(String(255), unique=True)
     comfort_rating: Mapped[int | None] = mapped_column(nullable=True)
 

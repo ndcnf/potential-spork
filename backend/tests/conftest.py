@@ -130,6 +130,7 @@ def venue_factory(db_session: Session) -> Callable[..., Venue]:
     def create(**overrides: object) -> Venue:
         index = next(sequence)
         venue = Venue(
+            source_key=overrides.pop("source_key", None),
             name=overrides.pop("name", f"Venue {index}"),
             comfort_rating=overrides.pop("comfort_rating", None),
         )
@@ -162,10 +163,12 @@ def screening_factory(
         starts_at = overrides.pop("starts_at", aware_datetime_factory(index))
         ends_at = overrides.pop("ends_at", starts_at + timedelta(minutes=100) if starts_at is not None else None)
         screening = Screening(
+            source_key=overrides.pop("source_key", None),
             film_id=film.id,
             venue_id=venue.id if venue is not None else overrides.pop("venue_id", None),
             starts_at=starts_at,
             ends_at=ends_at,
+            source_url=overrides.pop("source_url", None),
             selection_status=overrides.pop("selection_status", "none"),
         )
         screening.film = film

@@ -36,6 +36,13 @@ SQLITE_COMPATIBILITY_COLUMNS: dict[str, dict[str, str]] = {
         "premiere_label": "VARCHAR(255)",
         "short_description": "TEXT",
         "poster_url": "TEXT",
+    },
+    "venues": {
+        "source_key": "VARCHAR(255)"
+    },
+    "screenings": {
+        "source_key": "VARCHAR(255)",
+        "source_url": "VARCHAR(500)",
     }
 }
 

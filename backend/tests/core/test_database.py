@@ -28,6 +28,41 @@ def create_legacy_cycles_schema(database_path: Path) -> str:
     return database_url
 
 
+def create_legacy_venues_and_screenings_schema(database_path: Path) -> str:
+    database_url = f"sqlite:///{database_path}"
+    engine = create_engine(database_url, connect_args={"check_same_thread": False})
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE venues (
+                    id INTEGER PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    comfort_rating INTEGER
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE screenings (
+                    id INTEGER PRIMARY KEY,
+                    film_id INTEGER NOT NULL,
+                    venue_id INTEGER,
+                    starts_at DATETIME,
+                    ends_at DATETIME,
+                    selection_status VARCHAR(32) NOT NULL
+                )
+                """
+            )
+        )
+
+    engine.dispose()
+    return database_url
+
+
 def create_legacy_films_schema(database_path: Path) -> str:
     database_url = f"sqlite:///{database_path}"
     engine = create_engine(database_url, connect_args={"check_same_thread": False})
@@ -83,6 +118,20 @@ def test_run_sqlite_schema_upgrades_adds_missing_nullable_cycle_columns(tmp_path
         cycle_columns = {row[1] for row in connection.execute(text("PRAGMA table_info(cycles)"))}
 
     assert {"source_key"}.issubset(cycle_columns)
+
+
+def test_run_sqlite_schema_upgrades_adds_missing_nullable_venue_and_screening_columns(tmp_path: Path) -> None:
+    database_url = create_legacy_venues_and_screenings_schema(tmp_path / "legacy_venues_screenings.db")
+    engine = create_engine(database_url, connect_args={"check_same_thread": False})
+
+    run_sqlite_schema_upgrades(engine)
+
+    with engine.begin() as connection:
+        venue_columns = {row[1] for row in connection.execute(text("PRAGMA table_info(venues)"))}
+        screening_columns = {row[1] for row in connection.execute(text("PRAGMA table_info(screenings)"))}
+
+    assert {"source_key"}.issubset(venue_columns)
+    assert {"source_key", "source_url"}.issubset(screening_columns)
 
 
 def test_run_sqlite_schema_upgrades_is_idempotent(tmp_path: Path) -> None:

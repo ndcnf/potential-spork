@@ -807,6 +807,34 @@ C’est volontaire à ce stade, parce qu’on est encore dans une phase de trans
 - `source_key` obligatoire
 - index/contrainte réellement exploités comme clé d’upsert principale
 
+## Source Key Extension To Venue And Screening
+
+La même transition a été étendue à `Venue` et `Screening`.
+
+### Current state
+
+- `Venue.source_key` ajouté
+- `Screening.source_key` ajouté
+- `Screening.source_url` ajouté pour préparer un vrai lien source stable
+- compatibilité SQLite prévue pour ces colonnes
+
+### Repository coverage added
+
+Première couverture repository ajoutée pour :
+
+- `VenueRepository`
+- `ScreeningRepository`
+
+Ces repositories sont encore minimaux, mais ils posent les invariants suivants :
+
+- lookup principal par `source_key`
+- fallback legacy raisonnable quand nécessaire
+- mise à jour contrôlée des champs importés
+
+### Important note
+
+Le pipeline canonique ne persiste pas encore réellement `venues` et `screenings` depuis la source HTML actuelle. Cette étape prépare la suite. Le but ici est d’éviter de devoir improviser les contrats de persistence au moment où les screenings arriveront.
+
 ## Screening Selection Rules
 
 Ces règles doivent être documentées et testées côté backend. Elles ne doivent pas dériver d’un comportement opportuniste du frontend.
