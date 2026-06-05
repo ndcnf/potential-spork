@@ -931,6 +931,39 @@ Règle UX :
 - ne pas mettre ce CTA au coeur du parcours principal
 - le laisser dans `Settings`, car c’est une capacité technique/opérationnelle
 
+### Live source failure handling
+
+Le mode `prod` dépend d’une source HTML externe vivante. Cette source peut :
+
+- changer d’URL
+- répondre `404`
+- répondre partiellement
+- devenir temporairement indisponible
+
+Règle backend :
+
+- une erreur réseau ou HTTP de la source ne doit pas remonter en `500` brut non qualifié
+- l’API d’import doit traduire cela en erreur `502`
+- le message doit indiquer que la source NIFFF est indisponible
+
+Pourquoi :
+
+- `500` fait croire à un bug applicatif interne
+- `502` exprime correctement une dépendance distante défaillante
+- le frontend peut alors afficher un message d’état plus juste à l’utilisateur
+
+### Current live URL default
+
+Le défaut actuel pour le mode `prod` vise :
+
+- `https://nifff.ch/programme/`
+
+et non :
+
+- `https://nifff.ch/programme/?type=film`
+
+Ce choix est plus robuste pour la phase actuelle, car le point d’entrée live ne garantit pas forcément le même schéma de query que l’archive.
+
 ## Bundle Persistence Extended
 
 Le wrapper legacy `import_nifff.py` persiste maintenant aussi les `venues` et `screenings` présents dans le bundle canonique.

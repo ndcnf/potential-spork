@@ -60,7 +60,7 @@ class NifffArchiveHtmlSource(BaseNifffHtmlSource):
 
 
 class NifffLiveHtmlSource(BaseNifffHtmlSource):
-    def __init__(self, schedule_url_template: str = "https://nifff.ch/programme/?type=film") -> None:
+    def __init__(self, schedule_url_template: str = "https://nifff.ch/programme/") -> None:
         super().__init__(schedule_url_template=schedule_url_template, source_mode="prod")
 
 

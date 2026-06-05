@@ -137,6 +137,6 @@ def import_nifff_catalog_from_archive(db: Session, year: int, schedule_url: str 
 
 def import_nifff_catalog_from_live(db: Session, year: int, schedule_url: str | None = None) -> ImportSummary:
     source = NifffLiveHtmlSource(
-        schedule_url_template=schedule_url or "https://nifff.ch/programme/?type=film"
+        schedule_url_template=schedule_url or "https://nifff.ch/programme/"
     )
     return _import_nifff_from_source(db=db, source=source, year=year)

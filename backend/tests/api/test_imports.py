@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import requests
+
 
 def test_import_catalog_accepts_minimal_payload(client, monkeypatch) -> None:
     monkeypatch.setattr(
@@ -111,3 +113,18 @@ def test_import_catalog_returns_422_for_invalid_payload(client) -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_import_catalog_returns_502_when_source_fetch_fails(client, monkeypatch) -> None:
+    def fake_import_nifff_catalog(db, year, schedule_url=None):
+        raise requests.HTTPError("404 Client Error")
+
+    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog_from_live", fake_import_nifff_catalog)
+
+    response = client.post(
+        "/api/imports/nifff/catalog",
+        json={"year": 2025, "source_mode": "prod"},
+    )
+
+    assert response.status_code == 502
+    assert "Source NIFFF indisponible" in response.json()["detail"]
