@@ -245,6 +245,7 @@ Déjà acté et implémenté dans le frontend :
 - `Films` expose désormais aussi un compteur `Non merci`
 - les compteurs du header `Films` servent maintenant aussi de filtres légers
 - les films `Non merci` sont visuellement plus discrets dans la liste
+- les cartes film ont retrouvé un vrai traitement de surface sobre, avec un signal plus net pour les `Immanquables`
 
 Pour la suite immédiate, la roadmap de référence reste :
 
@@ -309,6 +310,7 @@ Décisions UI désormais actées :
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
 - headers de cycle renforcés par un traitement plus organique, type surlignage / encre, sans tomber dans l'effet décoratif gratuit
 - cartes film raffinées typographiquement : titre plus dense, tagline plus lisible, métadonnées plus discrètes et ligne séance traitée comme un chip éditorial léger
+- les `Immanquables` peuvent ressortir par une bordure et un fond léger, tant que le titre et la promesse film gardent la première place visuelle
 - la carte film reste un support de lecture, pas une fausse zone cliquable
 - les états d'interaction forts vivent sur les vrais contrôles, pas sur tout le bloc carte
 - à l'initialisation, les films arrivent en état **`À traiter`**, sans sélection préalable

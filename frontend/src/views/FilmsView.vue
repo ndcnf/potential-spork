@@ -352,6 +352,7 @@ function applyFilmPriority(film: Film, priority: Priority) {
           <button
             type="button"
             class="films-progress__stat"
+            data-priority-filter="high"
             :class="{ 'films-progress__stat--active': filters.priority === 'high' }"
             @click="togglePriorityFilter('high')"
           >
@@ -361,6 +362,7 @@ function applyFilmPriority(film: Film, priority: Priority) {
           <button
             type="button"
             class="films-progress__stat"
+            data-priority-filter="medium"
             :class="{ 'films-progress__stat--active': filters.priority === 'medium' }"
             @click="togglePriorityFilter('medium')"
           >
@@ -370,6 +372,7 @@ function applyFilmPriority(film: Film, priority: Priority) {
           <button
             type="button"
             class="films-progress__stat"
+            data-priority-filter="pending"
             :class="{ 'films-progress__stat--active': filters.priority === 'pending' }"
             @click="togglePriorityFilter('pending')"
           >
@@ -379,6 +382,7 @@ function applyFilmPriority(film: Film, priority: Priority) {
           <button
             type="button"
             class="films-progress__stat films-progress__stat--muted"
+            data-priority-filter="ignore"
             :class="{ 'films-progress__stat--active': filters.priority === 'ignore' }"
             @click="togglePriorityFilter('ignore')"
           >
@@ -491,29 +495,31 @@ function applyFilmPriority(film: Film, priority: Priority) {
         </div>
       </header>
 
-      <div v-if="isCycleOpen(group.cycle.id)" class="cycle-group__body">
+       <div v-if="isCycleOpen(group.cycle.id)" class="cycle-group__body">
          <article v-for="film in group.films" :key="film.id" class="film-card" :data-priority="normalizePriority(film.priority)">
           <div class="film-card-stack">
-            <div class="film-card-primary">
-              <div class="film-card-heading">
-                <h4>{{ film.title }} <span class="film-title-year">({{ film.year || 'année ?' }})</span></h4>
-                <PrioritySelect :model-value="film.priority" dense @update:model-value="applyFilmPriority(film, $event)" />
-              </div>
+            <div class="film-card-heading">
+              <h4>{{ film.title }} <span class="film-title-year">({{ film.year || 'année ?' }})</span></h4>
+            </div>
+
+            <PrioritySelect class="film-card-control" :model-value="film.priority" dense @update:model-value="applyFilmPriority(film, $event)" />
+
+            <div class="film-card-copy">
               <p class="film-tagline film-tagline--inline">{{ film.tagline || 'Tagline NIFFF à importer' }}</p>
-               <p class="film-meta">{{ film.directors || 'Réalisation non renseignée' }}</p>
+              <p class="film-meta">{{ film.directors || 'Réalisation non renseignée' }}</p>
               <p v-if="film.cast" class="film-cast film-cast--inline">{{ film.cast }}</p>
               <p class="film-meta film-meta--compact">
                 {{ film.countries || 'Pays ?' }} · {{ film.duration_minutes || '?' }} min · {{ film.cycle_name || group.cycle.name }}
               </p>
             </div>
 
-            <div v-if="selectedScreeningByFilmId.get(film.id)" class="film-screenings">
+            <div v-if="selectedScreeningByFilmId.get(film.id)" class="film-screenings film-screenings--slot">
               <span class="film-screenings__item">
                 {{ formatScreeningLabel(selectedScreeningByFilmId.get(film.id)!) }}
               </span>
             </div>
-            <div v-else-if="shouldWarnMissingScreening(film.priority)" class="film-screenings">
-               <span class="film-screenings__item film-screenings__item--warning">pas de séance prévue</span>
+            <div v-else-if="shouldWarnMissingScreening(film.priority)" class="film-screenings film-screenings--slot">
+                <span class="film-screenings__item film-screenings__item--warning">pas de séance prévue</span>
             </div>
           </div>
         </article>
