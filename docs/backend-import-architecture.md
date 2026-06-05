@@ -730,6 +730,41 @@ Le but de cette ossature n’est pas encore de finir l’architecture. Le but es
 
 Ce n’est pas l’état final, mais c’est déjà une dépendance bien moins fragile.
 
+## Repository Step Introduced
+
+Une première couche repository a été ajoutée pour sortir les writes ORM les plus évidents du service d’import.
+
+### Added files
+
+- `backend/app/repositories/cycles.py`
+- `backend/app/repositories/films.py`
+
+### Current scope
+
+Pour l’instant, ces repositories gèrent seulement :
+
+- lookup par clé actuelle disponible (`slug`)
+- création si l’entité n’existe pas
+- mise à jour des champs pilotés par l’import
+- `flush()` contrôlé
+
+### Important limitation
+
+Ce n’est pas encore la cible finale, parce que :
+
+- le lookup repose encore sur `slug`
+- il n’y a pas encore de `source_key` persisté en base
+- `Venue` et `Screening` n’ont pas encore leur repository dédié
+
+### Immediate benefit
+
+Malgré cette limite, on a déjà réduit un anti-pattern concret :
+
+- avant : le service d’import faisait lui-même tous les writes SQLAlchemy
+- maintenant : le service orchestre, les repositories persistent
+
+Le service devient donc plus simple à lire, plus testable, et plus facile à remplacer quand les `source_key` arriveront en base.
+
 ## Screening Selection Rules
 
 Ces règles doivent être documentées et testées côté backend. Elles ne doivent pas dériver d’un comportement opportuniste du frontend.
