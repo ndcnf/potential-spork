@@ -21,6 +21,7 @@ export type PlanningScreening = Screening & {
   recommendationTotalOptions: number | null
   recommendationNote: string | null
   recommendationReasons: string[]
+  recommendationDrawbacks: string[]
   visualRowStart?: number
   visualRowSpan?: number
 }
@@ -49,47 +50,47 @@ export function usePlanningModel() {
     return priority === 'high' || priority === 'must-see'
   }
 
-  function screeningRecommendationScore(screening: Screening, selectedScreenings: Screening[], candidateCount: number): { score: number; note: string; reasons: string[] } {
+  function clockMinutes(value: string | null): number {
+    if (!value) return 0
+    const hours = Number(value.slice(11, 13))
+    const minutes = Number(value.slice(14, 16))
+    return hours * 60 + minutes
+  }
+
+  function screeningRecommendationScore(screening: Screening, selectedScreenings: Screening[]): { score: number; note: string; reasons: string[]; drawbacks: string[] } {
     const settings = settingsStore.recommendationSettings
     const reasons: string[] = []
+    const drawbacks: string[] = []
     const conflictPenalty = selectedScreenings.some((other) => other.id !== screening.id && other.film_id !== screening.film_id && screeningsOverlapWithBuffer(screening, other)) ? -100 : 0
-    const rarityBonus = candidateCount === 1 ? 40 : candidateCount === 2 ? 20 : 0
     const comfortBonus = settings.preferredVenueScores[screening.venue_name ?? ''] ?? 0
-    const startMinutes = toMinutes(screening.starts_at)
+    const startMinutes = clockMinutes(screening.starts_at)
     const latenessPenalty = settings.avoidAfterMinutes !== null && startMinutes >= settings.avoidAfterMinutes ? -1 : 0
     const earlyPenalty = settings.avoidBeforeMinutes !== null && startMinutes < settings.avoidBeforeMinutes ? -1 : 0
-    const total = conflictPenalty + rarityBonus + comfortBonus + latenessPenalty + earlyPenalty
+    const total = conflictPenalty + comfortBonus + latenessPenalty + earlyPenalty
 
     if (conflictPenalty < 0) {
-      return { score: total, note: 'moins favorable: conflit avec une autre séance déjà retenue', reasons: [] }
-    }
-
-    if (rarityBonus > 0) {
-      reasons.push(candidateCount === 1 ? 'seule séance disponible' : 'peu d’options restantes pour ce film')
+      drawbacks.push('conflit avec une autre séance déjà retenue')
     }
 
     if (comfortBonus > 0) {
       reasons.push(`salle ${screening.venue_name || 'inconnue'} marquée comme favorable`)
     } else if (comfortBonus < 0) {
-      reasons.push(`salle ${screening.venue_name || 'inconnue'} plutôt à éviter`)
+      drawbacks.push(`salle ${screening.venue_name || 'inconnue'} marquée comme inconfortable`)
     }
 
     if (earlyPenalty < 0 && settings.avoidBeforeMinutes !== null) {
-      reasons.push(`horaire avant ${formatMinutes(settings.avoidBeforeMinutes)}`)
+      drawbacks.push('trop tot')
     }
 
     if (latenessPenalty < 0 && settings.avoidAfterMinutes !== null) {
-      reasons.push(`horaire après ${formatMinutes(settings.avoidAfterMinutes)}`)
-    }
-
-    if (!reasons.length) {
-      reasons.push('aucune contrainte particulière sur cette séance')
+      drawbacks.push('trop tard')
     }
 
     return {
       score: total,
       note: total > 0 ? 'option favorable selon tes préférences' : 'option neutre selon tes préférences',
       reasons,
+      drawbacks,
     }
   }
 
@@ -142,6 +143,7 @@ export function usePlanningModel() {
     const recommendationTotalByScreeningId = new Map<number, number>()
     const recommendationNoteByScreeningId = new Map<number, string>()
     const recommendationReasonsByScreeningId = new Map<number, string[]>()
+    const recommendationDrawbacksByScreeningId = new Map<number, string[]>()
 
     for (const screening of baseScreenings) {
       totalScreeningCountByFilmId.set(screening.film_id, (totalScreeningCountByFilmId.get(screening.film_id) ?? 0) + 1)
@@ -162,7 +164,7 @@ export function usePlanningModel() {
         const hasSelected = screenings.some((screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed')
         const selectedOtherFilmScreenings = selectedScreenings.filter((screening) => screening.film_id !== filmId)
         const scored = [...screenings]
-          .map((screening) => ({ screening, ...screeningRecommendationScore(screening, selectedOtherFilmScreenings, screenings.length) }))
+          .map((screening) => ({ screening, ...screeningRecommendationScore(screening, selectedOtherFilmScreenings) }))
           .sort((left, right) => right.score - left.score || (left.screening.starts_at ?? '').localeCompare(right.screening.starts_at ?? ''))
 
         scored.forEach((entry, index) => {
@@ -170,6 +172,7 @@ export function usePlanningModel() {
           recommendationTotalByScreeningId.set(entry.screening.id, scored.length)
           recommendationNoteByScreeningId.set(entry.screening.id, entry.note)
           recommendationReasonsByScreeningId.set(entry.screening.id, entry.reasons)
+          recommendationDrawbacksByScreeningId.set(entry.screening.id, entry.drawbacks)
         })
 
         if (!hasSelected && scored[0]) {
@@ -208,6 +211,7 @@ export function usePlanningModel() {
           recommendationTotalOptions: recommendationTotalByScreeningId.get(screening.id) ?? null,
           recommendationNote: recommendationNoteByScreeningId.get(screening.id) ?? null,
           recommendationReasons: recommendationReasonsByScreeningId.get(screening.id) ?? [],
+          recommendationDrawbacks: recommendationDrawbacksByScreeningId.get(screening.id) ?? [],
         }
       })
       .sort((left, right) => left.dayKey.localeCompare(right.dayKey) || left.startMinutes - right.startMinutes || left.film_title.localeCompare(right.film_title))
@@ -460,10 +464,6 @@ export function usePlanningModel() {
 
     if (screening.isSingleScreening) {
       return 'C’est la seule séance disponible pour ce film.'
-    }
-
-    if (screening.isRecommended && screening.recommendationNote) {
-      return `${screening.recommendationNote}.`
     }
 
     return 'Cette séance reste disponible sans collision immédiate.'

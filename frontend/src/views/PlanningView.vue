@@ -375,10 +375,6 @@ async function removeScreeningSelection(screeningId: number) {
                    <p v-if="screening.isConflict || screening.isAlternative || screening.isMustLock" class="planning__timeline-note">
                      {{ screeningDecisionNote(screening) }}
                    </p>
-                   <div v-if="screening.isRecommended && screening.recommendationReasons.length" class="planning__recommendation-strip">
-                     <span class="planning__recommendation-title">Pourquoi cette séance</span>
-                     <span v-for="reason in screening.recommendationReasons" :key="reason" class="planning__detail-hint planning__detail-hint--recommended">{{ reason }}</span>
-                   </div>
                  </div>
                </div>
              </article>
@@ -452,17 +448,14 @@ async function removeScreeningSelection(screeningId: number) {
           <img :src="detailScreening.film.poster_url" :alt="`Affiche ${detailScreening.film_title}`" />
         </div>
 
+        <div class="planning__detail-topline">
+          <p class="planning__detail-time">{{ formatTimeRange(detailScreening) }}</p>
+          <p class="planning__detail-venue">{{ detailScreening.venue_name || 'Salle inconnue' }}</p>
+        </div>
+
         <div class="planning__detail-grid">
           <div>
-            <p class="planning__detail-line"><strong>Horaire</strong> {{ formatTimeRange(detailScreening) }}</p>
-            <p class="planning__detail-line"><strong>Salle</strong> {{ detailScreening.venue_name || 'Salle inconnue' }}</p>
             <p class="planning__detail-line"><strong>Cycle</strong> {{ detailScreening.film?.cycle_name || 'Non renseigné' }}</p>
-            <p class="planning__detail-line planning__detail-line--status">
-              <strong>Statut</strong>
-              <span class="planning__status-pill" :class="`planning__status-pill--${screeningStatusTone(detailScreening)}`">
-                {{ screeningReason(detailScreening) }}
-              </span>
-            </p>
           </div>
           <div>
             <p class="planning__detail-line"><strong>Réalisation</strong> {{ detailScreening.film?.directors || 'Non renseignée' }}</p>
@@ -474,18 +467,6 @@ async function removeScreeningSelection(screeningId: number) {
         <div v-if="detailScreening.film?.cast" class="planning__detail-copy">
           <p class="planning__detail-copy-title">Casting</p>
           <p>{{ detailScreening.film.cast }}</p>
-        </div>
-
-        <div v-if="detailScreening.film?.short_description" class="planning__detail-copy">
-          <p>{{ detailScreening.film.short_description }}</p>
-        </div>
-
-        <div v-if="detailScreening.isRecommended && detailScreening.recommendationReasons.length" class="planning__detail-copy planning__detail-copy--recommended">
-          <p class="planning__detail-copy-title">Pourquoi cette séance ressort</p>
-          <p class="planning__detail-copy-subtitle">{{ detailScreening.recommendationNote }}</p>
-          <div class="planning__detail-hints">
-            <span v-for="reason in detailScreening.recommendationReasons" :key="reason" class="planning__detail-hint planning__detail-hint--recommended">{{ reason }}</span>
-          </div>
         </div>
 
         <div v-if="relatedFilmScreenings.length" class="planning__detail-copy">
@@ -516,8 +497,17 @@ async function removeScreeningSelection(screeningId: number) {
                <div v-if="screeningComparisonHints(option).length" class="planning__detail-hints">
                  <span v-for="hint in screeningComparisonHints(option)" :key="hint" class="planning__detail-hint">{{ hint }}</span>
                </div>
-               <div v-if="option.recommendationReasons.length" class="planning__detail-hints">
-                 <span v-for="reason in option.recommendationReasons" :key="reason" class="planning__detail-hint planning__detail-hint--recommended">{{ reason }}</span>
+               <div v-if="option.recommendationReasons.length" class="planning__detail-recommendation-block">
+                 <p class="planning__detail-copy-title">Pour cette séance</p>
+                 <div class="planning__detail-hints">
+                  <span v-for="reason in option.recommendationReasons" :key="reason" class="planning__detail-hint planning__detail-hint--recommended">{{ reason }}</span>
+                 </div>
+               </div>
+               <div v-if="option.recommendationDrawbacks.length" class="planning__detail-recommendation-block">
+                 <p class="planning__detail-copy-title">Pour pas cette séance</p>
+                 <div class="planning__detail-hints">
+                   <span v-for="reason in option.recommendationDrawbacks" :key="reason" class="planning__detail-hint planning__detail-hint--warning">{{ reason }}</span>
+                 </div>
                </div>
                <p class="planning__detail-note">{{ screeningDecisionNote(option) }}</p>
               <div class="planning__detail-actions">

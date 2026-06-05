@@ -72,7 +72,7 @@ export const useSettingsStore = defineStore('settings', {
       if (score === null) {
         delete this.recommendationSettings.preferredVenueScores[venueName]
       } else {
-        this.recommendationSettings.preferredVenueScores[venueName] = score
+        this.recommendationSettings.preferredVenueScores[venueName] = score > 0 ? 1 : -1
       }
       this.persist()
     },

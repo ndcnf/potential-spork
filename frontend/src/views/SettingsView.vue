@@ -20,6 +20,12 @@ const knownVenues = computed(() => {
   return [...new Set(names)].sort((left, right) => left.localeCompare(right))
 })
 
+function normalizeVenueScore(value: number | null | undefined): -1 | 0 | 1 {
+  if ((value ?? 0) > 0) return 1
+  if ((value ?? 0) < 0) return -1
+  return 0
+}
+
 const activeRecommendationSignals = computed(() => {
   const signals: string[] = []
 
@@ -144,20 +150,23 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
 
       <fieldset class="settings__fieldset" :disabled="!settingsStore.recommendationSettings.enabled">
         <div class="settings__venues">
-          <label v-for="venue in knownVenues" :key="venue" class="settings__venue-row">
+          <div v-for="venue in knownVenues" :key="venue" class="settings__venue-row">
             <span>{{ venue }}</span>
-            <select
-              :value="settingsStore.recommendationSettings.preferredVenueScores[venue] ?? ''"
-              @change="settingsStore.setVenueScore(venue, ($event.target as HTMLSelectElement).value === '' ? null : Number(($event.target as HTMLSelectElement).value))"
-            >
-              <option value="">Neutre</option>
-              <option :value="2">Très favorable</option>
-              <option :value="1">Plutôt favorable</option>
-              <option :value="0">Neutre</option>
-              <option :value="-1">Plutôt à éviter</option>
-              <option :value="-2">À éviter</option>
-            </select>
-          </label>
+            <div class="settings__choice-group" role="radiogroup" :aria-label="`Confort pour ${venue}`">
+              <button type="button" class="settings__choice-pill" :class="{ 'settings__choice-pill--active': normalizeVenueScore(settingsStore.recommendationSettings.preferredVenueScores[venue]) === 0 }" @click="settingsStore.setVenueScore(venue, null)">
+                <span class="settings__choice-mark" aria-hidden="true">0</span>
+                <span>Sans avis</span>
+              </button>
+              <button type="button" class="settings__choice-pill" :class="{ 'settings__choice-pill--active': normalizeVenueScore(settingsStore.recommendationSettings.preferredVenueScores[venue]) === 1 }" @click="settingsStore.setVenueScore(venue, 1)">
+                <span class="settings__choice-mark" aria-hidden="true">+</span>
+                <span>Bien</span>
+              </button>
+              <button type="button" class="settings__choice-pill" :class="{ 'settings__choice-pill--active': normalizeVenueScore(settingsStore.recommendationSettings.preferredVenueScores[venue]) === -1 }" @click="settingsStore.setVenueScore(venue, -1)">
+                <span class="settings__choice-mark" aria-hidden="true">-</span>
+                <span>Pas confo</span>
+              </button>
+            </div>
+          </div>
         </div>
       </fieldset>
     </section>
