@@ -27,6 +27,7 @@ Ordre recommandé :
 
 - réduire la dette `must-see` / `low`
 - définir plus tard une stratégie si synchronisation serveur des choix devient nécessaire
+- revoir la règle actuelle de persistance locale > état distant dès que les vraies données seront accessibles de manière fiable
 
 ## Open Ideas — Not Validated
 

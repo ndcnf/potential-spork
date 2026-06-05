@@ -196,6 +196,16 @@ Implémentation légère acceptée :
 
 - `localStorage`
 
+Règle courante d’implémentation :
+
+- au bootstrap, l’état local persistant est réappliqué
+- dans l’état actuel du produit, il prime sur l’état distant si les deux diffèrent
+
+Important :
+
+- ce comportement est toléré pour la phase actuelle et le mode démo
+- il devra être revu dès que les vraies données seront disponibles de façon fiable
+
 ## Visual Hierarchy
 
 ### `Films`
