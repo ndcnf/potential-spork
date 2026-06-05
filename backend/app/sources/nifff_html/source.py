@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Literal
 
 import requests
 from bs4 import BeautifulSoup
@@ -12,11 +13,12 @@ from app.sources.nifff_html.parser import ParsedFilm, enrich_from_detail, extrac
 logger = logging.getLogger(__name__)
 
 
-class NifffHtmlSource:
+class BaseNifffHtmlSource:
     source_name = "nifff_html"
 
-    def __init__(self, schedule_url_template: str = "https://nifff.ch/archives/{year}/schedule?type=film") -> None:
+    def __init__(self, *, schedule_url_template: str, source_mode: Literal["demo", "prod"]) -> None:
         self._schedule_url_template = schedule_url_template
+        self.source_mode = source_mode
 
     def fetch_catalog(self, year: int) -> list[ParsedFilm]:
         url = self._schedule_url_template.format(year=year)
@@ -40,8 +42,27 @@ class NifffHtmlSource:
         except requests.RequestException as exc:
             logger.warning(
                 "NIFFF detail fetch failed; keeping listing data",
-                extra={"source_url": parsed.source_url, "film_slug": parsed.slug, "error": str(exc)},
+                extra={
+                    "source_url": parsed.source_url,
+                    "film_slug": parsed.slug,
+                    "error": str(exc),
+                    "source_mode": self.source_mode,
+                },
             )
             return parsed
 
         return enrich_from_detail(detail_html, parsed)
+
+
+class NifffArchiveHtmlSource(BaseNifffHtmlSource):
+    def __init__(self, schedule_url_template: str = "https://nifff.ch/archives/{year}/schedule?type=film") -> None:
+        super().__init__(schedule_url_template=schedule_url_template, source_mode="demo")
+
+
+class NifffLiveHtmlSource(BaseNifffHtmlSource):
+    def __init__(self, schedule_url_template: str = "https://nifff.ch/programme/?type=film") -> None:
+        super().__init__(schedule_url_template=schedule_url_template, source_mode="prod")
+
+
+class NifffHtmlSource(NifffArchiveHtmlSource):
+    """Backward-compatible alias while the service still defaults to archive/demo mode."""

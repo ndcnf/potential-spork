@@ -835,6 +835,71 @@ Ces repositories sont encore minimaux, mais ils posent les invariants suivants :
 
 Le pipeline canonique ne persiste pas encore réellement `venues` et `screenings` depuis la source HTML actuelle. Cette étape prépare la suite. Le but ici est d’éviter de devoir improviser les contrats de persistence au moment où les screenings arriveront.
 
+## Source Modes: Demo/Archive vs Prod/Live
+
+Convention retenue :
+
+- `demo` = source archive
+- `prod` = source live
+
+### Meaning
+
+#### `demo` / archive
+
+But :
+
+- alimenter le produit avant dévoilement officiel
+- faire tourner le planning avec des données plausibles
+- sécuriser les tests de non-régression avec snapshots historiques
+
+Sources typiques :
+
+- Wayback Machine
+- archives locales HTML
+- snapshots de debug
+
+#### `prod` / live
+
+But :
+
+- servir le vrai programme courant
+- faire foi une fois le programme dévoilé
+
+Sources typiques :
+
+- page programme live
+- pages détail live
+- plus tard éventuellement API live
+
+### Architectural rule
+
+Le backend ne doit pas disperser des `if archive else live` dans toute la logique métier.
+
+La distinction doit vivre au niveau de l’adapter source.
+
+Exemples propres :
+
+- `NifffArchiveHtmlSource`
+- `NifffLiveHtmlSource`
+
+Les deux doivent produire le même contrat canonique.
+
+### Operational rule
+
+- avant dévoilement : le mode `demo` est la source opérationnelle utile
+- après dévoilement : le mode `prod` devient la référence
+- `demo` reste utile pour fixtures, debug, fallback, historique
+
+### Current implementation state
+
+Une première séparation explicite a été posée :
+
+- `NifffArchiveHtmlSource`
+- `NifffLiveHtmlSource`
+- alias transitoire `NifffHtmlSource` conservé pour compatibilité
+
+Ce n’est pas encore le choix runtime final, mais l’intention d’architecture est maintenant claire et codée.
+
 ## Bundle Persistence Extended
 
 Le wrapper legacy `import_nifff.py` persiste maintenant aussi les `venues` et `screenings` présents dans le bundle canonique.
