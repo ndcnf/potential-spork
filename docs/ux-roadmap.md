@@ -206,17 +206,16 @@ It must not absorb product choices that belong to the main workflow.
 
 The main navigation should reflect the workflow directly:
 
-- `1. Films`
-- `2. Planning`
+- `Films`
+- `Planning`
 - `Settings` stays visually secondary
 
 Recommended behavior:
-- show step numbers for the active workflow views
-- keep the active step highly legible
+- keep the active area highly legible
 - show progression, not just location
+- avoid presenting the product as a rigid numbered tunnel if the user can move back and forth naturally
 
 Good signal examples:
-- `Step 1 of 2`
 - `12 prioritaires définis`
 - `4 conflits à arbitrer`
 - `3 créneaux encore libres`
@@ -311,9 +310,8 @@ For the next iteration, the product only needs to make the flow legible.
 Not richer. Legible.
 
 Minimum deliverables:
-- visible workflow navigation for the active steps
+- visible workflow navigation for the active spaces
 - one-line UX promise per main view
-- one dominant CTA per screen
 - real empty states for the 3 core workflow views
 - progression counters in navigation or view headers
 
@@ -561,7 +559,7 @@ That choice would be a UX regression.
 Purpose:
 - orient the user
 - show progress
-- expose one next step
+- support the current triage state without forcing a next-step tunnel
 
 Content:
 - page title: `Films`
@@ -570,14 +568,13 @@ Content:
   - `X Prioritaires`
   - `Y Moyens`
   - `Z Restants a trier`
-- primary CTA: `Passer au Planning`
 
 Behavior:
-- CTA enabled only when the user has enough prioritized films to make planning meaningful
-- if not enabled, explain why in plain language
+- the header should make progress visible
+- navigation to `Planning` may exist, but it should not frame the screen as a forced next step
 
 Example helper copy:
-- `Selectionnez au moins quelques films prioritaires pour lancer l'arbitrage.`
+- `Tu peux commencer à arbitrer dès que quelques films ressortent clairement.`
 
 #### 2. Utility bar
 Purpose:
@@ -605,9 +602,17 @@ Recommended page structure:
 - cycle block
 - cycle summary
 - cycle-local progress signals
-- films inside that cycle
+- flat list of films inside that cycle
 
 Inside each cycle, keep a simple flat list if the status control and progress signals already carry enough meaning.
+
+Do not re-segment the cycle into heavy visual status sections such as:
+- `A traiter`
+- `Prioritaires`
+- `Moyens`
+- `Ignores`
+
+That would weaken the editorial logic of the cycle and add unnecessary cognitive load.
 
 Implementation note:
 - avoid redundant status grouping if it adds visual noise
@@ -799,8 +804,8 @@ Good examples:
 - `Conflits possibles avec 2 choix prioritaires`
 
 Rule:
-- `pas de seance prevue` should be reserved for `Prioritaire` films
-- this warning is unnecessary noise for `Moyen`
+- `pas de seance prevue` should be reserved for `Immanquable` films only
+- this warning is unnecessary noise for `Peut-etre`
 
 Visual hierarchy rule:
 - do not express the same status through structure, control, and summary if the inline control plus cycle-level signals are already sufficient
@@ -918,7 +923,7 @@ Action: `Reessayer`
 
 V1 scope only:
 - progress-aware `Films` header
-- cycle-first structure with local decision sections
+- cycle-first structure with a flat list and local progress signals
 - stabilized editorial `FilmCard`
 - visible inline `PrioritySelect`
 - restrained scheduling hint
@@ -928,7 +933,7 @@ Delivery order:
 1. lock section model
 2. stabilize card hierarchy
 3. make priority update immediate and calm
-4. add progress counters and gateway CTA to Planning
+4. add progress counters and keep navigation between `Films` and `Planning` lightweight
 5. refine empty/loading/error states
 
 Success criteria:

@@ -234,8 +234,8 @@ Ordre conseillé :
 
 Déjà acté et implémenté dans le frontend :
 
-- workflow principal visible en `1. Films` / `2. Planning`, sans troisième étape active dans le frontend courant
-- `Films` renforcé comme espace de sélection éditoriale avec progression visible et CTA passerelle vers `Planning`
+- workflow principal recentré sur `Films` et `Planning`, sans troisième vue active dans le frontend courant
+- `Films` renforcé comme espace de sélection éditoriale avec progression visible
 - `Planning` recentré comme espace d’arbitrage avec guidage explicite et hiérarchie d’actions simplifiée
 - ton UI unifié au `tu`, avec accents rétablis sur les libellés visibles
 - skeletons de chargement ajoutés sur les vues actives
@@ -252,24 +252,19 @@ Et ce fichier sert de complément opérationnel.
 ## 9. Décisions désormais verrouillées pour la suite
 
 ### Workflow canonique
-Le workflow produit de référence pour la version courante est désormais :
+Le workflow produit de référence pour la version courante repose sur 2 espaces actifs :
 
-1. `Select films`
-2. `Arbitrate conflicts`
+- `Films`
+- `Planning`
 
 `Fill remaining gaps` est explicitement reporté à une V2 ou V3.
-
-Traduction de travail possible côté UI FR :
-
-1. `Films`
-2. `Planning`
 
 Important :
 - `Films` = qualification éditoriale
 - `Planning` = arbitrage de séances
 
-Le produit ne doit plus présenter les vues actives comme des outils parallèles.
-La séquence courante est un parcours explicite en 2 étapes : `Films` puis `Planning`.
+Le produit doit rendre ce flux lisible, mais **sans le transformer en tunnel rigide**.
+L'utilisateur peut passer de `Films` à `Planning`, puis revenir à `Films` librement.
 
 ### Promesse UX par vue
 
@@ -294,7 +289,7 @@ Structure recommandée à implémenter :
 - structure principale par `cycle`
 - liste plate de films dans chaque cycle
 - cartes éditoriales stabilisées
-- CTA passerelle vers `Planning`
+- navigation souple entre `Films` et `Planning`
 
 Règle produit :
 - la priorité se décide au niveau **film uniquement**
@@ -303,8 +298,6 @@ Règle produit :
 
 Décisions UI désormais actées :
 - header global avec progression visible
-- CTA `Passer au Planning` conditionné par au moins un film `Prioritaire`
-- CTA `Passer au Planning` conditionné par au moins un film `Immanquable`
 - dots de progression conservées au niveau cycle comme **signal de synthèse**, pas comme contrôle
 - pas de sous-sections visuelles `À traiter / Prioritaires / Moyens / Ignorés` dans chaque cycle
 - distinction des cycles portée d'abord par la typographie, pas par des pastilles couleur
@@ -313,7 +306,7 @@ Décisions UI désormais actées :
 - la carte film reste un support de lecture, pas une fausse zone cliquable
 - les états d'interaction forts vivent sur les vrais contrôles, pas sur tout le bloc carte
 - à l'initialisation, les films arrivent en état **`À traiter`**, sans sélection préalable
-- le rappel `pas de séance prévue` ne concerne que les films `Prioritaires`
+- le rappel `pas de séance prévue` ne concerne que les films `Immanquables`
 - le statut reste lisible via le contrôle dans la carte, les dots et les compteurs, sans bruit structurel supplémentaire
 
 Rappel critique :
@@ -381,7 +374,7 @@ Autre règle importante :
 
 #### Étape 1 — Refaire le header de vue
 
-But : orienter, montrer la progression, ouvrir la porte vers `Planning`.
+But : orienter et montrer la progression, sans créer de faux tunnel.
 
 À implémenter dans `FilmsView.vue` :
 - titre : `Films`
@@ -390,14 +383,13 @@ But : orienter, montrer la progression, ouvrir la porte vers `Planning`.
   - `Prioritaires`
   - `Moyens`
   - `Restants a trier`
-- 1 CTA dominant : `Passer au Planning`
 
 Règle :
-- le CTA ne doit pas être juste décoratif
-- s’il est désactivé, il faut expliquer pourquoi
+- la progression doit informer, pas forcer
+- la navigation vers `Planning` peut exister, mais ne doit pas structurer la vue comme une étape suivante obligatoire
 
-Exemple de microcopy :
-- `Selectionnez quelques films prioritaires pour lancer un arbitrage utile.`
+Exemple de microcopy utile :
+- `Tu peux commencer à arbitrer dès que quelques films ressortent clairement.`
 
 À calculer côté vue :
 - `highCount`
@@ -543,7 +535,7 @@ But : rappeler la faisabilité sans déplacer le centre de gravité vers le plan
 
 Conserver uniquement des hints sobres :
 - séance choisie : `ven 04.07 18h30-21h00`
-- pas de séance prévue : seulement pour `Prioritaire` ou `Moyen`
+- pas de séance prévue : seulement pour `Immanquable`
 - nombre de séances : si utile, en texte simple
 
 Ne pas remettre dans `Films` :
@@ -603,11 +595,11 @@ Recommandation V1 :
 #### Passe 1
 - nouveau header
 - compteurs
-- CTA vers `Planning`
+- progression et navigation souple
 
 #### Passe 2
-- computed de sous-sections par décision à l’intérieur de chaque cycle
-- rendu par cycles, puis sections `A traiter / Prioritaires / Moyens / Ignores`
+- consolidation de la liste plate par cycle
+- signaux de progression portés par compteurs, dots et contrôle inline
 
 #### Passe 3
 - refonte de la hiérarchie interne de `film-card`
