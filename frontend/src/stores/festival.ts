@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { screeningsOverlapWithBuffer } from '@/lib/planning'
 import { buildPreviewDataset } from '@/mock/nifff2025Preview'
 import { api } from '@/services/api'
-import type { Cycle, Film, Priority, Screening } from '@/types'
+import type { Cycle, DataSourceMode, Film, ImportSummary, Priority, Screening } from '@/types'
 
 const STORAGE_KEY = 'potential-spork-festival-ui-state'
 const previewDataset = buildPreviewDataset()
@@ -188,6 +188,10 @@ export const useFestivalStore = defineStore('festival', {
     loading: false,
     loadError: null as string | null,
     usingMocks: false,
+    effectiveSourceMode: 'demo' as DataSourceMode,
+    sourceFallbackReason: null as string | null,
+    sourceSwitchPending: false,
+    lastImportSummary: null as ImportSummary | null,
   }),
   getters: {
     groupedFilms(state) {
@@ -212,6 +216,42 @@ export const useFestivalStore = defineStore('festival', {
         (screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed',
       )
     },
+    sourceStatus(state) {
+      if (state.sourceSwitchPending) {
+        return {
+          label: 'Sync…',
+          tone: 'info' as const,
+          description: 'Import en cours puis rechargement du catalogue.',
+          showBadge: true,
+        }
+      }
+
+      if (state.usingMocks && state.effectiveSourceMode === 'prod') {
+        return {
+          label: 'Fallback démo',
+          tone: 'warning' as const,
+          description:
+            state.sourceFallbackReason ?? 'Les données live sont indisponibles pour le moment. L’application affiche une démonstration de secours.',
+          showBadge: true,
+        }
+      }
+
+      if (state.usingMocks || state.effectiveSourceMode === 'demo') {
+        return {
+          label: 'Démo',
+          tone: 'subtle' as const,
+          description: 'La source archive ou les données de démonstration sont actuellement utilisées.',
+          showBadge: true,
+        }
+      }
+
+      return {
+        label: 'Live',
+        tone: 'success' as const,
+        description: 'Le programme courant est chargé depuis la source live.',
+        showBadge: false,
+      }
+    },
   },
   actions: {
     ensureWorkingData() {
@@ -224,6 +264,7 @@ export const useFestivalStore = defineStore('festival', {
       if (!this.screenings.length) {
         this.screenings = structuredClone(mockScreenings)
         this.usingMocks = true
+        this.sourceFallbackReason = 'Aucune donnée backend disponible : démonstration locale activée.'
       }
 
       const hydrated = applyPersistedUiState(this.films, this.screenings)
@@ -247,6 +288,7 @@ export const useFestivalStore = defineStore('festival', {
           this.films = hydrated.films
           this.screenings = hydrated.screenings
           this.usingMocks = true
+          this.sourceFallbackReason = 'Le backend a répondu sans catalogue exploitable. Démonstration locale activée.'
           return
         }
 
@@ -255,15 +297,29 @@ export const useFestivalStore = defineStore('festival', {
         this.films = hydrated.films
         this.screenings = hydrated.screenings
         this.usingMocks = false
+        this.sourceFallbackReason = null
       } catch {
         this.cycles = sanitizeCycles(mockCycles)
         const hydrated = applyPersistedUiState(sanitizeFilms(mockFilms), mockScreenings)
         this.films = hydrated.films
         this.screenings = hydrated.screenings
         this.usingMocks = true
-        this.loadError = 'Impossible de charger les données réelles. Mode démo activé.'
+        this.sourceFallbackReason = 'Impossible de charger les données réelles. Démonstration locale activée.'
+        this.loadError = 'Impossible de charger les données réelles. Démonstration locale activée.'
       } finally {
         this.loading = false
+      }
+    },
+    async switchSource(mode: DataSourceMode) {
+      this.sourceSwitchPending = true
+      this.loadError = null
+      try {
+        const summary = await api.importCatalog(2025, mode)
+        this.lastImportSummary = summary
+        this.effectiveSourceMode = mode
+        await this.bootstrap()
+      } finally {
+        this.sourceSwitchPending = false
       }
     },
     updateFilmPriority(filmId: number, priority: Priority) {

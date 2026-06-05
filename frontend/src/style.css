@@ -95,6 +95,47 @@ a {
   font-size: var(--font-size-lg);
 }
 
+.app-header__source-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: var(--space-xs) 0 0;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.app-header__source-chip--subtle {
+  border-color: var(--color-border-mid);
+  background: color-mix(in srgb, var(--color-surface-strong) 72%, transparent);
+}
+
+.app-header__source-chip--warning {
+  border-color: var(--color-accent-border);
+  background: color-mix(in srgb, var(--color-accent-soft) 52%, transparent);
+  color: var(--color-text);
+}
+
+.app-header__source-chip--info,
+.app-header__source-chip--success {
+  border-color: var(--color-accent-border);
+  background: color-mix(in srgb, var(--color-accent-soft) 40%, transparent);
+  color: var(--color-text);
+}
+
+.app-header__status-row {
+  padding-top: var(--space-xs);
+}
+
+.app-header__status-copy {
+  display: inline-flex;
+  color: var(--color-text-subtle);
+}
+
 .app-header__nav {
   display: flex;
   flex-wrap: wrap;

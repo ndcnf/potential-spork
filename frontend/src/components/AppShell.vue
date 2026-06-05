@@ -3,8 +3,10 @@ import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import settingsIcon from '@/assets/icons/solar--settings-bold-duotone.svg?raw'
+import { useFestivalStore } from '@/stores/festival'
 
 const route = useRoute()
+const festivalStore = useFestivalStore()
 
 const tabs = [
   { label: 'Films', to: '/films', hint: 'Qualifier les envies', step: true },
@@ -14,6 +16,7 @@ const tabs = [
 
 const primaryTabs = computed(() => tabs.filter((tab) => tab.step))
 const secondaryTabs = computed(() => tabs.filter((tab) => !tab.step))
+const sourceStatus = computed(() => festivalStore.sourceStatus)
 </script>
 
 <template>
@@ -23,6 +26,9 @@ const secondaryTabs = computed(() => tabs.filter((tab) => !tab.step))
         <div class="app-header__brand">
           <p class="eyebrow">Potential Spork</p>
           <h1>PLANIFFFICATEUR</h1>
+          <p v-if="sourceStatus.showBadge" class="app-header__source-chip" :class="`app-header__source-chip--${sourceStatus.tone}`">
+            {{ sourceStatus.label }}
+          </p>
         </div>
 
         <nav class="app-header__nav">
@@ -51,6 +57,10 @@ const secondaryTabs = computed(() => tabs.filter((tab) => !tab.step))
             <small>{{ tab.hint }}</small>
           </RouterLink>
         </nav>
+      </div>
+
+      <div v-if="sourceStatus.showBadge && sourceStatus.description" class="content-frame app-header__status-row">
+        <small class="app-header__status-copy">{{ sourceStatus.description }}</small>
       </div>
     </header>
 
