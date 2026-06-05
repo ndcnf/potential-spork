@@ -5,10 +5,17 @@ import { buildPreviewDataset } from '@/mock/nifff2025Preview'
 import { api } from '@/services/api'
 import type { Cycle, Film, Priority, Screening } from '@/types'
 
+const STORAGE_KEY = 'potential-spork-festival-ui-state'
 const previewDataset = buildPreviewDataset()
 const mockCycles: Cycle[] = previewDataset.cycles
 const mockFilms: Film[] = previewDataset.films
 const mockScreenings: Screening[] = previewDataset.screenings
+
+type PersistedFestivalUiState = {
+  version: 1
+  filmPriorities: Record<number, Priority>
+  screeningSelections: Record<number, Screening['selection_status']>
+}
 
 function normalizePriority(priority: Priority): 'pending' | 'ignore' | 'medium' | 'high' {
   if (priority === 'must-see' || priority === 'high') {
@@ -84,6 +91,95 @@ function recomputeScreeningStates(screenings: Screening[]): Screening[] {
   })
 }
 
+function readPersistedUiState(): PersistedFestivalUiState | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const raw = window.localStorage.getItem(STORAGE_KEY)
+  if (!raw) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<PersistedFestivalUiState>
+    return {
+      version: 1,
+      filmPriorities: parsed.filmPriorities ?? {},
+      screeningSelections: parsed.screeningSelections ?? {},
+    }
+  } catch {
+    return null
+  }
+}
+
+function persistUiState(films: Film[], screenings: Screening[]) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const filmPriorities = films.reduce<Record<number, Priority>>((result, film) => {
+    if (film.priority !== 'unreviewed') {
+      result[film.id] = film.priority
+    }
+    return result
+  }, {})
+
+  const screeningSelections = screenings.reduce<Record<number, Screening['selection_status']>>((result, screening) => {
+    if (screening.selection_status !== 'none') {
+      result[screening.id] = screening.selection_status
+    }
+    return result
+  }, {})
+
+  const payload: PersistedFestivalUiState = {
+    version: 1,
+    filmPriorities,
+    screeningSelections,
+  }
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+}
+
+function applyPersistedUiState(films: Film[], screenings: Screening[]): { films: Film[]; screenings: Screening[] } {
+  const persisted = readPersistedUiState()
+  if (!persisted) {
+    return {
+      films,
+      screenings: recomputeScreeningStates(screenings),
+    }
+  }
+
+  const nextFilms = films.map((film) => {
+    const persistedPriority = persisted.filmPriorities[film.id]
+    if (!persistedPriority) {
+      return film
+    }
+
+    return {
+      ...film,
+      priority: sanitizePriority(persistedPriority),
+    }
+  })
+
+  const nextScreenings = screenings.map((screening) => {
+    const persistedSelection = persisted.screeningSelections[screening.id]
+    if (!persistedSelection || persistedSelection === 'none') {
+      return screening
+    }
+
+    return {
+      ...screening,
+      selection_status: persistedSelection,
+    }
+  })
+
+  return {
+    films: nextFilms,
+    screenings: recomputeScreeningStates(nextScreenings),
+  }
+}
+
 export const useFestivalStore = defineStore('festival', {
   state: () => ({
     cycles: [] as Cycle[],
@@ -129,6 +225,10 @@ export const useFestivalStore = defineStore('festival', {
         this.screenings = structuredClone(mockScreenings)
         this.usingMocks = true
       }
+
+      const hydrated = applyPersistedUiState(this.films, this.screenings)
+      this.films = hydrated.films
+      this.screenings = hydrated.screenings
     },
     async bootstrap() {
       this.loading = true
@@ -143,20 +243,23 @@ export const useFestivalStore = defineStore('festival', {
         const hasRealData = cycles.length > 0 || films.length > 0 || screenings.length > 0
         if (!hasRealData) {
           this.cycles = sanitizeCycles(mockCycles)
-          this.films = sanitizeFilms(mockFilms)
-          this.screenings = mockScreenings
+          const hydrated = applyPersistedUiState(sanitizeFilms(mockFilms), mockScreenings)
+          this.films = hydrated.films
+          this.screenings = hydrated.screenings
           this.usingMocks = true
           return
         }
 
         this.cycles = sanitizeCycles(cycles)
-        this.films = sanitizeFilms(films)
-        this.screenings = screenings
+        const hydrated = applyPersistedUiState(sanitizeFilms(films), screenings)
+        this.films = hydrated.films
+        this.screenings = hydrated.screenings
         this.usingMocks = false
       } catch {
         this.cycles = sanitizeCycles(mockCycles)
-        this.films = sanitizeFilms(mockFilms)
-        this.screenings = mockScreenings
+        const hydrated = applyPersistedUiState(sanitizeFilms(mockFilms), mockScreenings)
+        this.films = hydrated.films
+        this.screenings = hydrated.screenings
         this.usingMocks = true
         this.loadError = 'Impossible de charger les données réelles. Mode démo activé.'
       } finally {
@@ -168,6 +271,7 @@ export const useFestivalStore = defineStore('festival', {
       const target = this.films.find((film) => film.id === filmId)
       if (target) {
         target.priority = priority
+        persistUiState(this.films, this.screenings)
       }
     },
     updateCyclePriority(cycleId: number, priority: Priority) {
@@ -188,7 +292,9 @@ export const useFestivalStore = defineStore('festival', {
       if (!this.usingMocks) {
         await api.updateScreeningSelection(screeningId, status)
         const screenings = await api.listScreenings()
-        this.screenings = screenings
+        const hydrated = applyPersistedUiState(this.films, screenings)
+        this.screenings = hydrated.screenings
+        persistUiState(this.films, this.screenings)
         return
       }
 
@@ -209,6 +315,7 @@ export const useFestivalStore = defineStore('festival', {
       }
 
       this.screenings = recomputeScreeningStates(this.screenings)
+      persistUiState(this.films, this.screenings)
     },
   },
 })

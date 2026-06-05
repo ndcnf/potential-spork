@@ -227,10 +227,11 @@ Le build a déjà été utilisé comme garde-fou tout au long des dernières it�
 
 Ordre conseillé :
 
-1. compléter les états guidés restants, surtout `error` distinct du fallback mock
-2. poursuivre l’allègement de `Planning` si de nouveaux points de friction apparaissent dans la timeline
-3. garder `Trous` hors scope jusqu'à une V2 ou V3 explicite
-4. ne retoucher la copy qu'à la marge, sauf si un vrai problème de compréhension réapparaît
+1. garantir que les choix utilisateur survivent à un refresh
+2. compléter les états guidés restants, surtout `error` distinct du fallback mock
+3. poursuivre l’allègement de `Planning` si de nouveaux points de friction apparaissent dans la timeline
+4. garder `Trous` hors scope jusqu'à une V2 ou V3 explicite
+5. ne retoucher la copy qu'à la marge, sauf si un vrai problème de compréhension réapparaît
 
 Déjà acté et implémenté dans le frontend :
 
@@ -240,6 +241,7 @@ Déjà acté et implémenté dans le frontend :
 - ton UI unifié au `tu`, avec accents rétablis sur les libellés visibles
 - skeletons de chargement ajoutés sur les vues actives
 - feedbacks de transition ajoutés sur les changements de priorité et les actions sur les séances
+- persistance locale minimale en place pour les priorités film et les sélections de séances
 
 Pour la suite immédiate, la roadmap de référence reste :
 
@@ -323,6 +325,23 @@ Pour les vues cœur actives (`Films`, `Planning`), les états suivants doivent �
 - transition feedback
 
 L'absence de ces états n'est pas un détail visuel. C'est une dette UX structurelle.
+
+### Persistance utilisateur
+
+Décision désormais actée :
+- les choix utilisateur ne doivent plus être perdus après un refresh simple de page.
+
+Implémentation courante :
+- persistance locale via `localStorage`
+- réhydratation au bootstrap du store frontend
+
+Couverture minimale actuelle :
+- priorité des films
+- sélection des séances
+
+Point de vigilance :
+- cette persistance est locale au navigateur courant,
+- elle ne remplace pas une vraie synchronisation serveur si celle-ci devient un enjeu plus tard.
 
 ---
 

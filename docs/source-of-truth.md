@@ -254,6 +254,23 @@ Point critique :
 - le fallback mock ne doit pas masquer un vrai état `error`,
 - un échec réel de chargement doit être compréhensible et visible comme tel.
 
+### Persistance minimale requise
+
+Le produit ne doit pas faire perdre le travail utilisateur au premier refresh.
+
+Conséquence :
+- les choix locaux essentiels doivent être conservés côté client,
+- au minimum :
+  - priorité des films,
+  - sélection des séances.
+
+Implémentation simple acceptée :
+- `localStorage`
+- ou persistance équivalente légère.
+
+Ce sujet est structurel.
+Ce n’est pas un confort secondaire.
+
 ---
 
 ## 9. Règles de hiérarchie visuelle
@@ -305,7 +322,9 @@ Pour les prochaines itérations, cela implique :
    - error,
    - feedback de transition.
 
-4. Réserver `pas de séance prévue` aux seuls `Immanquables`.
+4. Garantir une persistance locale minimale des choix utilisateur.
+
+5. Réserver `pas de séance prévue` aux seuls `Immanquables`.
 
 ---
 
@@ -318,6 +337,7 @@ Pour les prochaines itérations, cela implique :
 - pas de segmentation lourde des films par statuts dans chaque cycle
 - `pas de séance prévue` = `Immanquable` uniquement
 - vrais états `empty/loading/error` obligatoires
+- pas de perte de travail au refresh
 
 Fin.
 
