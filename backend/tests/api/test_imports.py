@@ -8,6 +8,12 @@ def test_import_catalog_accepts_minimal_payload(client, monkeypatch) -> None:
             "cycles_created": 1,
             "films_created": 2,
             "films_updated": 3,
+            "venues_created": 0,
+            "venues_updated": 0,
+            "screenings_created": 0,
+            "screenings_updated": 0,
+            "warnings_count": 0,
+            "errors_count": 0,
         },
     )
 
@@ -18,6 +24,12 @@ def test_import_catalog_accepts_minimal_payload(client, monkeypatch) -> None:
         "cycles_created": 1,
         "films_created": 2,
         "films_updated": 3,
+        "venues_created": 0,
+        "venues_updated": 0,
+        "screenings_created": 0,
+        "screenings_updated": 0,
+        "warnings_count": 0,
+        "errors_count": 0,
     }
 
 
@@ -31,6 +43,12 @@ def test_import_catalog_accepts_schedule_url(client, monkeypatch) -> None:
             "cycles_created": 0,
             "films_created": 0,
             "films_updated": 0,
+            "venues_created": 0,
+            "venues_updated": 0,
+            "screenings_created": 0,
+            "screenings_updated": 0,
+            "warnings_count": 0,
+            "errors_count": 0,
         }
 
     monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog", fake_import_nifff_catalog)

@@ -899,6 +899,48 @@ Grâce à cette étape :
 
 Autrement dit, le pipeline complet existe maintenant conceptuellement aussi pour les screenings, même si les heuristiques HTML devront encore être durcies sur de vrais cas source.
 
+## Import Report Now Carries Operational Counters
+
+Le backend expose maintenant un résumé d’import plus utile, même avant d’avoir les vraies données finales.
+
+### Current counters
+
+Le résumé d’import remonte désormais :
+
+- `cycles_created`
+- `films_created`
+- `films_updated`
+- `venues_created`
+- `venues_updated`
+- `screenings_created`
+- `screenings_updated`
+- `warnings_count`
+- `errors_count`
+
+### Why this matters now
+
+Même avec des données Wayback non parfaitement fidèles, ces compteurs sont précieux pour :
+
+- détecter une duplication anormale
+- vérifier que des screenings remontent bien dans le pipeline
+- voir rapidement si le parse produit beaucoup d’objets mais peu de persistence
+- repérer des warnings structurels lors d’un essai sur snapshot historique
+
+### About Wayback data
+
+Des snapshots Wayback de l’année passée sont utiles, même s’ils ne sont pas 1:1 avec la version courante.
+
+Bon usage :
+
+- en faire des fixtures réalistes de non-régression
+- tester la robustesse des heuristiques DOM
+- valider la forme générale du pipeline
+
+À ne pas faire :
+
+- considérer ces snapshots comme vérité métier finale
+- verrouiller des sélecteurs trop spécifiques uniquement à cette version archivée
+
 ## Screening Selection Rules
 
 Ces règles doivent être documentées et testées côté backend. Elles ne doivent pas dériver d’un comportement opportuniste du frontend.

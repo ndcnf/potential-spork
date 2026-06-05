@@ -59,6 +59,8 @@ def test_import_nifff_catalog_creates_cycles_and_films(db_session: Session, monk
     assert result.cycles_created == 1
     assert result.films_created == 1
     assert result.films_updated == 0
+    assert result.venues_created == 0
+    assert result.screenings_created == 0
     assert cycle is not None
     assert film is not None
     assert film.cycle_id == cycle.id
@@ -129,6 +131,8 @@ def test_import_nifff_catalog_persists_venues_and_screenings_from_bundle(db_sess
     )
 
     assert result.films_created == 1
+    assert result.venues_created == 1
+    assert result.screenings_created == 1
     assert film is not None
     assert venue is not None
     assert screening is not None
@@ -159,9 +163,10 @@ def test_import_nifff_catalog_logs_warning_when_screening_film_is_unknown(
     monkeypatch.setattr("app.services.import_nifff.import_catalog", lambda source, year: (bundle, fake_report()))
 
     with caplog.at_level("WARNING"):
-        import_nifff_catalog(db=db_session, year=2025)
+        result = import_nifff_catalog(db=db_session, year=2025)
 
     assert any("Skipping screening import because film source key is unknown" in message for message in caplog.messages)
+    assert result.warnings_count == 1
 
 
 def test_import_nifff_catalog_skips_invalid_cards(db_session: Session, monkeypatch) -> None:
@@ -174,4 +179,5 @@ def test_import_nifff_catalog_skips_invalid_cards(db_session: Session, monkeypat
 
     assert result.cycles_created == 0
     assert result.films_created == 0
+    assert result.warnings_count == 0
     assert db_session.scalars(select(Film)).all() == []

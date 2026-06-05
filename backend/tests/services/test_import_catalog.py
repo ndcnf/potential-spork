@@ -39,4 +39,6 @@ def test_import_catalog_returns_bundle_and_report() -> None:
     assert bundle.source_name == "nifff_html"
     assert report.source_name == "nifff_html"
     assert report.year == 2025
+    assert report.cycles_created == 0
+    assert report.screenings_created == 0
     assert report.warnings == []
