@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from datetime import timedelta
 
 from sqlalchemy.orm import Session
@@ -35,7 +36,10 @@ def test_screenings_overlap_returns_true_for_overlapping_ranges(screening_factor
 
 
 def test_derive_screening_state_returns_past_for_elapsed_screening(screening_factory, aware_datetime_factory) -> None:
-    screening = screening_factory(starts_at=aware_datetime_factory(-48), ends_at=aware_datetime_factory(-47))
+    screening = screening_factory(
+        starts_at=datetime(2000, 1, 1, 18, 0, tzinfo=UTC),
+        ends_at=datetime(2000, 1, 1, 20, 0, tzinfo=UTC),
+    )
 
     assert derive_screening_state(screening, [screening]) == "past"
 

@@ -7,11 +7,13 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.api.deps import db_session as db_session_dependency
-from app.main import app
+from app.main import create_app
 
 
 @pytest.fixture
 def client(session_factory: sessionmaker[Session]) -> Iterator[TestClient]:
+    app = create_app(run_startup_hooks=False)
+
     def override_db_session() -> Iterator[Session]:
         with session_factory() as session:
             yield session

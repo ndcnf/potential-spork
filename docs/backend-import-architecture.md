@@ -625,6 +625,56 @@ Puis les mapper proprement vers :
 - `404` si l’entité demandée n’existe pas
 - `409` si une règle métier ou une collision stable empêche l’opération
 
+## App Factory And Test Isolation
+
+Le backend ne doit pas forcer les tests API à dépendre du moteur global de production ou de développement.
+
+### Problem To Avoid
+
+Un `app = FastAPI(...)` global avec startup branché directement sur l’engine global crée un couplage dangereux :
+
+- `TestClient` déclenche les hooks de startup
+- ces hooks peuvent créer ou migrer la vraie base locale
+- les tests deviennent moins déterministes
+- la suite de tests peut modifier un environnement développeur par erreur
+
+### Required Pattern
+
+Préférer :
+
+```python
+def create_app(*, run_startup_hooks: bool = True) -> FastAPI:
+    app = FastAPI(...)
+    ...
+    if run_startup_hooks:
+        @app.on_event("startup")
+        def on_startup() -> None:
+            ...
+    return app
+
+
+app = create_app()
+```
+
+But :
+
+- garder un point d’entrée standard pour `uvicorn`
+- permettre aux tests d’instancier une app sans startup side effects
+- injecter proprement les dépendances de test
+
+### Test Rule
+
+Les tests API doivent :
+
+- utiliser `create_app(run_startup_hooks=False)`
+- surcharger `db_session`
+- utiliser une SQLite de test isolée
+- ne jamais dépendre de l’engine global de `app.core.database`
+
+### Practical Consequence
+
+Tant que ce pattern n’est pas respecté, la suite API est fragile même si les assertions métier sont bonnes.
+
 ## Screening Selection Rules
 
 Ces règles doivent être documentées et testées côté backend. Elles ne doivent pas dériver d’un comportement opportuniste du frontend.
