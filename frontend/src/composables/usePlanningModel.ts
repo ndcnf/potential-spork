@@ -508,7 +508,7 @@ export function usePlanningModel() {
         hints.push(`Tu as déjà retenu ${formatDayChipLabel(selectedSibling.dayKey)} à ${selectedSibling.starts_at.slice(11, 16).replace(':', 'h')}`)
       }
     } else if (conflictingSelected?.starts_at) {
-      hints.push(`Conflit avec ${conflictingSelected.film_title}, ${formatDayChipLabel(conflictingSelected.dayKey)} ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}`)
+      hints.push(`Potentiel conflit avec ${conflictingSelected.film_title}, ${formatDayChipLabel(conflictingSelected.dayKey)} ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}`)
     }
 
     return hints.slice(0, 2)
@@ -531,7 +531,7 @@ export function usePlanningModel() {
     }
 
     if (conflictingSelected?.starts_at) {
-      return `Choisir cette séance entrera en conflit avec ${conflictingSelected.film_title}, ${formatDayChipLabel(conflictingSelected.dayKey)} ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}.`
+      return `Choisir cette séance créerait un conflit avec ${conflictingSelected.film_title}, ${formatDayChipLabel(conflictingSelected.dayKey)} ${conflictingSelected.starts_at.slice(11, 16).replace(':', 'h')}.`
     }
 
     if (screening.isMustLock) {
