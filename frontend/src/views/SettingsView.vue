@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import { api } from '@/services/api'
 import { useFestivalStore } from '@/stores/festival'
 import { useSettingsStore } from '@/stores/settings'
+import type { DataSourceMode } from '@/types'
 
 const festivalStore = useFestivalStore()
 const settingsStore = useSettingsStore()
+const sourceSwitchPending = ref(false)
+const sourceSwitchError = ref<string | null>(null)
+const sourceSwitchSummary = ref<string | null>(null)
 
 onMounted(() => {
   settingsStore.load()
@@ -62,6 +67,42 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
   settingsStore.setAvoidBeforeMinutes(parseInputTime(beforeValue))
   settingsStore.setAvoidAfterMinutes(parseInputTime(afterValue))
 }
+
+const currentSourceDescription = computed(() =>
+  settingsStore.dataSourceMode === 'prod'
+    ? 'Live (prod) : utilise le programme courant quand il est disponible.'
+    : 'Démo (archive) : utile avant le dévoilement complet du programme.',
+)
+
+async function switchDataSource(mode: DataSourceMode) {
+  if (sourceSwitchPending.value || settingsStore.dataSourceMode === mode) {
+    return
+  }
+
+  sourceSwitchPending.value = true
+  sourceSwitchError.value = null
+  sourceSwitchSummary.value = null
+
+  try {
+    settingsStore.setDataSourceMode(mode)
+    const summary = await api.importCatalog(2025, mode)
+    await festivalStore.bootstrap()
+    sourceSwitchSummary.value = [
+      `${summary.films_created + summary.films_updated} film(s) traités`,
+      `${summary.screenings_created + summary.screenings_updated} séance(s) traitée(s)`,
+      summary.warnings_count > 0 ? `${summary.warnings_count} warning(s)` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ')
+  } catch {
+    sourceSwitchError.value =
+      mode === 'prod'
+        ? 'Impossible de charger la source live pour le moment.'
+        : 'Impossible de recharger la source démo archive pour le moment.'
+  } finally {
+    sourceSwitchPending.value = false
+  }
+}
 </script>
 
 <template>
@@ -102,6 +143,32 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
     <section v-if="festivalStore.loadError" class="notice-panel notice-panel--warning">
       <h3>Mode démo</h3>
       <p class="page-copy">{{ festivalStore.loadError }}</p>
+    </section>
+
+    <section class="settings__panel">
+      <header class="settings__section-header">
+        <div>
+          <h3>Source de données</h3>
+          <p class="page-copy">Réglage technique secondaire. La source démo s'appuie sur l'archive ; la source live sert le programme courant dès qu'il est disponible.</p>
+        </div>
+      </header>
+
+      <p class="settings__status">{{ currentSourceDescription }}</p>
+
+      <div class="settings__choice-group settings__choice-group--start" role="radiogroup" aria-label="Source de données">
+        <button type="button" class="settings__choice-pill" :class="{ 'settings__choice-pill--active': settingsStore.dataSourceMode === 'demo' }" :disabled="sourceSwitchPending" @click="switchDataSource('demo')">
+          <span class="settings__choice-mark" aria-hidden="true">D</span>
+          <span>Démo (archive)</span>
+        </button>
+        <button type="button" class="settings__choice-pill" :class="{ 'settings__choice-pill--active': settingsStore.dataSourceMode === 'prod' }" :disabled="sourceSwitchPending" @click="switchDataSource('prod')">
+          <span class="settings__choice-mark" aria-hidden="true">L</span>
+          <span>Live (prod)</span>
+        </button>
+      </div>
+
+      <p v-if="sourceSwitchPending" class="settings__status">Import en cours puis rechargement du catalogue…</p>
+      <p v-else-if="sourceSwitchSummary" class="settings__status">{{ sourceSwitchSummary }}</p>
+      <p v-if="sourceSwitchError" class="settings__status settings__status--error">{{ sourceSwitchError }}</p>
     </section>
 
     <section class="settings__panel">

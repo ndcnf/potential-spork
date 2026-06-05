@@ -1,4 +1,4 @@
-import type { Cycle, Film, Screening } from '@/types'
+import type { Cycle, DataSourceMode, Film, ImportSummary, Screening } from '@/types'
 
 const API_BASE = 'http://localhost:8000/api'
 
@@ -24,9 +24,9 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ selection_status }),
     }),
-  importCatalog: (year = 2025) =>
-    readJson('/imports/nifff/catalog', {
+  importCatalog: (year = 2025, source_mode: DataSourceMode = 'demo') =>
+    readJson<ImportSummary>('/imports/nifff/catalog', {
       method: 'POST',
-      body: JSON.stringify({ year }),
+      body: JSON.stringify({ year, source_mode }),
     }),
 }

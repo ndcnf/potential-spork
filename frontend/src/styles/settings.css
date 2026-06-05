@@ -142,6 +142,10 @@
   gap: var(--space-sm);
 }
 
+.settings__choice-group--start {
+  justify-content: flex-start;
+}
+
 .settings__choice-pill {
   display: inline-flex;
   align-items: center;
@@ -205,6 +209,10 @@
 .settings__status,
 .planning__status-note {
   color: var(--color-text-muted);
+}
+
+.settings__status--error {
+  color: var(--color-danger-text, #ff8f8f);
 }
 
 @media (max-width: 960px) {

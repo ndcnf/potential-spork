@@ -1,8 +1,13 @@
 import { defineStore } from 'pinia'
 
-import type { RecommendationSettings } from '@/types'
+import type { DataSourceMode, RecommendationSettings } from '@/types'
 
 const STORAGE_KEY = 'potential-spork-settings'
+
+type PersistedSettings = {
+  recommendationSettings: RecommendationSettings
+  dataSourceMode: DataSourceMode
+}
 
 const defaultSettings = (): RecommendationSettings => ({
   enabled: false,
@@ -14,6 +19,7 @@ const defaultSettings = (): RecommendationSettings => ({
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
     recommendationSettings: defaultSettings() as RecommendationSettings,
+    dataSourceMode: 'demo' as DataSourceMode,
     loaded: false,
   }),
   getters: {
@@ -43,16 +49,19 @@ export const useSettingsStore = defineStore('settings', {
       const raw = window.localStorage.getItem(STORAGE_KEY)
       if (raw) {
         try {
-          const parsed = JSON.parse(raw) as RecommendationSettings
+          const parsed = JSON.parse(raw) as Partial<PersistedSettings>
+          const persistedRecommendationSettings = parsed.recommendationSettings ?? (parsed as Partial<RecommendationSettings>)
           this.recommendationSettings = {
             ...defaultSettings(),
-            ...parsed,
-            preferredVenueScores: parsed.preferredVenueScores ?? {},
-            avoidBeforeMinutes: parsed.avoidBeforeMinutes ?? null,
-            avoidAfterMinutes: parsed.avoidAfterMinutes ?? null,
+            ...persistedRecommendationSettings,
+            preferredVenueScores: persistedRecommendationSettings?.preferredVenueScores ?? {},
+            avoidBeforeMinutes: persistedRecommendationSettings?.avoidBeforeMinutes ?? null,
+            avoidAfterMinutes: persistedRecommendationSettings?.avoidAfterMinutes ?? null,
           }
+          this.dataSourceMode = parsed.dataSourceMode === 'prod' ? 'prod' : 'demo'
         } catch {
           this.recommendationSettings = defaultSettings()
+          this.dataSourceMode = 'demo'
         }
       }
 
@@ -62,7 +71,11 @@ export const useSettingsStore = defineStore('settings', {
       if (typeof window === 'undefined') {
         return
       }
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(this.recommendationSettings))
+      const payload: PersistedSettings = {
+        recommendationSettings: this.recommendationSettings,
+        dataSourceMode: this.dataSourceMode,
+      }
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     },
     setRecommendationEnabled(enabled: boolean) {
       this.recommendationSettings.enabled = enabled
@@ -82,6 +95,10 @@ export const useSettingsStore = defineStore('settings', {
     },
     setAvoidAfterMinutes(value: number | null) {
       this.recommendationSettings.avoidAfterMinutes = value
+      this.persist()
+    },
+    setDataSourceMode(mode: DataSourceMode) {
+      this.dataSourceMode = mode
       this.persist()
     },
     resetRecommendationSettings() {

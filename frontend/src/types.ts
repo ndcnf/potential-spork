@@ -1,10 +1,23 @@
 export type Priority = 'unreviewed' | 'ignore' | 'low' | 'medium' | 'high' | 'must-see'
+export type DataSourceMode = 'demo' | 'prod'
 
 export interface RecommendationSettings {
   enabled: boolean
   preferredVenueScores: Record<string, number>
   avoidBeforeMinutes: number | null
   avoidAfterMinutes: number | null
+}
+
+export interface ImportSummary {
+  cycles_created: number
+  films_created: number
+  films_updated: number
+  venues_created: number
+  venues_updated: number
+  screenings_created: number
+  screenings_updated: number
+  warnings_count: number
+  errors_count: number
 }
 
 export interface Cycle {
