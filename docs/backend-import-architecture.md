@@ -758,6 +758,320 @@ Recommandation :
 - définir un mapping de migration explicite
 - supprimer progressivement les états legacy du contrat public
 
+## Concrete Migration Plan
+
+Objectif : migrer sans casser le comportement utile déjà en place, tout en augmentant la testabilité et l’agnosticisme de la source.
+
+Principe d’exécution :
+
+- une passe = une responsabilité claire
+- comportement métier inchangé tant que possible
+- tests ajoutés avant ou pendant chaque passe
+- pas de refonte ORM + parsing + API dans la même passe
+
+### Phase 0 — Baseline de sécurité
+
+But : arrêter de refactorer à l’aveugle.
+
+À faire :
+
+1. exécuter et stabiliser la suite de tests backend
+2. ajouter les dépendances de qualité minimales (`pytest`, puis idéalement `ruff`, `mypy`)
+3. créer des fixtures HTML réalistes pour listing et détail
+4. documenter la commande unique de validation backend
+
+Livrables attendus :
+
+- suite de tests exécutable localement
+- fixtures de parsing versionnées
+- point d’entrée de validation clair pour les prochaines passes
+
+### Phase 1 — Couvrir le comportement actuel par des tests
+
+But : figer l’existant utile avant de déplacer les responsabilités.
+
+À tester immédiatement :
+
+#### Parsing / source
+
+- `build_session()`
+- `fetch_html()`
+- `extract_runtime()`
+- `extract_year()`
+- `parse_listing_card()`
+- `enrich_from_detail()`
+- résolution d’URL absolue
+- champs absents
+
+#### Services métier
+
+- `screenings_overlap()`
+- `derive_screening_state()`
+- `sync_film_screening_status()`
+- `build_calendar()`
+
+#### API minimale
+
+- `GET /health`
+- `GET /api/films`
+- `PATCH /api/films/{id}`
+- `GET /api/screenings`
+- `PATCH /api/screenings/{id}`
+- `GET /api/planning`
+- `GET /api/exports/confirmed.ics`
+
+Livrables attendus :
+
+- couverture de non-régression sur les helpers critiques
+- premiers tests API de contrat
+- suppression des zones non testées les plus risquées
+
+### Phase 2 — Assainir l’import actuel sans changer son résultat
+
+But : garder le même import fonctionnel, mais retirer les anti-patterns.
+
+À faire :
+
+1. supprimer `except requests.RequestException: pass`
+2. introduire des warnings d’import explicites
+3. centraliser les erreurs réseau avec exceptions nommées
+4. préparer un rapport d’import structuré avec `warnings` et `errors`
+
+À ne pas faire dans cette phase :
+
+- changer encore le schéma SQL principal
+- introduire l’upsert repository sur toutes les entités d’un coup
+
+Livrables attendus :
+
+- import plus observable
+- erreurs réseau non silencieuses
+- base prête pour un vrai orchestrateur d’import
+
+### Phase 3 — Introduire le modèle canonique d’import
+
+But : couper le lien direct entre parsing source-specific et modèle métier SQLAlchemy.
+
+À créer :
+
+- `app/schemas/imported.py` ou `app/import_models.py`
+
+Types minimum :
+
+- `ImportedCycle`
+- `ImportedFilm`
+- `ImportedVenue`
+- `ImportedScreening`
+- `ImportReport`
+
+Règle :
+
+- aucun router FastAPI ne dépend de ces modèles pour l’instant
+- le service d’import, lui, doit en dépendre explicitement
+
+Livrables attendus :
+
+- contrat canonique source-agnostic
+- base stable pour supporter HTML puis API sans refonte métier
+
+### Phase 4 — Introduire un contrat de source explicite
+
+But : permettre plusieurs implémentations de source sans changer le service métier.
+
+À créer :
+
+- `app/sources/base.py`
+
+Avec par exemple :
+
+- `FestivalSource`
+- ou des contrats séparés `fetch_cycles`, `fetch_films`, `fetch_screenings`
+
+Première implémentation :
+
+- `NifffHtmlSource`
+
+Livrables attendus :
+
+- dépendance du service sur un protocole et non sur un module HTML concret
+- porte ouverte à une future source API ou snapshot local
+
+### Phase 5 — Ajouter un normalizer HTML
+
+But : transformer les objets parser-specific en objets canoniques.
+
+À créer :
+
+- `app/sources/nifff_html/normalizer.py`
+
+Responsabilités :
+
+- construire les `source_key`
+- normaliser les chaînes
+- rendre les URLs absolues
+- porter les durées et années correctement
+- préparer les structures d’upsert
+
+Règle :
+
+- aucune écriture DB dans le normalizer
+
+Livrables attendus :
+
+- séparation nette parser / normalizer
+- mapping métier testable sans SQLAlchemy
+
+### Phase 6 — Extraire les repositories
+
+But : sortir les writes SQLAlchemy du service d’import.
+
+À créer :
+
+- `app/repositories/cycles.py`
+- `app/repositories/films.py`
+- `app/repositories/venues.py`
+- `app/repositories/screenings.py`
+
+Responsabilités :
+
+- lookup par clé stable
+- upsert
+- règles de mise à jour
+- `flush()` contrôlés
+
+Attention :
+
+- ne pas faire de `select` profonds dans des boucles sans nécessité
+- préparer du préchargement par lots si le catalogue grossit
+
+Livrables attendus :
+
+- SQLAlchemy isolé
+- import service plus lisible et plus testable
+
+### Phase 7 — Créer un orchestrateur d’import unique
+
+But : déplacer la coordination complète dans un vrai service métier.
+
+À créer :
+
+- `app/services/import_catalog.py`
+
+Responsabilités :
+
+- choisir la source
+- fetcher
+- parser
+- normaliser
+- appeler les repositories
+- produire le rapport final
+
+Le fichier legacy `services/import_nifff.py` doit alors :
+
+- soit disparaître
+- soit devenir un simple wrapper transitoire
+
+Livrables attendus :
+
+- orchestration centralisée
+- code d’import testable de bout en bout avec mocks ciblés
+
+### Phase 8 — Introduire les `source_key` en base
+
+But : garantir l’idempotence autrement que par des heuristiques fragiles.
+
+À faire :
+
+1. ajouter progressivement `source_key` sur `Cycle`, `Film`, `Venue`, `Screening`
+2. ajouter les contraintes/index utiles
+3. documenter précisément comment chaque clé est construite
+4. tester les collisions et réimports
+
+Attention :
+
+- migration SQLite à soigner proprement
+- si la pression d’évolution augmente, évaluer PostgreSQL plutôt que multiplier les contournements SQLite
+
+Livrables attendus :
+
+- idempotence documentée
+- imports rejouables sans duplication silencieuse
+
+### Phase 9 — Aligner le backend sur les règles produit finales
+
+But : supprimer les contradictions entre doc produit et code backend.
+
+À faire :
+
+1. retirer progressivement `Cycle.priority`
+2. introduire un contrat de priorité produit clair
+3. conserver temporairement un mapping legacy si nécessaire
+4. nettoyer `/gaps` si le placeholder ne correspond plus au produit
+
+Livrables attendus :
+
+- backend cohérent avec `source-of-truth.md`
+- disparition graduelle des valeurs legacy du contrat public
+
+### Phase 10 — Finaliser la documentation et les garde-fous CI
+
+But : rendre le système maintenable, pas seulement fonctionnel.
+
+À faire :
+
+1. documenter les contrats API finaux
+2. documenter les invariants DB
+3. documenter la stratégie de snapshots HTML
+4. exécuter automatiquement tests + lint dans CI
+
+Recommandation minimale CI :
+
+- `python -m pytest`
+- `ruff check`
+- `ruff format --check`
+- `mypy` si le typage strict est enclenché
+
+## Recommended File Targets By Phase
+
+### Court terme
+
+- `backend/tests/sources/nifff_html/test_client.py`
+- `backend/tests/sources/nifff_html/test_parser.py`
+- `backend/tests/core/test_database.py`
+- nouveaux tests pour `services/screenings.py`
+- nouveaux tests pour `services/export_ics.py`
+- nouveaux tests API via `TestClient`
+
+### Moyen terme
+
+- `backend/app/sources/base.py`
+- `backend/app/sources/nifff_html/normalizer.py`
+- `backend/app/services/import_catalog.py`
+- `backend/app/repositories/*.py`
+- `backend/app/schemas/imported.py`
+
+### Refactor legacy à faire disparaître
+
+- `backend/app/services/import_nifff.py`
+- `backend/app/api/routes/imports.py` comme simple façade fine
+- `backend/app/models/cycle.py` pour retirer la priorité cycle
+- `backend/app/schemas/common.py` pour sortir des priorités legacy
+
+## Recommended Order If Time Is Tight
+
+Si tu dois maximiser le ratio valeur / risque, l’ordre strict recommandé est :
+
+1. tests unitaires et API sur l’existant
+2. suppression des erreurs silencieuses d’import
+3. modèle canonique d’import
+4. contrat de source
+5. normalizer
+6. repositories
+7. `source_key`
+8. nettoyage du legacy métier
+
+Cet ordre évite le refactor cosmétique. Il sécurise d’abord le comportement, puis coupe les dépendances fragiles, puis aligne enfin le modèle produit.
+
 ## Current Model Gaps To Anticipate
 
 Le modèle SQLAlchemy actuel n’est pas encore idéal pour ce design.
