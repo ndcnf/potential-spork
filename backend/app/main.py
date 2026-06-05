@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import cycles, export, films, gaps, imports, planning, screenings
 from app.core.config import settings
-from app.core.database import Base, engine
+from app.core.database import Base, engine, run_sqlite_schema_upgrades
 
 
 app = FastAPI(title=settings.app_name)
@@ -20,6 +20,7 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
+    run_sqlite_schema_upgrades()
 
 
 @app.get("/health")

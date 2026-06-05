@@ -16,6 +16,11 @@ Le frontend courant assume :
 - navigation sans étapes numérotées
 - ton UI homogène au `tu`
 - mode démo explicite si les données réelles ne chargent pas
+- titre de marque `PLANIFFFICATEUR`
+- `Paramètres` renvoyé en navigation secondaire avec icône
+- export iCal retiré du header global
+- fond plus noir avec shell partagé `content-frame`
+- mention Solar dans le footer global
 - persistance locale au refresh pour :
   - priorités film
   - sélections de séances
@@ -24,9 +29,12 @@ Le frontend courant assume :
 
 - header avec progression visible
 - compteurs cliquables comme filtres légers
+- compteurs cumulables
+- compteurs calculés sur l’ensemble des films, pas sur la vue filtrée
 - compteur `Non merci` présent
 - structure par cycle conservée
 - liste plate de films par cycle
+- pas de réorganisation des cartes lors d’un choix
 - cartes film en grille :
   - colonne gauche = titre + contenu éditorial
   - colonne droite = contrôle de qualification
@@ -35,6 +43,7 @@ Le frontend courant assume :
 - `Non merci` est plus discret dans la liste
 - `PrioritySelect` visible en haut de carte
 - warning `pas de séance prévue` réservé à `Immanquable`
+- recherche / tri / masquage dédiés retirés de la vue
 
 ### `Planning`
 
@@ -44,6 +53,14 @@ Le frontend courant assume :
 - note de conséquence visible seulement dans les cas utiles
 - action directe `Ignorer` disponible dans la timeline
 - panneau détail non sticky
+- centrage horizontal aligné sur les autres pages
+- recommandations visibles surtout dans le panneau détail, pas dans la timeline elle-même
+- distinction explicite entre `Conflit` et `Conflit potentiel`
+- recommandations protégées contre :
+  - conflits avec des séances déjà retenues
+  - conflits entre recommandations concurrentes
+- logique horaire des recommandations alignée sur la journée festival
+- `must-lock` limité à la vraie dernière séance viable
 - panneau détail conserve :
   - poster
   - cycle
@@ -51,6 +68,7 @@ Le frontend courant assume :
   - réalisation
   - casting
   - infos séance
+  - comparatif `Pour cette séance` / `Pour pas cette séance`
 - suppression des pastilles dans les pills d’état
 - suppression des compteurs redondants dans les headers de groupes timeline/visualisation
 
@@ -59,6 +77,8 @@ Le frontend courant assume :
 - vue secondaire
 - centrée sur les recommandations du planning
 - persistance locale déjà en place
+- résumé visible des signaux qui font remonter une séance
+- préférences salles réduites à 3 états simples
 
 ## Files To Know
 
@@ -94,4 +114,5 @@ Composants :
 
 - la zone séance du header `Films` peut encore être clarifiée
 - la hiérarchie visuelle de `Planning` peut encore être simplifiée
+- le wording des recommandations et des conflits potentiels doit encore être surveillé sur cas réels
 - les états `error` réels vs mode démo doivent rester surveillés dans les prochaines passes
