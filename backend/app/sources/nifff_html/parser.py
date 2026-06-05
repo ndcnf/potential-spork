@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import datetime
 from urllib.parse import urljoin
@@ -42,7 +43,8 @@ WAYBACK_PREFIX_RE = re.compile(r"https?://web\.archive\.org/web/\d+(?:[a-z_]+)?/
 
 
 def slugify(value: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-z0-9]+", "-", normalized.lower()).strip("-")
     return slug or "unknown"
 
 
