@@ -24,7 +24,7 @@ class Film(Base):
     age_rating: Mapped[str | None] = mapped_column(String(32), nullable=True)
     poster_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    priority: Mapped[str] = mapped_column(String(32), default="medium")
+    priority: Mapped[str] = mapped_column(String(32), default="low")
     cycle_id: Mapped[int | None] = mapped_column(ForeignKey("cycles.id"), nullable=True)
 
     cycle = relationship("Cycle", back_populates="films")

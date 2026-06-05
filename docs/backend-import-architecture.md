@@ -964,6 +964,54 @@ et non :
 
 Ce choix est plus robuste pour la phase actuelle, car le point d’entrée live ne garantit pas forcément le même schéma de query que l’archive.
 
+## Current Regression Fixes And Known Limits
+
+### Film default status on fresh import
+
+Règle produit attendue :
+
+- un film importé arrive en état `À traiter`
+
+Conséquence technique actuelle :
+
+- la priorité par défaut d’un film importé ne doit pas être `medium`
+- elle doit retomber sur l’équivalent legacy de `À traiter`, donc `low`
+
+Règle de migration transitoire appliquée :
+
+- les films nouvellement importés reçoivent `low`
+- les anciennes valeurs par défaut `medium` sont normalisées vers `low` pendant l’upsert
+- les choix explicites existants (`high`, `must-see`, `ignore`) sont préservés
+
+### Runtime display for durations
+
+Dans l’UI, la durée film ne doit pas être affichée brutalement en minutes si la lecture produit attend un format plus humain.
+
+Règle :
+
+- préférer un affichage `2h26` à `146 min` dès que la durée dépasse une heure
+
+### Shorts programs / film packages
+
+Limite connue importante.
+
+Les `film-package` ou programmes de courts ne se comportent pas comme un film simple.
+
+Règle métier à verrouiller :
+
+- le choix se fait par séance / package projeté
+- pas par pseudo-film aplati comme un long métrage standard
+
+Conséquence :
+
+- si un programme shorts apparaît dans la source, il ne faut pas le traiter naïvement comme un film classique sans modéliser le package et ses séances
+
+Statut :
+
+- sujet identifié
+- à corriger explicitement dans le pipeline source/canonique
+- ne pas verrouiller une implémentation fragile en attendant
+
 ## Bundle Persistence Extended
 
 Le wrapper legacy `import_nifff.py` persiste maintenant aussi les `venues` et `screenings` présents dans le bundle canonique.

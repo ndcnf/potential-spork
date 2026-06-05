@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 
-import { formatTimeRange, getFestivalDayKey } from '@/lib/planning'
+import { formatMinutes, formatTimeRange, getFestivalDayKey } from '@/lib/planning'
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import PrioritySelect from '@/components/ui/PrioritySelect.vue'
 import { useFestivalStore } from '@/stores/festival'
@@ -448,7 +448,7 @@ function applyFilmPriority(film: Film, priority: Priority) {
               <p class="film-meta">{{ film.directors || 'Réalisation non renseignée' }}</p>
               <p v-if="film.cast" class="film-cast film-cast--inline">{{ film.cast }}</p>
               <p class="film-meta film-meta--compact">
-                {{ film.countries || 'Pays ?' }} · {{ film.duration_minutes || '?' }} min · {{ film.cycle_name || group.cycle.name }}
+                {{ film.countries || 'Pays ?' }} · {{ formatMinutes(film.duration_minutes) }} · {{ film.cycle_name || group.cycle.name }}
               </p>
             </div>
 

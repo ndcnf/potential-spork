@@ -31,9 +31,11 @@ class FilmRepository:
                 source_key=imported_film.source_key,
                 title=imported_film.title,
                 slug=imported_film.slug,
-                priority="medium",
+                priority="low",
             )
 
+        if film.priority not in {"high", "must-see", "ignore"}:
+            film.priority = "low"
         film.source_key = imported_film.source_key
         film.title = imported_film.title
         film.directors = imported_film.directors
