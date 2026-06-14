@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 
 from app.sources.nifff_html.parser import (
     ParsedFilm,
+    ParsedScreening,
     extract_screenings_from_detail,
     extract_listing_screenings,
     extract_program_path,
@@ -110,6 +111,26 @@ def test_extract_screenings_from_detail_reads_screening_nodes() -> None:
     assert screenings[0].venue_name == "Théâtre"
     assert screenings[0].source_url == "https://nifff.ch/screenings/1"
     assert screenings[0].ticket_url == "https://nifff.ch/tickets/1"
+
+
+def test_enrich_from_detail_keeps_listing_screenings_when_detail_has_none() -> None:
+    parsed = ParsedFilm(
+        title="A Useful Ghost",
+        slug="a-useful-ghost",
+        source_url="https://nifff.ch/prog/2025/film/a-useful-ghost",
+        screenings=[
+            ParsedScreening(
+                starts_at=datetime(2025, 7, 5, 19, 0),
+                ends_at=None,
+                venue_name="Arcades",
+            )
+        ],
+    )
+
+    enriched = enrich_from_detail("<html><body></body></html>", parsed)
+
+    assert len(enriched.screenings) == 1
+    assert enriched.screenings[0].venue_name == "Arcades"
 
 
 def test_extract_program_path_normalizes_wayback_program_url() -> None:

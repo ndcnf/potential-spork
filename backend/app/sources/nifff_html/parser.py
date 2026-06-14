@@ -312,6 +312,7 @@ def parse_listing_card(card: Tag, base_url: str, year: int) -> ParsedFilm | None
 
 def enrich_from_detail(html: str, parsed: ParsedFilm) -> ParsedFilm:
     soup = BeautifulSoup(html, "html.parser")
+    detail_screenings = extract_screenings_from_detail(soup, parsed.source_url)
 
     return ParsedFilm(
         title=parsed.title,
@@ -330,5 +331,5 @@ def enrich_from_detail(html: str, parsed: ParsedFilm) -> ParsedFilm:
         language=field_after_heading(soup, "Langue"),
         age_rating=field_after_heading(soup, "Âge"),
         poster_url=extract_poster_url(soup, parsed.source_url),
-        screenings=extract_screenings_from_detail(soup, parsed.source_url),
+        screenings=detail_screenings or parsed.screenings,
     )
