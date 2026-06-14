@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { screeningsOverlapWithBuffer } from '@/lib/planning'
 import { buildPreviewDataset } from '@/mock/nifff2025Preview'
 import { api } from '@/services/api'
+import { useSettingsStore } from '@/stores/settings'
 import type { Cycle, DataSourceMode, Film, ImportSummary, Priority, Screening } from '@/types'
 
 const STORAGE_KEY = 'potential-spork-festival-ui-state'
@@ -220,6 +221,14 @@ function resetLocalUserChoices(films: Film[], screenings: Screening[]): { films:
   }
 }
 
+function demoDataset() {
+  return {
+    cycles: sanitizeCycles(structuredClone(mockCycles)),
+    films: sanitizeFilms(structuredClone(mockFilms)),
+    screenings: structuredClone(mockScreenings),
+  }
+}
+
 export const useFestivalStore = defineStore('festival', {
   state: () => ({
     cycles: [] as Cycle[],
@@ -244,15 +253,13 @@ export const useFestivalStore = defineStore('festival', {
       }))
     },
     highlightedFilms(state) {
-      const films = state.films.length ? state.films : mockFilms
-      return films.filter((film) => normalizePriority(film.priority) === 'high')
+      return state.films.filter((film) => normalizePriority(film.priority) === 'high')
     },
     visibleScreenings(state) {
-      return state.screenings.length ? state.screenings : mockScreenings
+      return state.screenings
     },
     selectedScreenings(state) {
-      const screenings = state.screenings.length ? state.screenings : mockScreenings
-      return screenings.filter(
+      return state.screenings.filter(
         (screening) => screening.selection_status === 'tentative' || screening.selection_status === 'confirmed',
       )
     },
@@ -294,27 +301,38 @@ export const useFestivalStore = defineStore('festival', {
     },
   },
   actions: {
+    loadDemoData(reason: string | null = null) {
+      const demo = demoDataset()
+      const hydrated = applyPersistedUiState(demo.films, demo.screenings)
+      this.cycles = demo.cycles
+      this.films = hydrated.films
+      this.screenings = hydrated.screenings
+      this.usingMocks = true
+      this.effectiveSourceMode = 'demo'
+      this.sourceFallbackReason = reason
+    },
     ensureWorkingData() {
-      if (!this.cycles.length) {
-        this.cycles = sanitizeCycles(structuredClone(mockCycles))
-      }
-      if (!this.films.length) {
-        this.films = sanitizeFilms(structuredClone(mockFilms))
-      }
-      if (!this.screenings.length) {
-        this.screenings = structuredClone(mockScreenings)
-        this.usingMocks = true
-        this.sourceFallbackReason = 'Aucune donnée backend disponible : démonstration locale activée.'
+      if (!this.cycles.length && !this.films.length && !this.screenings.length) {
+        this.loadDemoData('Aucune donnée disponible : démonstration locale activée.')
       }
 
       const hydrated = applyPersistedUiState(this.films, this.screenings)
       this.films = hydrated.films
       this.screenings = hydrated.screenings
     },
-    async bootstrap() {
+    async bootstrap(sourceMode?: DataSourceMode) {
+      const settingsStore = useSettingsStore()
+      settingsStore.load()
+      const requestedMode = sourceMode ?? settingsStore.dataSourceMode
+
       this.loading = true
       this.loadError = null
       try {
+        if (requestedMode === 'demo') {
+          this.loadDemoData(null)
+          return
+        }
+
         const [cycles, films, screenings] = await Promise.all([
           api.listCycles(),
           api.listFilms(),
@@ -323,12 +341,7 @@ export const useFestivalStore = defineStore('festival', {
 
         const hasRealData = cycles.length > 0 || films.length > 0 || screenings.length > 0
         if (!hasRealData) {
-          this.cycles = sanitizeCycles(mockCycles)
-          const hydrated = applyPersistedUiState(sanitizeFilms(mockFilms), mockScreenings)
-          this.films = hydrated.films
-          this.screenings = hydrated.screenings
-          this.usingMocks = true
-          this.sourceFallbackReason = 'Le backend a répondu sans catalogue exploitable. Démonstration locale activée.'
+          this.loadDemoData('Le backend a répondu sans catalogue exploitable. Démonstration locale activée.')
           return
         }
 
@@ -337,14 +350,12 @@ export const useFestivalStore = defineStore('festival', {
         this.films = hydrated.films
         this.screenings = hydrated.screenings
         this.usingMocks = false
-        this.sourceFallbackReason = null
+        this.effectiveSourceMode = 'prod'
+        this.sourceFallbackReason = screenings.length
+          ? null
+          : 'Le catalogue live est chargé, mais aucune séance exploitable n’est encore disponible.'
       } catch {
-        this.cycles = sanitizeCycles(mockCycles)
-        const hydrated = applyPersistedUiState(sanitizeFilms(mockFilms), mockScreenings)
-        this.films = hydrated.films
-        this.screenings = hydrated.screenings
-        this.usingMocks = true
-        this.sourceFallbackReason = 'Impossible de charger les données réelles. Démonstration locale activée.'
+        this.loadDemoData('Impossible de charger les données réelles. Démonstration locale activée.')
         this.loadError = 'Impossible de charger les données réelles. Démonstration locale activée.'
       } finally {
         this.loading = false
@@ -354,10 +365,16 @@ export const useFestivalStore = defineStore('festival', {
       this.sourceSwitchPending = true
       this.loadError = null
       try {
+        if (mode === 'demo') {
+          this.lastImportSummary = null
+          await this.bootstrap('demo')
+          return
+        }
+
         const summary = await api.importCatalog(2025, mode)
         this.lastImportSummary = summary
         this.effectiveSourceMode = mode
-        await this.bootstrap()
+        await this.bootstrap(mode)
       } finally {
         this.sourceSwitchPending = false
       }

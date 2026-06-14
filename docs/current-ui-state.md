@@ -16,6 +16,9 @@ Le frontend courant assume :
 - navigation sans étapes numérotées
 - ton UI homogène au `tu`
 - mode démo explicite si les données réelles ne chargent pas
+- fallback démo appliqué comme bundle cohérent, pas comme mélange partiel films réels / séances démo
+- source `Démo` chargée comme environnement de validation cohérent tant que les vraies données ne sont pas disponibles
+- source `Live` réservée à l’intégration backend réelle, avec signal explicite si les séances ne sont pas encore chargées
 - titre de marque `PLANIFFFICATEUR`
 - `Paramètres` renvoyé en navigation secondaire avec icône
 - export iCal retiré du header global

@@ -55,6 +55,7 @@ const transitionFeedback = reactive<{ message: string; tone: 'info' | 'success';
 })
 
 const hasPlanningCandidates = computed(() => summary.value.films > 0)
+const hasPlannableScreenings = computed(() => summary.value.screenings > 0)
 const hasConflicts = computed(() => summary.value.conflicts > 0)
 const hasArbitrations = computed(() => summary.value.toPlace > 0)
 const initialLoading = computed(() => store.loading && !store.screenings.length && !store.cycles.length)
@@ -66,6 +67,15 @@ const planningGuidance = computed(() => {
       copy: "Tu n'as pas encore assez de films qualifiés pour arbitrer ton planning.",
       actionLabel: 'Retourner à Films',
       actionTo: '/films',
+    }
+  }
+
+  if (!hasPlannableScreenings.value) {
+    return {
+      title: 'Aucune séance chargée',
+      copy: 'Tes films sont bien qualifiés, mais la source active ne fournit pas encore de séances exploitables pour le planning.',
+      actionLabel: 'Revoir la source',
+      actionTo: '/settings',
     }
   }
 
@@ -304,7 +314,7 @@ async function removeScreeningSelection(screeningId: number) {
       </section>
     </section>
 
-      <section v-if="hasPlanningCandidates" class="planning__focus-layout" :class="{ 'planning__focus-layout--with-panel': !!detailScreening }">
+      <section v-if="hasPlanningCandidates && hasPlannableScreenings" class="planning__focus-layout" :class="{ 'planning__focus-layout--with-panel': !!detailScreening }">
       <section class="planning__panel planning__panel--day">
         <header class="planning__panel-header">
           <div>
@@ -577,9 +587,11 @@ async function removeScreeningSelection(screeningId: number) {
       </section>
 
       <section v-else class="empty-panel">
-        <h3>Aucun film à arbitrer pour le moment</h3>
-        <p class="page-copy">Tu dois d'abord marquer au moins un film comme `Immanquable` ou `Peut-être` dans la vue `Films`.</p>
-        <RouterLink to="/films" class="ghost-button">Retourner à Films</RouterLink>
+        <h3>{{ planningGuidance.title }}</h3>
+        <p class="page-copy">{{ planningGuidance.copy }}</p>
+        <RouterLink v-if="planningGuidance.actionLabel && planningGuidance.actionTo" :to="planningGuidance.actionTo" class="ghost-button">
+          {{ planningGuidance.actionLabel }}
+        </RouterLink>
       </section>
     </template>
   </section>

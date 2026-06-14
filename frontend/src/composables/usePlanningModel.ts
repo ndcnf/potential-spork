@@ -350,6 +350,7 @@ export function usePlanningModel() {
 
   const summary = computed(() => ({
     films: store.films.filter((film) => isPlanningPriority(film.priority)).length,
+    screenings: planningScreenings.value.length,
     selected: planningScreenings.value.filter((screening) => screening.isSelected).length,
     conflicts: selectedConflictCount.value,
     toPlace: planningScreenings.value.filter((screening) => !screening.isSelected && !screening.isAlternative && screening.selection_status !== 'rejected').length,
