@@ -593,6 +593,25 @@ Erreurs attendues :
 - `422` statut invalide
 - plus tard potentiellement `409` si une règle métier bloque l’opération
 
+#### `POST /api/user-choices/reset`
+
+But : repartir d’un état utilisateur propre sans disperser la logique de reset côté frontend.
+
+Effets attendus :
+
+- remet les priorités film au défaut legacy `low`, exposé côté UI comme `À traiter`
+- remet les sélections de séances à `none`
+- laisse les données catalogue intactes
+
+Sortie minimale :
+
+```json
+{
+  "films_reset": 0,
+  "screenings_reset": 0
+}
+```
+
 #### `GET /api/planning`
 
 Sortie : séances groupées par jour.
@@ -2085,5 +2104,5 @@ Le jour où une API apparaît, tu dois pouvoir changer l’adapter, pas le produ
 
 ## notes humaines
 
-le reset fonctionne, mais le resultat n'est pas le bon. Tous les films sont passe en "peut-etre". Il faut voir s'il reste un legacy sur les statuts quand on est passe a 3 au lieu de 5.
+Le reset des choix utilisateur est désormais porté par `POST /api/user-choices/reset` côté backend. Il remet les films à `low`, puis le frontend affiche cet état legacy comme `À traiter`.
 Pour les seances shorts, au final pour la construction d'un choix de film, il faut se baser sur ce qui constitue une seance dans le programme.

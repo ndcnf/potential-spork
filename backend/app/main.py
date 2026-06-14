@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import cycles, export, films, gaps, imports, planning, screenings
+from app.api.routes import cycles, export, films, gaps, imports, planning, screenings, user_choices
 from app.core.config import settings
 from app.core.database import Base, engine, run_sqlite_schema_upgrades
 
@@ -11,6 +11,7 @@ def _register_routes(app: FastAPI) -> None:
     app.include_router(films.router, prefix=settings.api_prefix)
     app.include_router(imports.router, prefix=settings.api_prefix)
     app.include_router(screenings.router, prefix=settings.api_prefix)
+    app.include_router(user_choices.router, prefix=settings.api_prefix)
     app.include_router(planning.router, prefix=settings.api_prefix)
     app.include_router(gaps.router, prefix=settings.api_prefix)
     app.include_router(export.router, prefix=settings.api_prefix)

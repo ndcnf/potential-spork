@@ -1,4 +1,4 @@
-import type { Cycle, DataSourceMode, Film, ImportSummary, Screening } from '@/types'
+import type { Cycle, DataSourceMode, Film, ImportSummary, ResetUserChoicesSummary, Screening } from '@/types'
 
 const API_BASE = 'http://localhost:8000/api'
 
@@ -23,6 +23,10 @@ export const api = {
     readJson<Screening>(`/screenings/${screeningId}`, {
       method: 'PATCH',
       body: JSON.stringify({ selection_status }),
+    }),
+  resetUserChoices: () =>
+    readJson<ResetUserChoicesSummary>('/user-choices/reset', {
+      method: 'POST',
     }),
   importCatalog: (year = 2025, source_mode: DataSourceMode = 'demo') =>
     readJson<ImportSummary>('/imports/nifff/catalog', {

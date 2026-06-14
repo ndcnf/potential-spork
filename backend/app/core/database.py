@@ -76,6 +76,31 @@ def _ensure_missing_nullable_columns(
             )
 
 
+def _normalize_all_medium_legacy_film_priorities(target_engine: Engine) -> None:
+    with target_engine.begin() as connection:
+        existing_tables = {
+            row[0]
+            for row in connection.execute(
+                text("SELECT name FROM sqlite_master WHERE type='table'")
+            )
+        }
+
+        if "films" not in existing_tables:
+            return
+
+        total_films = connection.execute(text("SELECT COUNT(*) FROM films")).scalar_one()
+        if total_films == 0:
+            return
+
+        non_medium_films = connection.execute(
+            text("SELECT COUNT(*) FROM films WHERE priority != 'medium'")
+        ).scalar_one()
+        if non_medium_films > 0:
+            return
+
+        connection.execute(text("UPDATE films SET priority = 'low' WHERE priority = 'medium'"))
+
+
 def run_sqlite_schema_upgrades(target_engine: Engine | None = None) -> None:
     engine_to_use = target_engine or engine
 
@@ -84,6 +109,8 @@ def run_sqlite_schema_upgrades(target_engine: Engine | None = None) -> None:
 
     for table_name, expected_columns in SQLITE_COMPATIBILITY_COLUMNS.items():
         _ensure_missing_nullable_columns(engine_to_use, table_name, expected_columns)
+
+    _normalize_all_medium_legacy_film_priorities(engine_to_use)
 
 
 def get_db() -> Generator[Session, None, None]:

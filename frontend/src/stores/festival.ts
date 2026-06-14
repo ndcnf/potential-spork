@@ -149,6 +149,18 @@ function persistUiState(films: Film[], screenings: Screening[]) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
 }
 
+function shouldIgnoreLegacyAllMediumPriorities(persisted: PersistedFestivalUiState, films: Film[]): boolean {
+  const entries = Object.entries(persisted.filmPriorities)
+  if (!entries.length || !films.length) {
+    return false
+  }
+
+  const filmIds = new Set(films.map((film) => String(film.id)))
+  const knownEntries = entries.filter(([filmId]) => filmIds.has(filmId))
+
+  return knownEntries.length === films.length && knownEntries.every(([, priority]) => priority === 'medium')
+}
+
 function applyPersistedUiState(films: Film[], screenings: Screening[]): { films: Film[]; screenings: Screening[] } {
   const persisted = readPersistedUiState()
   if (!persisted) {
@@ -158,7 +170,12 @@ function applyPersistedUiState(films: Film[], screenings: Screening[]): { films:
     }
   }
 
+  const ignorePersistedFilmPriorities = shouldIgnoreLegacyAllMediumPriorities(persisted, films)
   const nextFilms = films.map((film) => {
+    if (ignorePersistedFilmPriorities) {
+      return film
+    }
+
     const persistedPriority = persisted.filmPriorities[film.id]
     if (!persistedPriority) {
       return film
@@ -185,6 +202,21 @@ function applyPersistedUiState(films: Film[], screenings: Screening[]): { films:
   return {
     films: nextFilms,
     screenings: recomputeScreeningStates(nextScreenings),
+  }
+}
+
+function resetLocalUserChoices(films: Film[], screenings: Screening[]): { films: Film[]; screenings: Screening[] } {
+  return {
+    films: films.map((film) => ({
+      ...film,
+      priority: 'unreviewed',
+    })),
+    screenings: recomputeScreeningStates(
+      screenings.map((screening) => ({
+        ...screening,
+        selection_status: 'none',
+      })),
+    ),
   }
 }
 
@@ -334,13 +366,14 @@ export const useFestivalStore = defineStore('festival', {
       clearPersistedUiState()
 
       if (!this.usingMocks) {
-        const selectedScreenings = this.screenings.filter((screening) => screening.selection_status !== 'none')
-        for (const screening of selectedScreenings) {
-          await api.updateScreeningSelection(screening.id, 'none')
-        }
+        await api.resetUserChoices()
+        await this.bootstrap()
+        return
       }
 
-      await this.bootstrap()
+      const reset = resetLocalUserChoices(this.films, this.screenings)
+      this.films = reset.films
+      this.screenings = reset.screenings
     },
     async reimportCurrentSource(mode: DataSourceMode) {
       this.sourceSwitchPending = true

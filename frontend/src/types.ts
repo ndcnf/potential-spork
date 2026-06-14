@@ -20,6 +20,11 @@ export interface ImportSummary {
   errors_count: number
 }
 
+export interface ResetUserChoicesSummary {
+  films_reset: number
+  screenings_reset: number
+}
+
 export interface Cycle {
   id: number
   name: string
