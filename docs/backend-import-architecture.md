@@ -2121,4 +2121,4 @@ Le jour où une API apparaît, tu dois pouvoir changer l’adapter, pas le produ
 
 Le reset des choix utilisateur est désormais porté par `POST /api/user-choices/reset` côté backend. Il remet les films à `low`, puis le frontend affiche cet état legacy comme `À traiter`.
 Pour les seances shorts, au final pour la construction d'un choix de film, il faut se baser sur ce qui constitue une seance dans le programme.
-Quand une métadonnée éditoriale comme l'année ou le pays est absente, l'UI doit masquer cette partie au lieu d'afficher un placeholder de type `année ?` ou `Pays ?`.
+Quand une métadonnée éditoriale comme l'année ou le pays est absente, l'UI doit masquer cette partie au lieu d'afficher un placeholder de type `année ?` ou `Pays ?`. Les autres morceaux disponibles, par exemple une durée seule, restent affichables ; seul le séparateur médian est supprimé quand un côté manque.

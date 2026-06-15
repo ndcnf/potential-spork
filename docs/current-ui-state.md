@@ -50,6 +50,8 @@ Le frontend courant assume :
 - `PrioritySelect` visible en haut de carte
 - warning `pas de séance prévue` réservé à `Immanquable`
 - l'année, le pays et la durée ne sont affichés que si l'information existe
+- quand une carte n'a qu'une ligne meta, par exemple une durée seule, cette ligne reste visible mais est attachée visuellement au titre pour éviter un espace vide
+- les séparateurs de meta ne sont affichés que quand les deux morceaux existent
 - recherche / tri / masquage dédiés retirés de la vue
 
 ### `Planning`

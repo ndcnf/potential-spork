@@ -83,6 +83,15 @@ export function hasFilmCardCopy(film: FilmLike): boolean {
   )
 }
 
+export function isFilmCardMetaOnly(film: FilmLike): boolean {
+  return Boolean(
+    filmMetaLabel(film) &&
+    !filmTaglineLabel(film) &&
+    !filmDirectorLabel(film) &&
+    !filmCastLabel(film),
+  )
+}
+
 export function hasFilmDetailInfo(film: FilmLike): boolean {
   return Boolean(
     filmDirectorLabel(film) ||

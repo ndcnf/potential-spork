@@ -271,6 +271,13 @@
   align-items: start;
 }
 
+.film-card-stack--meta-only {
+  grid-template-areas:
+    'heading control'
+    'screening screening';
+  row-gap: var(--space-2xs);
+}
+
 .film-card-copy {
   grid-area: copy;
   min-width: 0;
@@ -335,6 +342,10 @@
   letter-spacing: 0.01em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--color-text-subtle) 88%, transparent);
+}
+
+.film-meta--heading {
+  margin: var(--space-2xs) 0 0;
 }
 
 .film-card[data-priority='high'] .film-card-heading h4,

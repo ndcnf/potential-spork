@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 
-import { filmCastLabel, filmDirectorLabel, filmMetaLabel, filmTaglineLabel, filmYearLabel, hasFilmCardCopy } from '@/lib/filmDisplay'
+import { filmCastLabel, filmDirectorLabel, filmMetaLabel, filmTaglineLabel, filmYearLabel, hasFilmCardCopy, isFilmCardMetaOnly } from '@/lib/filmDisplay'
 import { formatTimeRange, getFestivalDayKey } from '@/lib/planning'
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import PrioritySelect from '@/components/ui/PrioritySelect.vue'
@@ -437,14 +437,15 @@ function applyFilmPriority(film: Film, priority: Priority) {
 
        <div v-if="isCycleOpen(group.cycle.id)" class="cycle-group__body">
          <article v-for="film in group.films" :key="film.id" class="film-card" :data-priority="normalizePriority(film.priority)">
-          <div class="film-card-stack">
+          <div class="film-card-stack" :class="{ 'film-card-stack--meta-only': isFilmCardMetaOnly(film) }">
             <div class="film-card-heading">
               <h4>{{ film.title }} <span v-if="filmYearLabel(film)" class="film-title-year">({{ filmYearLabel(film) }})</span></h4>
+              <p v-if="isFilmCardMetaOnly(film)" class="film-meta film-meta--compact film-meta--heading">{{ filmMetaLabel(film) }}</p>
             </div>
 
             <PrioritySelect class="film-card-control" :model-value="film.priority" dense @update:model-value="applyFilmPriority(film, $event)" />
 
-            <div v-if="hasFilmCardCopy(film)" class="film-card-copy">
+            <div v-if="hasFilmCardCopy(film) && !isFilmCardMetaOnly(film)" class="film-card-copy">
               <p v-if="filmTaglineLabel(film)" class="film-tagline film-tagline--inline">{{ filmTaglineLabel(film) }}</p>
               <p v-if="filmDirectorLabel(film)" class="film-meta">{{ filmDirectorLabel(film) }}</p>
               <p v-if="filmCastLabel(film)" class="film-cast film-cast--inline">{{ filmCastLabel(film) }}</p>
