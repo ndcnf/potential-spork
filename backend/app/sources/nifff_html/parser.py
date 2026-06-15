@@ -84,6 +84,18 @@ def normalize_wayback_url(url: str) -> str:
     return WAYBACK_PREFIX_RE.sub("https://", url, count=1)
 
 
+def is_placeholder_image_url(url: str | None) -> bool:
+    return bool(url and url.startswith("data:image/svg+xml"))
+
+
+def first_real_image_url(image: Tag) -> str | None:
+    for attribute in ("data-src", "data-lazy-src", "src"):
+        url = image.get(attribute)
+        if url and not is_placeholder_image_url(url):
+            return url
+    return None
+
+
 def extract_program_path(url: str) -> str:
     normalized_url = normalize_wayback_url(url)
     match = re.search(r"https?://[^/]+(?P<path>/prog/\d+/(?:film|event|film-package)/[^?#/]+)", normalized_url)
@@ -113,10 +125,13 @@ def extract_table_value(soup: BeautifulSoup, heading: str) -> str | None:
     return None
 
 
-def extract_poster_url(soup: BeautifulSoup, base_url: str) -> str | None:
-    header_image = soup.select_one('.header-page__image img[data-src], .header-page__image img[src], .ratio-16-9 img[data-src], .ratio-16-9 img[src]')
+def extract_poster_url(soup: BeautifulSoup | Tag, base_url: str) -> str | None:
+    header_image = soup.select_one(
+        ".header-page__image img[data-src], .header-page__image img[data-lazy-src], .header-page__image img[src], "
+        ".ratio-16-9 img[data-src], .ratio-16-9 img[data-lazy-src], .ratio-16-9 img[src]"
+    )
     if header_image is not None:
-        src = header_image.get("data-src") or header_image.get("src")
+        src = first_real_image_url(header_image)
         if src:
             return urljoin(base_url, src)
 
@@ -124,9 +139,11 @@ def extract_poster_url(soup: BeautifulSoup, base_url: str) -> str | None:
     if meta is not None and meta.get("content"):
         return urljoin(base_url, meta["content"])
 
-    image = soup.select_one("img[src]")
-    if image is not None and image.get("src"):
-        return urljoin(base_url, image["src"])
+    image = soup.select_one("img[data-src], img[data-lazy-src], img[src]")
+    if image is not None:
+        src = first_real_image_url(image)
+        if src:
+            return urljoin(base_url, src)
 
     return None
 
@@ -306,6 +323,7 @@ def parse_listing_card(card: Tag, base_url: str, year: int) -> ParsedFilm | None
         duration_minutes=extract_runtime(info_line),
         tagline=tagline,
         premiere_label=premiere_label,
+        poster_url=extract_poster_url(card, base_url),
         screenings=extract_listing_screenings(card, year, source_url),
     )
 

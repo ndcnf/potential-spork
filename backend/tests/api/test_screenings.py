@@ -37,6 +37,18 @@ def test_update_screening_updates_selection_status(client, db_session, screening
     assert response.json()["selection_status"] == "confirmed"
 
 
+def test_update_screening_can_ignore_screening_without_rejecting_film(client, db_session, film_factory, screening_factory) -> None:
+    film = film_factory(priority="high")
+    screening = screening_factory(film=film, selection_status="none")
+    db_session.commit()
+
+    response = client.patch(f"/api/screenings/{screening.id}", json={"selection_status": "rejected"})
+
+    assert response.status_code == 200
+    assert response.json()["selection_status"] == "rejected"
+    assert db_session.get(type(film), film.id).priority == "high"
+
+
 def test_update_screening_resets_sibling_states_when_confirmed(client, db_session, film_factory, screening_factory) -> None:
     film = film_factory()
     selected = screening_factory(film=film, selection_status="none")

@@ -99,6 +99,10 @@ def test_wayback_listing_snapshot_parses_inline_screenings_and_ignores_events(fi
     assert parsed_films[0].tagline == "Deadpan Haunting"
     assert parsed_films[0].premiere_label == "Swiss Premiere"
     assert parsed_films[0].source_url == "https://nifff.ch/prog/2025/film/a-useful-ghost"
+    assert (
+        parsed_films[0].poster_url
+        == "https://web.archive.org/web/20250704120326/https://files.eventival.com/357/editions/2589/films/1117745/accessories/1785455.jpeg"
+    )
     assert len(parsed_films[0].screenings) == 3
     assert parsed_films[0].screenings[0].venue_name == "Arcades"
     assert parsed_films[0].screenings[0].source_url == "https://nifff.ch/prog/2025/film/a-useful-ghost"

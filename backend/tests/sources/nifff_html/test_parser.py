@@ -92,6 +92,21 @@ def test_extract_poster_url_falls_back_to_og_image() -> None:
     assert extract_poster_url(soup, "https://nifff.ch/prog/2025/film/a-cure-for-wellness") == "https://nifff.ch/images/og.jpg"
 
 
+def test_extract_poster_url_prefers_lazy_source_over_svg_placeholder() -> None:
+    html = """
+    <img
+      src="data:image/svg+xml,%3Csvg%3E%3C/svg%3E"
+      data-lazy-src="https://web.archive.org/web/20250704120326/https://files.eventival.com/poster.jpeg"
+    />
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    assert (
+        extract_poster_url(soup, "https://web.archive.org/web/20250704120326/https://nifff.ch/programme/")
+        == "https://web.archive.org/web/20250704120326/https://files.eventival.com/poster.jpeg"
+    )
+
+
 def test_extract_short_description_falls_back_to_meta_description() -> None:
     html = '<meta name="description" content="Short description." />'
     soup = BeautifulSoup(html, "html.parser")

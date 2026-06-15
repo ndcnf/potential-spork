@@ -17,6 +17,9 @@ def derive_screening_state(screening: Screening, all_screenings: list[Screening]
     if screening.selection_status in {"tentative", "confirmed"}:
         return "selected"
 
+    if screening.selection_status == "rejected":
+        return "rejected"
+
     if any(
         other.film_id == screening.film_id and other.id != screening.id and other.selection_status in {"tentative", "confirmed"}
         for other in all_screenings
