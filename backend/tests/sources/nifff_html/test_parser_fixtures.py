@@ -98,5 +98,7 @@ def test_wayback_listing_snapshot_parses_inline_screenings_and_ignores_events(fi
     assert parsed_films[0].directors == "Ratchapoom Boonbunchachoke"
     assert parsed_films[0].tagline == "Deadpan Haunting"
     assert parsed_films[0].premiere_label == "Swiss Premiere"
+    assert parsed_films[0].source_url == "https://nifff.ch/prog/2025/film/a-useful-ghost"
     assert len(parsed_films[0].screenings) == 3
     assert parsed_films[0].screenings[0].venue_name == "Arcades"
+    assert parsed_films[0].screenings[0].source_url == "https://nifff.ch/prog/2025/film/a-useful-ghost"

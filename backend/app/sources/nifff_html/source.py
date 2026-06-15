@@ -12,16 +12,23 @@ from app.sources.nifff_html.parser import ParsedFilm, enrich_from_detail, extrac
 
 logger = logging.getLogger(__name__)
 
+NIFFF_LIVE_PROGRAMME_URL = "https://nifff.ch/programme/"
+NIFFF_2025_WAYBACK_PROGRAMME_URL = "https://web.archive.org/web/20250704120326/https://nifff.ch/programme/"
+
 
 class BaseNifffHtmlSource:
     source_name = "nifff_html"
 
-    def __init__(self, *, schedule_url_template: str, source_mode: Literal["demo", "prod"]) -> None:
+    def __init__(self, *, schedule_url_template: str, source_mode: Literal["demo", "prod"], fetch_details: bool) -> None:
         self._schedule_url_template = schedule_url_template
         self.source_mode = source_mode
+        self._fetch_details = fetch_details
+
+    def schedule_url_for_year(self, year: int) -> str:
+        return self._schedule_url_template.format(year=year)
 
     def fetch_catalog(self, year: int) -> list[ParsedFilm]:
-        url = self._schedule_url_template.format(year=year)
+        url = self.schedule_url_for_year(year)
         session = build_session()
         listing_html = fetch_html(session, url)
         soup = BeautifulSoup(listing_html, "html.parser")
@@ -32,7 +39,10 @@ class BaseNifffHtmlSource:
             parsed = parse_listing_card(card, url, year)
             if parsed is None:
                 continue
-            parsed_films.append(self._enrich_with_detail_if_available(session, parsed))
+            if self._fetch_details:
+                parsed_films.append(self._enrich_with_detail_if_available(session, parsed))
+            else:
+                parsed_films.append(parsed)
 
         return parsed_films
 
@@ -55,13 +65,15 @@ class BaseNifffHtmlSource:
 
 
 class NifffArchiveHtmlSource(BaseNifffHtmlSource):
-    def __init__(self, schedule_url_template: str = "https://nifff.ch/archives/{year}/schedule?type=film") -> None:
-        super().__init__(schedule_url_template=schedule_url_template, source_mode="demo")
+    def __init__(self, schedule_url_template: str = NIFFF_2025_WAYBACK_PROGRAMME_URL) -> None:
+        if "nifff.ch" in schedule_url_template and "web.archive.org" not in schedule_url_template:
+            raise ValueError("demo archive source must use Wayback instead of direct nifff.ch URLs")
+        super().__init__(schedule_url_template=schedule_url_template, source_mode="demo", fetch_details=False)
 
 
 class NifffLiveHtmlSource(BaseNifffHtmlSource):
-    def __init__(self, schedule_url_template: str = "https://nifff.ch/programme/") -> None:
-        super().__init__(schedule_url_template=schedule_url_template, source_mode="prod")
+    def __init__(self, schedule_url_template: str = NIFFF_LIVE_PROGRAMME_URL) -> None:
+        super().__init__(schedule_url_template=schedule_url_template, source_mode="prod", fetch_details=True)
 
 
 class NifffHtmlSource(NifffArchiveHtmlSource):

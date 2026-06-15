@@ -67,7 +67,7 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
 const currentSourceDescription = computed(() =>
   settingsStore.dataSourceMode === 'prod'
     ? 'Source sélectionnée : Live (prod). Utilise le programme courant quand il est disponible.'
-    : 'Source sélectionnée : Démo (archive). Utile avant le dévoilement complet du programme.',
+    : 'Source sélectionnée : Démo (archive). Lit la DB démo déjà importée depuis Wayback.',
 )
 
 const sourceRuntimeDescription = computed(() => festivalStore.sourceStatus.description)
@@ -178,7 +178,7 @@ async function reimportCurrentSource() {
       <header class="settings__section-header">
         <div>
           <h3>Source de données</h3>
-          <p class="page-copy">Réglage technique secondaire. La source démo s'appuie sur l'archive ; la source live sert le programme courant dès qu'il est disponible.</p>
+          <p class="page-copy">Réglage technique secondaire. La source démo lit la DB archive ; le bouton d'import sert seulement à rafraîchir rarement cette DB depuis Wayback.</p>
         </div>
       </header>
 

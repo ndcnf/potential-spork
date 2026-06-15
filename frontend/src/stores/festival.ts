@@ -229,6 +229,21 @@ function demoDataset() {
   }
 }
 
+async function loadBackendCatalog() {
+  const [cycles, films, screenings] = await Promise.all([
+    api.listCycles(),
+    api.listFilms(),
+    api.listScreenings(),
+  ])
+
+  return {
+    cycles,
+    films,
+    screenings,
+    hasData: cycles.length > 0 || films.length > 0 || screenings.length > 0,
+  }
+}
+
 export const useFestivalStore = defineStore('festival', {
   state: () => ({
     cycles: [] as Cycle[],
@@ -283,11 +298,21 @@ export const useFestivalStore = defineStore('festival', {
         }
       }
 
-      if (state.usingMocks || state.effectiveSourceMode === 'demo') {
+      if (state.usingMocks) {
         return {
           label: 'Démo',
           tone: 'subtle' as const,
-          description: 'La source archive ou les données de démonstration sont actuellement utilisées.',
+          description:
+            state.sourceFallbackReason ?? 'La démonstration locale est utilisée car la DB démo n’est pas disponible.',
+          showBadge: true,
+        }
+      }
+
+      if (state.effectiveSourceMode === 'demo') {
+        return {
+          label: 'Démo',
+          tone: 'subtle' as const,
+          description: state.sourceFallbackReason ?? 'La DB démo issue de l’archive Wayback est actuellement utilisée.',
           showBadge: true,
         }
       }
@@ -329,18 +354,33 @@ export const useFestivalStore = defineStore('festival', {
       this.loadError = null
       try {
         if (requestedMode === 'demo') {
-          this.loadDemoData(null)
+          try {
+            const { cycles, films, screenings, hasData } = await loadBackendCatalog()
+
+            if (!hasData) {
+              this.loadDemoData('Aucune donnée en DB démo : démonstration locale activée.')
+              return
+            }
+
+            this.cycles = sanitizeCycles(cycles)
+            const hydrated = applyPersistedUiState(sanitizeFilms(films), screenings)
+            this.films = hydrated.films
+            this.screenings = hydrated.screenings
+            this.usingMocks = false
+            this.effectiveSourceMode = 'demo'
+            this.sourceFallbackReason = screenings.length
+              ? null
+              : 'La DB démo est chargée, mais aucune séance exploitable n’est encore disponible.'
+          } catch {
+            this.loadDemoData('Backend indisponible : démonstration locale activée.')
+            this.loadError = 'Backend indisponible : démonstration locale activée.'
+          }
           return
         }
 
-        const [cycles, films, screenings] = await Promise.all([
-          api.listCycles(),
-          api.listFilms(),
-          api.listScreenings(),
-        ])
+        const { cycles, films, screenings, hasData } = await loadBackendCatalog()
 
-        const hasRealData = cycles.length > 0 || films.length > 0 || screenings.length > 0
-        if (!hasRealData) {
+        if (!hasData) {
           this.loadDemoData('Le backend a répondu sans catalogue exploitable. Démonstration locale activée.')
           return
         }
@@ -400,7 +440,8 @@ export const useFestivalStore = defineStore('festival', {
         const summary = await api.importCatalog(2025, mode)
         this.lastImportSummary = summary
         this.effectiveSourceMode = mode
-        await this.resetUserChoices()
+        await api.resetUserChoices()
+        await this.bootstrap(mode)
       } finally {
         this.sourceSwitchPending = false
       }

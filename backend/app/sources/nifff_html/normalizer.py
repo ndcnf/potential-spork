@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from app.schemas.imported import CanonicalImportBundle, ImportedCycle, ImportedFilm, ImportedScreening, ImportedVenue
 from app.sources.nifff_html.parser import ParsedFilm, ParsedScreening, slugify
 
@@ -20,6 +22,14 @@ def build_screening_source_key(parsed_film: ParsedFilm, parsed_screening: Parsed
     starts_at_token = parsed_screening.starts_at.isoformat() if parsed_screening.starts_at else "unknown"
     venue_token = slugify(parsed_screening.venue_name or "unknown")
     return f"nifff:screening:{parsed_film.slug}:{venue_token}:{starts_at_token}"
+
+
+def infer_screening_end(parsed_film: ParsedFilm, parsed_screening: ParsedScreening):
+    if parsed_screening.ends_at is not None:
+        return parsed_screening.ends_at
+    if parsed_screening.starts_at is None or parsed_film.duration_minutes is None:
+        return None
+    return parsed_screening.starts_at + timedelta(minutes=parsed_film.duration_minutes)
 
 
 def normalize_parsed_films(*, parsed_films: list[ParsedFilm], year: int) -> CanonicalImportBundle:
@@ -78,7 +88,7 @@ def normalize_parsed_films(*, parsed_films: list[ParsedFilm], year: int) -> Cano
                     film_source_key=build_film_source_key(parsed),
                     venue_source_key=venue_source_key,
                     starts_at=parsed_screening.starts_at,
-                    ends_at=parsed_screening.ends_at,
+                    ends_at=infer_screening_end(parsed, parsed_screening),
                     source_url=parsed_screening.source_url,
                     ticket_url=parsed_screening.ticket_url,
                 )

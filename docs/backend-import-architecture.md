@@ -870,12 +870,20 @@ But :
 - alimenter le produit avant dévoilement officiel
 - faire tourner le planning avec des données plausibles
 - sécuriser les tests de non-régression avec snapshots historiques
+- conserver en DB une copie utilisable sans rappeler la source externe à chaque chargement
 
 Sources typiques :
 
-- Wayback Machine
+- Wayback Machine, uniquement sur réimport manuel rare
 - archives locales HTML
 - snapshots de debug
+
+Règle NIFFF 2025 :
+
+- le mode `demo` ne doit jamais interroger directement `nifff.ch`
+- les séances passées doivent venir de la capture 2025 `archive.org`
+- une fois importées, les séances sont relues depuis la DB
+- changer de source vers `demo` ne doit pas déclencher de nouvel appel Wayback
 
 #### `prod` / live
 
@@ -908,6 +916,7 @@ Les deux doivent produire le même contrat canonique.
 - avant dévoilement : le mode `demo` est la source opérationnelle utile
 - après dévoilement : le mode `prod` devient la référence
 - `demo` reste utile pour fixtures, debug, fallback, historique
+- le réimport `demo` est une action explicite, pas un effet de bord du chargement UI
 
 ### Current implementation state
 

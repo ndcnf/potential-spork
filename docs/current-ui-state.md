@@ -82,7 +82,8 @@ Le frontend courant assume :
 - centrée sur les recommandations du planning
 - persistance locale déjà en place
 - bascule explicite `Démo (archive)` / `Live (prod)`
-- possibilité de relancer un import propre depuis la source active
+- `Démo (archive)` lit la DB déjà alimentée depuis Wayback, sans réimport automatique
+- possibilité de relancer explicitement un import propre depuis la source active
 - possibilité de reset les choix utilisateur pour repartir d’un état propre
 - résumé visible des signaux qui font remonter une séance
 - préférences salles réduites à 3 états simples

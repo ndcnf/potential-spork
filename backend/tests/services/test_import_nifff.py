@@ -8,7 +8,7 @@ from app.models.film import Film
 from app.models.screening import Screening
 from app.models.venue import Venue
 from app.schemas.imported import CanonicalImportBundle, ImportReport, ImportedCycle, ImportedFilm, ImportedScreening, ImportedVenue
-from app.services.import_nifff import import_nifff_catalog
+from app.services.import_nifff import import_nifff_catalog, import_nifff_catalog_from_archive
 
 
 def build_bundle(*, short_description: str | None, tagline: str = "Psychological horror") -> CanonicalImportBundle:
@@ -181,3 +181,23 @@ def test_import_nifff_catalog_skips_invalid_cards(db_session: Session, monkeypat
     assert result.films_created == 0
     assert result.warnings_count == 0
     assert db_session.scalars(select(Film)).all() == []
+
+
+def test_archive_import_uses_wayback_source_by_default(db_session: Session, monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_import_catalog(*, source, year):
+        captured["year"] = year
+        captured["source_mode"] = source.source_mode
+        captured["schedule_url"] = source.schedule_url_for_year(year)
+        return CanonicalImportBundle(source_name="nifff_html", year=year), fake_report()
+
+    monkeypatch.setattr("app.services.import_nifff.import_catalog", fake_import_catalog)
+
+    import_nifff_catalog_from_archive(db=db_session, year=2025)
+
+    assert captured == {
+        "year": 2025,
+        "source_mode": "demo",
+        "schedule_url": "https://web.archive.org/web/20250704120326/https://nifff.ch/programme/",
+    }

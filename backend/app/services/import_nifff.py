@@ -122,21 +122,15 @@ def _import_nifff_from_source(db: Session, source: _SourceWithMode, year: int) -
 
 
 def import_nifff_catalog(db: Session, year: int, schedule_url: str | None = None) -> ImportSummary:
-    source = NifffHtmlSource(
-        schedule_url_template=schedule_url or "https://nifff.ch/archives/{year}/schedule?type=film"
-    )
+    source = NifffHtmlSource(schedule_url_template=schedule_url) if schedule_url else NifffHtmlSource()
     return _import_nifff_from_source(db=db, source=source, year=year)
 
 
 def import_nifff_catalog_from_archive(db: Session, year: int, schedule_url: str | None = None) -> ImportSummary:
-    source = NifffArchiveHtmlSource(
-        schedule_url_template=schedule_url or "https://nifff.ch/archives/{year}/schedule?type=film"
-    )
+    source = NifffArchiveHtmlSource(schedule_url_template=schedule_url) if schedule_url else NifffArchiveHtmlSource()
     return _import_nifff_from_source(db=db, source=source, year=year)
 
 
 def import_nifff_catalog_from_live(db: Session, year: int, schedule_url: str | None = None) -> ImportSummary:
-    source = NifffLiveHtmlSource(
-        schedule_url_template=schedule_url or "https://nifff.ch/programme/"
-    )
+    source = NifffLiveHtmlSource(schedule_url_template=schedule_url) if schedule_url else NifffLiveHtmlSource()
     return _import_nifff_from_source(db=db, source=source, year=year)
