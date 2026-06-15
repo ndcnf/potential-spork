@@ -114,6 +114,22 @@ App disponible sur `http://localhost:5173`.
 
 Le frontend utilise l'API si elle tourne. Sinon il bascule sur des donnees mockees pour servir de proto UI/UX.
 
+## Tests
+
+Frontend :
+
+```bash
+cd frontend
+npm run test
+```
+
+Mode watch pendant le developpement :
+
+```bash
+cd frontend
+npm run test:watch
+```
+
 ## Etat actuel
 
 - Le vieux proof of concept Flask a ete retire de l'app
