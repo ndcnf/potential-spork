@@ -38,6 +38,8 @@ Le frontend courant assume :
 - compteur `Non merci` présent
 - structure par cycle conservée
 - liste plate de films par cycle
+- les `package_member` ne sont pas affichés comme films à qualifier individuellement
+- les `package` restent visibles comme choix planifiables
 - pas de réorganisation des cartes lors d’un choix
 - cartes film en grille :
   - colonne gauche = titre + contenu éditorial
@@ -47,6 +49,7 @@ Le frontend courant assume :
 - `Non merci` est plus discret dans la liste
 - `PrioritySelect` visible en haut de carte
 - warning `pas de séance prévue` réservé à `Immanquable`
+- l'année, le pays et la durée ne sont affichés que si l'information existe
 - recherche / tri / masquage dédiés retirés de la vue
 
 ### `Planning`
@@ -54,6 +57,7 @@ Le frontend courant assume :
 - timeline plus compacte
 - légende raccourcie
 - méta séance regroupée sur une seule ligne
+- les infos film manquantes ne sont pas remplacées par des placeholders `?`
 - note de conséquence visible seulement dans les cas utiles
 - action directe `Ignorer` disponible dans la timeline
 - panneau détail non sticky

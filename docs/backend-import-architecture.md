@@ -1021,24 +1021,30 @@ Règle :
 
 ### Shorts programs / film packages
 
-Limite connue importante.
+Règle métier importante.
 
 Les `film-package` ou programmes de courts ne se comportent pas comme un film simple.
 
-Règle métier à verrouiller :
+Règle métier :
 
 - le choix se fait par séance / package projeté
 - pas par pseudo-film aplati comme un long métrage standard
+- le modèle canonique distingue :
+  - `standalone` : un film planifiable directement
+  - `package` : un programme projeté comme une séance unique
+  - `package_member` : un contenu inclus dans un package, conservé en donnée mais non planifié seul
 
 Conséquence :
 
 - si un programme shorts apparaît dans la source, il ne faut pas le traiter naïvement comme un film classique sans modéliser le package et ses séances
+- l'UI de décision doit présenter le `package`, pas chaque `package_member` comme choix indépendant
 
 Statut :
 
-- sujet identifié
-- à corriger explicitement dans le pipeline source/canonique
-- ne pas verrouiller une implémentation fragile en attendant
+- implémenté dans le pipeline `parser -> normalizer -> import service -> repositories -> DB`
+- le normalizer classe les URLs `/film-package/` comme `package`
+- les films sans séance dans une catégorie où un package existe sont classés `package_member`
+- l'import resynchronise aussi les anciens films déjà présents en DB pour éviter un état mixte après reimport
 
 ## Bundle Persistence Extended
 
@@ -2115,3 +2121,4 @@ Le jour où une API apparaît, tu dois pouvoir changer l’adapter, pas le produ
 
 Le reset des choix utilisateur est désormais porté par `POST /api/user-choices/reset` côté backend. Il remet les films à `low`, puis le frontend affiche cet état legacy comme `À traiter`.
 Pour les seances shorts, au final pour la construction d'un choix de film, il faut se baser sur ce qui constitue une seance dans le programme.
+Quand une métadonnée éditoriale comme l'année ou le pays est absente, l'UI doit masquer cette partie au lieu d'afficher un placeholder de type `année ?` ou `Pays ?`.

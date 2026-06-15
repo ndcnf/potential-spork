@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import { FESTIVAL_DAY_CUTOFF_HOUR, formatMinutes, formatTimeRange as formatTimeRangeValue, getFestivalDisplayInfo, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
+import { filmDetailMetaLabel, filmMetaLabel } from '@/lib/filmDisplay'
+import { FESTIVAL_DAY_CUTOFF_HOUR, formatTimeRange as formatTimeRangeValue, getFestivalDisplayInfo, screeningsOverlapWithBuffer, toMinutes } from '@/lib/planning'
 import { useFestivalStore } from '@/stores/festival'
 import { useSettingsStore } from '@/stores/settings'
 import type { Film, Screening } from '@/types'
@@ -439,9 +440,11 @@ export function usePlanningModel() {
   }
 
   function filmMeta(screening: PlanningScreening): string {
-    const countries = screening.film?.countries ?? 'Pays ?'
-    const duration = screening.film?.duration_minutes
-    return `${countries} · ${formatMinutes(duration)}`
+    return filmMetaLabel(screening.film) ?? ''
+  }
+
+  function filmDetailMeta(screening: PlanningScreening): string {
+    return filmDetailMetaLabel(screening.film) ?? ''
   }
 
   function findSelectedSibling(screening: PlanningScreening): PlanningScreening | undefined {
@@ -656,6 +659,7 @@ export function usePlanningModel() {
     formatTimeRange,
     filmPriorityDots,
     filmMeta,
+    filmDetailMeta,
     screeningReason,
     screeningStatusTone,
     screeningComparisonStatus,

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 
-import { formatMinutes, formatTimeRange, getFestivalDayKey } from '@/lib/planning'
+import { filmCastLabel, filmDirectorLabel, filmMetaLabel, filmTaglineLabel, filmYearLabel, hasFilmCardCopy } from '@/lib/filmDisplay'
+import { formatTimeRange, getFestivalDayKey } from '@/lib/planning'
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import PrioritySelect from '@/components/ui/PrioritySelect.vue'
 import { useFestivalStore } from '@/stores/festival'
@@ -89,16 +90,6 @@ const screeningCountByFilmId = computed(() => {
 
   return counts
 })
-
-function shouldShowDirectors(film: Film): boolean {
-  if (!film.directors) {
-    return false
-  }
-
-  const normalizedDirectors = film.directors.trim().toLocaleLowerCase()
-  const normalizedTagline = film.tagline?.trim().toLocaleLowerCase()
-  return normalizedDirectors.length > 0 && normalizedDirectors !== normalizedTagline
-}
 
 const allFilms = computed(() => store.groupedFilms.flatMap((group) => group.films))
 
@@ -448,18 +439,17 @@ function applyFilmPriority(film: Film, priority: Priority) {
          <article v-for="film in group.films" :key="film.id" class="film-card" :data-priority="normalizePriority(film.priority)">
           <div class="film-card-stack">
             <div class="film-card-heading">
-              <h4>{{ film.title }} <span class="film-title-year">({{ film.year || 'année ?' }})</span></h4>
+              <h4>{{ film.title }} <span v-if="filmYearLabel(film)" class="film-title-year">({{ filmYearLabel(film) }})</span></h4>
             </div>
 
             <PrioritySelect class="film-card-control" :model-value="film.priority" dense @update:model-value="applyFilmPriority(film, $event)" />
 
-            <div class="film-card-copy">
-              <p class="film-tagline film-tagline--inline">{{ film.tagline || 'Tagline NIFFF à importer' }}</p>
-              <p v-if="shouldShowDirectors(film)" class="film-meta">{{ film.directors }}</p>
-              <p v-else class="film-meta">Réalisation non renseignée</p>
-              <p v-if="film.cast" class="film-cast film-cast--inline">{{ film.cast }}</p>
-              <p class="film-meta film-meta--compact">
-                {{ film.countries || 'Pays ?' }} · {{ formatMinutes(film.duration_minutes) }}
+            <div v-if="hasFilmCardCopy(film)" class="film-card-copy">
+              <p v-if="filmTaglineLabel(film)" class="film-tagline film-tagline--inline">{{ filmTaglineLabel(film) }}</p>
+              <p v-if="filmDirectorLabel(film)" class="film-meta">{{ filmDirectorLabel(film) }}</p>
+              <p v-if="filmCastLabel(film)" class="film-cast film-cast--inline">{{ filmCastLabel(film) }}</p>
+              <p v-if="filmMetaLabel(film)" class="film-meta film-meta--compact">
+                {{ filmMetaLabel(film) }}
               </p>
             </div>
 

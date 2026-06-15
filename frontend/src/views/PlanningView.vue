@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 
 import { useIcalExport } from '@/composables/useIcalExport'
 import { usePlanningModel } from '@/composables/usePlanningModel'
+import { filmDirectorLabel, filmTaglineLabel, hasFilmDetailInfo } from '@/lib/filmDisplay'
 
 const { exportHref, exportIcal, exportScreeningIcal } = useIcalExport()
 
@@ -27,6 +28,7 @@ const {
   formatTimeRange,
   filmPriorityDots,
   filmMeta,
+  filmDetailMeta,
   screeningReason,
   screeningStatusTone,
   screeningComparisonStatus,
@@ -467,10 +469,10 @@ async function removeScreeningSelection(screeningId: number) {
           <div>
             <p class="planning__detail-line"><strong>Cycle</strong> {{ detailScreening.film?.cycle_name || 'Non renseigné' }}</p>
           </div>
-          <div>
-            <p class="planning__detail-line"><strong>Réalisation</strong> {{ detailScreening.film?.directors || 'Non renseignée' }}</p>
-            <p class="planning__detail-line"><strong>Tagline</strong> {{ detailScreening.film?.tagline || 'Non renseignée' }}</p>
-            <p class="planning__detail-line"><strong>Infos</strong> {{ filmMeta(detailScreening) }} · {{ detailScreening.film?.year || 'année ?' }}</p>
+          <div v-if="hasFilmDetailInfo(detailScreening.film)">
+            <p v-if="filmDirectorLabel(detailScreening.film)" class="planning__detail-line"><strong>Réalisation</strong> {{ filmDirectorLabel(detailScreening.film) }}</p>
+            <p v-if="filmTaglineLabel(detailScreening.film)" class="planning__detail-line"><strong>Tagline</strong> {{ filmTaglineLabel(detailScreening.film) }}</p>
+            <p v-if="filmDetailMeta(detailScreening)" class="planning__detail-line"><strong>Infos</strong> {{ filmDetailMeta(detailScreening) }}</p>
           </div>
         </div>
 
