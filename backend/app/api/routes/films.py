@@ -28,6 +28,7 @@ def _to_film_read(film: Film) -> FilmRead:
         age_rating=film.age_rating,
         poster_url=film.poster_url,
         priority=film.priority,
+        planning_type=film.planning_type or "standalone",
         cycle_id=film.cycle_id,
         cycle_name=film.cycle.name if film.cycle else None,
         cycle_color=film.cycle.color if film.cycle else None,

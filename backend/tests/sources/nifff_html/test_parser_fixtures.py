@@ -92,17 +92,27 @@ def test_wayback_listing_snapshot_parses_inline_screenings_and_ignores_events(fi
     parsed_cards = [parse_listing_card(card, "https://web.archive.org/web/20250704120326/https://nifff.ch/programme/", 2025) for card in cards]
     parsed_films = [parsed for parsed in parsed_cards if parsed is not None]
 
-    assert len(cards) == 2
-    assert len(parsed_films) == 1
-    assert parsed_films[0].title == "A Useful Ghost"
-    assert parsed_films[0].directors == "Ratchapoom Boonbunchachoke"
-    assert parsed_films[0].tagline == "Deadpan Haunting"
-    assert parsed_films[0].premiere_label == "Swiss Premiere"
-    assert parsed_films[0].source_url == "https://nifff.ch/prog/2025/film/a-useful-ghost"
+    parsed_by_slug = {parsed.slug: parsed for parsed in parsed_films}
+    useful_ghost = parsed_by_slug["a-useful-ghost"]
+    asian_shorts = parsed_by_slug["asian-shorts"]
+
+    assert len(cards) == 3
+    assert len(parsed_films) == 2
+    assert useful_ghost.title == "A Useful Ghost"
+    assert useful_ghost.directors == "Ratchapoom Boonbunchachoke"
+    assert useful_ghost.tagline == "Deadpan Haunting"
+    assert useful_ghost.premiere_label == "Swiss Premiere"
+    assert useful_ghost.source_url == "https://nifff.ch/prog/2025/film/a-useful-ghost"
     assert (
-        parsed_films[0].poster_url
+        useful_ghost.poster_url
         == "https://web.archive.org/web/20250704120326/https://files.eventival.com/357/editions/2589/films/1117745/accessories/1785455.jpeg"
     )
-    assert len(parsed_films[0].screenings) == 3
-    assert parsed_films[0].screenings[0].venue_name == "Arcades"
-    assert parsed_films[0].screenings[0].source_url == "https://nifff.ch/prog/2025/film/a-useful-ghost"
+    assert len(useful_ghost.screenings) == 3
+    assert useful_ghost.screenings[0].venue_name == "Arcades"
+    assert useful_ghost.screenings[0].source_url == "https://nifff.ch/prog/2025/film/a-useful-ghost"
+    assert asian_shorts.title == "Asian Shorts"
+    assert asian_shorts.duration_minutes == 89
+    assert asian_shorts.source_url == "https://nifff.ch/prog/2025/film-package/asian-shorts"
+    assert asian_shorts.poster_url == "https://web.archive.org/web/20250704120326/https://files.eventival.com/357/editions/2589/film_packages/11864/safe_files/802.jpeg"
+    assert len(asian_shorts.screenings) == 2
+    assert asian_shorts.screenings[0].venue_name == "Rex"

@@ -51,6 +51,7 @@ class FilmRepository:
         film.age_rating = imported_film.age_rating
         film.poster_url = imported_film.poster_url
         film.source_url = imported_film.source_url
+        film.planning_type = imported_film.planning_type
         film.cycle_id = cycle.id if cycle else None
 
         self._db.add(film)

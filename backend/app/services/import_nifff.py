@@ -3,14 +3,16 @@ from __future__ import annotations
 import logging
 from typing import Protocol
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
+from app.models.film import Film
 from app.repositories.cycles import CycleRepository
 from app.repositories.films import FilmRepository
 from app.repositories.screenings import ScreeningRepository
 from app.repositories.venues import VenueRepository
 from app.schemas.imports import ImportSummary
 from app.services.import_catalog import import_catalog
+from app.sources.nifff_html.normalizer import category_tokens
 from app.sources.nifff_html.source import NifffArchiveHtmlSource, NifffHtmlSource, NifffLiveHtmlSource
 
 
@@ -33,6 +35,36 @@ def _summary_from_report(report: object) -> ImportSummary:
         warnings_count=len(report.warnings),
         errors_count=len(report.errors),
     )
+
+
+def _is_package_url(source_url: str | None) -> bool:
+    return source_url is not None and "/film-package/" in source_url
+
+
+def _sync_existing_package_member_planning_types(db: Session) -> None:
+    films = db.query(Film).options(joinedload(Film.cycle), selectinload(Film.screenings)).all()
+    package_cycle_tokens = set().union(
+        *(
+            category_tokens(film.cycle.name if film.cycle else None)
+            for film in films
+            if film.planning_type == "package" or _is_package_url(film.source_url)
+        )
+    )
+
+    if not package_cycle_tokens:
+        return
+
+    for film in films:
+        if film.planning_type == "package" or _is_package_url(film.source_url):
+            film.planning_type = "package"
+            continue
+
+        if not film.screenings and category_tokens(film.cycle.name if film.cycle else None).intersection(package_cycle_tokens):
+            film.planning_type = "package_member"
+            continue
+
+        if film.planning_type == "package_member":
+            film.planning_type = "standalone"
 
 
 def _import_nifff_from_source(db: Session, source: _SourceWithMode, year: int) -> ImportSummary:
@@ -98,6 +130,8 @@ def _import_nifff_from_source(db: Session, source: _SourceWithMode, year: int) -
             report.screenings_created += 1
         else:
             report.screenings_updated += 1
+
+    _sync_existing_package_member_planning_types(db)
 
     db.commit()
     logger.info(

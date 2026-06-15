@@ -1,4 +1,5 @@
 export type Priority = 'unreviewed' | 'ignore' | 'low' | 'medium' | 'high' | 'must-see'
+export type PlanningType = 'standalone' | 'package' | 'package_member'
 export type DataSourceMode = 'demo' | 'prod'
 
 export interface RecommendationSettings {
@@ -52,6 +53,7 @@ export interface Film {
   festival_url?: string | null
   imdb_url?: string | null
   priority: Priority
+  planning_type: PlanningType
   cycle_id: number | null
   cycle_name: string | null
   cycle_color: string | null

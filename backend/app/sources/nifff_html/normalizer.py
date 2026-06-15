@@ -6,6 +6,24 @@ from app.schemas.imported import CanonicalImportBundle, ImportedCycle, ImportedF
 from app.sources.nifff_html.parser import ParsedFilm, ParsedScreening, slugify
 
 
+def category_tokens(cycle_name: str | None) -> set[str]:
+    if not cycle_name:
+        return set()
+    return {slugify(token) for token in cycle_name.split(",") if slugify(token)}
+
+
+def is_package(parsed: ParsedFilm) -> bool:
+    return parsed.source_url is not None and "/film-package/" in parsed.source_url
+
+
+def infer_planning_type(parsed: ParsedFilm, package_category_tokens: set[str]) -> str:
+    if is_package(parsed):
+        return "package"
+    if not parsed.screenings and category_tokens(parsed.cycle_name).intersection(package_category_tokens):
+        return "package_member"
+    return "standalone"
+
+
 def build_cycle_source_key(cycle_name: str) -> str:
     return f"nifff:cycle:{slugify(cycle_name)}"
 
@@ -37,6 +55,9 @@ def normalize_parsed_films(*, parsed_films: list[ParsedFilm], year: int) -> Cano
     venues_by_key: dict[str, ImportedVenue] = {}
     imported_films: list[ImportedFilm] = []
     imported_screenings: list[ImportedScreening] = []
+    package_category_tokens = set().union(
+        *(category_tokens(parsed.cycle_name) for parsed in parsed_films if is_package(parsed))
+    )
 
     for parsed in parsed_films:
         cycle_source_key: str | None = None
@@ -70,6 +91,7 @@ def normalize_parsed_films(*, parsed_films: list[ParsedFilm], year: int) -> Cano
                 language=parsed.language,
                 age_rating=parsed.age_rating,
                 poster_url=parsed.poster_url,
+                planning_type=infer_planning_type(parsed, package_category_tokens),
             )
         )
 

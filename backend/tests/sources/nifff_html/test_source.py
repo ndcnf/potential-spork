@@ -24,9 +24,12 @@ def test_archive_source_fetches_wayback_listing_without_detail_fetch(
     parsed_films = NifffArchiveHtmlSource().fetch_catalog(2025)
 
     assert fetched_urls == ["https://web.archive.org/web/20250704120326/https://nifff.ch/programme/"]
-    assert len(parsed_films) == 1
-    assert parsed_films[0].title == "A Useful Ghost"
-    assert len(parsed_films[0].screenings) == 3
+    parsed_by_slug = {film.slug: film for film in parsed_films}
+    assert len(parsed_films) == 2
+    assert parsed_by_slug["a-useful-ghost"].title == "A Useful Ghost"
+    assert len(parsed_by_slug["a-useful-ghost"].screenings) == 3
+    assert parsed_by_slug["asian-shorts"].title == "Asian Shorts"
+    assert len(parsed_by_slug["asian-shorts"].screenings) == 2
     assert all(not url.startswith("https://nifff.ch") for url in fetched_urls)
 
 

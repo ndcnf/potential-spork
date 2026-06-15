@@ -108,6 +108,53 @@ def test_import_nifff_catalog_updates_existing_film_fields(db_session: Session, 
     assert film.short_description == "Updated description."
 
 
+def test_import_nifff_catalog_reclassifies_existing_pack_members(db_session: Session, monkeypatch) -> None:
+    cycle = Cycle(source_key="nifff:cycle:shorts-programs", name="Shorts Programs", slug="shorts-programs")
+    member = Film(
+        source_key="nifff:film:atom-void",
+        title="Atom & Void",
+        slug="atom-void",
+        source_url="https://nifff.ch/prog/2025/film/atom-void",
+        priority="low",
+        planning_type="standalone",
+        cycle=cycle,
+    )
+    db_session.add_all([cycle, member])
+    db_session.commit()
+
+    bundle = CanonicalImportBundle(
+        source_name="nifff_html",
+        year=2025,
+        cycles=[
+            ImportedCycle(
+                source_key="nifff:cycle:shorts-programs",
+                name="Shorts Programs",
+                slug="shorts-programs",
+            )
+        ],
+        films=[
+            ImportedFilm(
+                source_key="nifff:film:asian-shorts",
+                title="Asian Shorts",
+                slug="asian-shorts",
+                source_url="https://nifff.ch/prog/2025/film-package/asian-shorts",
+                cycle_source_key="nifff:cycle:shorts-programs",
+                planning_type="package",
+            )
+        ],
+    )
+    monkeypatch.setattr("app.services.import_nifff.import_catalog", lambda source, year: (bundle, fake_report()))
+
+    import_nifff_catalog(db=db_session, year=2025)
+
+    db_session.refresh(member)
+    package = db_session.scalar(select(Film).where(Film.slug == "asian-shorts"))
+
+    assert member.planning_type == "package_member"
+    assert package is not None
+    assert package.planning_type == "package"
+
+
 def test_import_nifff_catalog_persists_venues_and_screenings_from_bundle(db_session: Session, monkeypatch) -> None:
     bundle = build_bundle(short_description="A young executive discovers a terrifying secret.")
     bundle.venues.append(ImportedVenue(source_key="nifff:venue:theatre", name="Théâtre"))

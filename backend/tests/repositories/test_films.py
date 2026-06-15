@@ -72,3 +72,20 @@ def test_film_repository_resets_legacy_default_medium_to_low(db_session, film_fa
     assert result.created is False
     assert result.film.id == existing.id
     assert result.film.priority == "low"
+
+
+def test_film_repository_persists_planning_type(db_session) -> None:
+    repository = FilmRepository(db_session)
+
+    result = repository.upsert(
+        ImportedFilm(
+            source_key="nifff:film-package:asian-shorts",
+            title="Asian Shorts",
+            slug="asian-shorts",
+            source_url="https://nifff.ch/prog/2025/film-package/asian-shorts",
+            cycle_source_key=None,
+            planning_type="package",
+        )
+    )
+
+    assert result.film.planning_type == "package"

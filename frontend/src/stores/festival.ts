@@ -42,10 +42,19 @@ function sanitizePriority(priority: Priority | null | undefined): Priority {
   return priority
 }
 
+function sanitizePlanningType(planningType: Film['planning_type'] | null | undefined): Film['planning_type'] {
+  return planningType ?? 'standalone'
+}
+
+function isPlannableFilm(film: Film): boolean {
+  return film.planning_type !== 'package_member'
+}
+
 function sanitizeFilms(films: Film[]): Film[] {
   return films.map((film) => ({
     ...film,
     priority: sanitizePriority(film.priority),
+    planning_type: sanitizePlanningType(film.planning_type),
   }))
 }
 
@@ -264,11 +273,11 @@ export const useFestivalStore = defineStore('festival', {
 
       return cycles.map((cycle) => ({
         cycle,
-        films: films.filter((film) => film.cycle_id === cycle.id),
+        films: films.filter((film) => film.cycle_id === cycle.id && isPlannableFilm(film)),
       }))
     },
     highlightedFilms(state) {
-      return state.films.filter((film) => normalizePriority(film.priority) === 'high')
+      return state.films.filter((film) => isPlannableFilm(film) && normalizePriority(film.priority) === 'high')
     },
     visibleScreenings(state) {
       return state.screenings

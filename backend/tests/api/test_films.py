@@ -3,7 +3,7 @@ from __future__ import annotations
 
 def test_list_films_returns_ordered_films(client, db_session, film_factory, cycle_factory) -> None:
     cycle = cycle_factory(name="Midnight", slug="midnight")
-    film_factory(title="Zulu", slug="zulu", cycle=cycle)
+    film_factory(title="Zulu", slug="zulu", cycle=cycle, planning_type="package")
     film_factory(title="Alpha", slug="alpha", cycle=cycle)
     db_session.commit()
 
@@ -11,6 +11,8 @@ def test_list_films_returns_ordered_films(client, db_session, film_factory, cycl
 
     assert response.status_code == 200
     assert [item["title"] for item in response.json()] == ["Alpha", "Zulu"]
+    assert response.json()[0]["planning_type"] == "standalone"
+    assert response.json()[1]["planning_type"] == "package"
 
 
 def test_list_films_filters_by_query(client, db_session, film_factory) -> None:

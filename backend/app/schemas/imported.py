@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from app.schemas.common import PlanningType
+
 
 @dataclass(slots=True)
 class ImportedCycle:
@@ -31,6 +33,7 @@ class ImportedFilm:
     language: str | None = None
     age_rating: str | None = None
     poster_url: str | None = None
+    planning_type: PlanningType = "standalone"
 
 
 @dataclass(slots=True)

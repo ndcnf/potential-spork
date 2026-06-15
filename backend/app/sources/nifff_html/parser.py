@@ -285,7 +285,9 @@ def parse_listing_card(card: Tag, base_url: str, year: int) -> ParsedFilm | None
         return None
 
     program_path = extract_program_path(urljoin(base_url, link["href"]))
-    if f"/prog/{year}/film/" not in program_path:
+    is_film = f"/prog/{year}/film/" in program_path
+    is_film_package = f"/prog/{year}/film-package/" in program_path
+    if not is_film and not is_film_package:
         return None
 
     source_url = f"https://nifff.ch{program_path}" if program_path.startswith("/") else program_path

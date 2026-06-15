@@ -105,7 +105,7 @@ def test_run_sqlite_schema_upgrades_adds_missing_nullable_film_columns(tmp_path:
     with engine.begin() as connection:
         film_columns = {row[1] for row in connection.execute(text("PRAGMA table_info(films)"))}
 
-    assert {"source_key", "premiere_label", "short_description", "poster_url"}.issubset(film_columns)
+    assert {"source_key", "premiere_label", "short_description", "poster_url", "planning_type"}.issubset(film_columns)
 
 
 def test_run_sqlite_schema_upgrades_adds_missing_nullable_cycle_columns(tmp_path: Path) -> None:
@@ -150,6 +150,7 @@ def test_run_sqlite_schema_upgrades_is_idempotent(tmp_path: Path) -> None:
     assert film_columns.count("premiere_label") == 1
     assert film_columns.count("short_description") == 1
     assert film_columns.count("poster_url") == 1
+    assert film_columns.count("planning_type") == 1
 
 
 def test_run_sqlite_schema_upgrades_normalizes_all_medium_legacy_films_to_low(tmp_path: Path) -> None:

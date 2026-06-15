@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.schemas.common import Priority
+from app.schemas.common import PlanningType, Priority
 
 
 class FilmRead(BaseModel):
@@ -20,6 +20,7 @@ class FilmRead(BaseModel):
     age_rating: str | None
     poster_url: str | None
     priority: Priority
+    planning_type: PlanningType
     cycle_id: int | None
     cycle_name: str | None = None
     cycle_color: str | None = None

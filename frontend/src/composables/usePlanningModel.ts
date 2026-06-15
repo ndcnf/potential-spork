@@ -47,6 +47,10 @@ export function usePlanningModel() {
     return priority === 'medium' || priority === 'high' || priority === 'must-see'
   }
 
+  function isPlannableFilm(film: Film): boolean {
+    return film.planning_type !== 'package_member'
+  }
+
   function isHighPriority(priority: Film['priority'] | undefined): boolean {
     return priority === 'high' || priority === 'must-see'
   }
@@ -167,7 +171,7 @@ export function usePlanningModel() {
 
   const filmById = computed(() => new Map(store.films.map((film) => [film.id, film])))
 
-  const plannableFilmIds = computed(() => new Set(store.films.filter((film) => isPlanningPriority(film.priority)).map((film) => film.id)))
+  const plannableFilmIds = computed(() => new Set(store.films.filter((film) => isPlannableFilm(film) && isPlanningPriority(film.priority)).map((film) => film.id)))
 
   const planningScreenings = computed<PlanningScreening[]>(() => {
     const baseScreenings = store.visibleScreenings.filter((screening) => screening.starts_at && screening.ends_at && plannableFilmIds.value.has(screening.film_id))
@@ -349,7 +353,7 @@ export function usePlanningModel() {
   })
 
   const summary = computed(() => ({
-    films: store.films.filter((film) => isPlanningPriority(film.priority)).length,
+    films: store.films.filter((film) => isPlannableFilm(film) && isPlanningPriority(film.priority)).length,
     screenings: planningScreenings.value.length,
     selected: planningScreenings.value.filter((screening) => screening.isSelected).length,
     conflicts: selectedConflictCount.value,

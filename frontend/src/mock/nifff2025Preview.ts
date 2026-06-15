@@ -412,6 +412,7 @@ export function buildPreviewDataset(): { cycles: Cycle[]; films: Film[]; screeni
       festival_url: film.status === 'not_found_in_wayback_capture' ? null : buildFestivalFilmUrl(film.slug),
       imdb_url: null,
       priority: filmPriorities[film.slug] ?? 'unreviewed',
+      planning_type: 'standalone',
       cycle_id: cycle?.id ?? null,
       cycle_name: cycle?.name ?? null,
       cycle_color: cycle?.color ?? null,

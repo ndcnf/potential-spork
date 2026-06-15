@@ -25,6 +25,7 @@ class Film(Base):
     poster_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     priority: Mapped[str] = mapped_column(String(32), default="low")
+    planning_type: Mapped[str] = mapped_column(String(32), default="standalone")
     cycle_id: Mapped[int | None] = mapped_column(ForeignKey("cycles.id"), nullable=True)
 
     cycle = relationship("Cycle", back_populates="films")

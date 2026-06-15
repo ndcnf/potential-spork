@@ -76,3 +76,51 @@ def test_normalize_parsed_films_infers_screening_end_from_film_duration() -> Non
     bundle = normalize_parsed_films(parsed_films=[parsed_film], year=2025)
 
     assert bundle.screenings[0].ends_at == starts_at + timedelta(minutes=130)
+
+
+def test_normalize_parsed_films_classifies_packages_and_members() -> None:
+    package_start = datetime.fromisoformat("2025-07-05T16:45:00+02:00")
+    package = ParsedFilm(
+        title="Asian Shorts",
+        slug="asian-shorts",
+        source_url="https://nifff.ch/prog/2025/film-package/asian-shorts",
+        cycle_name="Shorts Programs",
+        duration_minutes=92,
+        screenings=[
+            ParsedScreening(
+                starts_at=package_start,
+                ends_at=None,
+                venue_name="Rex",
+            )
+        ],
+    )
+    package_member = ParsedFilm(
+        title="Atom & Void",
+        slug="atom-void",
+        source_url="https://nifff.ch/prog/2025/film/atom-void",
+        cycle_name="Shorts Programs",
+        duration_minutes=9,
+    )
+    standalone = ParsedFilm(
+        title="A Useful Ghost",
+        slug="a-useful-ghost",
+        source_url="https://nifff.ch/prog/2025/film/a-useful-ghost",
+        cycle_name="International Competition",
+        duration_minutes=130,
+        screenings=[
+            ParsedScreening(
+                starts_at=datetime.fromisoformat("2025-07-05T19:00:00+02:00"),
+                ends_at=None,
+                venue_name="Arcades",
+            )
+        ],
+    )
+
+    bundle = normalize_parsed_films(parsed_films=[package, package_member, standalone], year=2025)
+
+    planning_type_by_slug = {film.slug: film.planning_type for film in bundle.films}
+    assert planning_type_by_slug == {
+        "asian-shorts": "package",
+        "atom-void": "package_member",
+        "a-useful-ghost": "standalone",
+    }
