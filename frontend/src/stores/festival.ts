@@ -481,8 +481,7 @@ export const useFestivalStore = defineStore('festival', {
       if (!this.usingMocks) {
         await api.updateScreeningSelection(screeningId, status)
         const screenings = await api.listScreenings()
-        const hydrated = applyPersistedUiState(this.films, screenings)
-        this.screenings = hydrated.screenings
+        this.screenings = recomputeScreeningStates(screenings)
         persistUiState(this.films, this.screenings)
         return
       }

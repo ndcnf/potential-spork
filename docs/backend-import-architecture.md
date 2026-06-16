@@ -705,6 +705,7 @@ Une première ossature source-agnostique a été posée pour éviter que la proc
 - `backend/app/sources/nifff_html/source.py`
 - `backend/app/sources/nifff_html/normalizer.py`
 - `backend/app/services/import_catalog.py`
+- `backend/app/services/import_bundle.py`
 
 ### Current responsibility split
 
@@ -749,14 +750,37 @@ Responsabilité :
 - produire un `CanonicalImportBundle`
 - préparer un `ImportReport`
 
-À ce stade, l’écriture DB n’est pas encore extraite dans des repositories dédiés. Le service legacy `import_nifff.py` reste donc un wrapper transitoire entre bundle canonique et ORM.
+Cette couche ne fait pas d’écriture DB. Elle reste donc testable sans SQLAlchemy et sans session.
+
+#### `services/import_bundle.py`
+
+Responsabilité :
+
+- appliquer un `CanonicalImportBundle` en DB
+- appeler les repositories d’upsert
+- mettre à jour les compteurs de `ImportReport`
+- signaler les incohérences génériques du bundle, par exemple une séance qui référence un film absent
+
+Cette couche est source-agnostic : elle ne doit pas importer `sources/nifff_html`, `BeautifulSoup`, ni de logique de parsing.
+
+#### `services/import_nifff.py`
+
+Responsabilité transitoire :
+
+- choisir la source NIFFF (`demo` / `prod`)
+- appeler `import_catalog`
+- appeler `apply_import_bundle`
+- appliquer encore la correction legacy `package_member`
+- gérer le `commit`, le log final et le résumé API
+
+Le fichier reste temporairement spécifique NIFFF, mais il ne porte plus l’orchestration générique des repositories pour `cycles`, `films`, `venues` et `screenings`.
 
 ### Transitional rule
 
 Le but de cette ossature n’est pas encore de finir l’architecture. Le but est de couper la dépendance directe :
 
 - avant : `HTML -> parser -> SQLAlchemy direct`
-- maintenant : `HTML -> source -> parser -> normalizer -> bundle canonique -> repositories -> DB`
+- maintenant : `HTML -> source -> parser -> normalizer -> bundle canonique -> import_bundle -> repositories -> DB`
 
 Ce n’est pas l’état final, mais c’est déjà une dépendance bien moins fragile.
 

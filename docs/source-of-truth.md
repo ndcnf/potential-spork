@@ -200,6 +200,8 @@ Règle courante d’implémentation :
 
 - au bootstrap, l’état local persistant est réappliqué
 - dans l’état actuel du produit, il prime sur l’état distant si les deux diffèrent
+- après une action utilisateur réussie côté backend, la réponse backend fraîche prime sur `localStorage`
+- `localStorage` doit alors être réécrit depuis l’état fraîchement rechargé pour éviter de réappliquer une ancienne sélection
 
 Important :
 

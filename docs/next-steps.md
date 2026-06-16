@@ -27,7 +27,11 @@ Ordre recommandé :
 
 ### Data / Tech
 
-- réduire la dette `must-see` / `low`
+- continuer la séparation backend par petites passes :
+  - `import_catalog` doit rester responsable du fetch + normalisation vers `CanonicalImportBundle`
+  - `import_bundle` applique maintenant le bundle canonique en DB via les repositories
+  - `import_nifff` reste un wrapper transitoire spécifique NIFFF pour le choix de source, le `commit`, le log final et la correction legacy `package_member`
+- réduire ensuite la dette `must-see` / `low`
 - définir plus tard une stratégie si synchronisation serveur des choix devient nécessaire
 - revoir la règle actuelle de persistance locale > état distant dès que les vraies données seront accessibles de manière fiable
 
@@ -80,4 +84,11 @@ Bien discuter UX et frontend afin que ces icones permettent d'alleger visuelleme
 ```bash
 cd frontend
 npm run build
+```
+
+Pour les passes backend :
+
+```bash
+cd backend
+.venv/bin/python -B -m pytest -q
 ```

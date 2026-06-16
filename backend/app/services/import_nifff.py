@@ -6,11 +6,8 @@ from typing import Protocol
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.film import Film
-from app.repositories.cycles import CycleRepository
-from app.repositories.films import FilmRepository
-from app.repositories.screenings import ScreeningRepository
-from app.repositories.venues import VenueRepository
 from app.schemas.imports import ImportSummary
+from app.services.import_bundle import apply_import_bundle
 from app.services.import_catalog import import_catalog
 from app.sources.nifff_html.normalizer import category_tokens
 from app.sources.nifff_html.source import NifffArchiveHtmlSource, NifffHtmlSource, NifffLiveHtmlSource
@@ -69,68 +66,7 @@ def _sync_existing_package_member_planning_types(db: Session) -> None:
 
 def _import_nifff_from_source(db: Session, source: _SourceWithMode, year: int) -> ImportSummary:
     bundle, report = import_catalog(source=source, year=year)
-    cycle_repository = CycleRepository(db)
-    film_repository = FilmRepository(db)
-    venue_repository = VenueRepository(db)
-    screening_repository = ScreeningRepository(db)
-
-    cycles_by_source_key = {}
-    for imported_cycle in bundle.cycles:
-        result = cycle_repository.upsert(imported_cycle)
-        if result.created:
-            report.cycles_created += 1
-        else:
-            report.cycles_updated += 1
-        cycles_by_source_key[imported_cycle.source_key] = result.cycle
-
-    films_by_source_key = {}
-    for imported_film in bundle.films:
-        cycle = None
-        if imported_film.cycle_source_key:
-            cycle = cycles_by_source_key.get(imported_film.cycle_source_key)
-
-        result = film_repository.upsert(imported_film, cycle=cycle)
-        if result.created:
-            report.films_created += 1
-        else:
-            report.films_updated += 1
-        films_by_source_key[imported_film.source_key] = result.film
-
-    venues_by_source_key = {}
-    for imported_venue in bundle.venues:
-        result = venue_repository.upsert(imported_venue)
-        if result.created:
-            report.venues_created += 1
-        else:
-            report.venues_updated += 1
-        venues_by_source_key[imported_venue.source_key] = result.venue
-
-    for imported_screening in bundle.screenings:
-        film = films_by_source_key.get(imported_screening.film_source_key)
-        if film is None:
-            warning_message = "Skipping screening import because film source key is unknown"
-            report.warnings.append(
-                f"{warning_message}: screening={imported_screening.source_key} film={imported_screening.film_source_key}"
-            )
-            logger.warning(
-                warning_message,
-                extra={
-                    "screening_source_key": imported_screening.source_key,
-                    "film_source_key": imported_screening.film_source_key,
-                },
-            )
-            continue
-
-        venue = None
-        if imported_screening.venue_source_key:
-            venue = venues_by_source_key.get(imported_screening.venue_source_key)
-
-        result = screening_repository.upsert(imported_screening, film=film, venue=venue)
-        if result.created:
-            report.screenings_created += 1
-        else:
-            report.screenings_updated += 1
-
+    apply_import_bundle(db=db, bundle=bundle, report=report)
     _sync_existing_package_member_planning_types(db)
 
     db.commit()
