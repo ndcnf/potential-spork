@@ -706,6 +706,7 @@ Une première ossature source-agnostique a été posée pour éviter que la proc
 - `backend/app/sources/nifff_html/normalizer.py`
 - `backend/app/services/import_catalog.py`
 - `backend/app/services/import_bundle.py`
+- `backend/app/services/import_postprocessing.py`
 
 ### Current responsibility split
 
@@ -770,10 +771,19 @@ Responsabilité transitoire :
 - choisir la source NIFFF (`demo` / `prod`)
 - appeler `import_catalog`
 - appeler `apply_import_bundle`
-- appliquer encore la correction legacy `package_member`
+- appeler le post-processing d’import
 - gérer le `commit`, le log final et le résumé API
 
 Le fichier reste temporairement spécifique NIFFF, mais il ne porte plus l’orchestration générique des repositories pour `cycles`, `films`, `venues` et `screenings`.
+
+#### `services/import_postprocessing.py`
+
+Responsabilité :
+
+- isoler les corrections de données post-import qui ne sont ni du parsing, ni de la normalisation, ni de l’upsert générique
+- appliquer aujourd’hui la correction legacy `package_member` sur les films déjà présents
+
+Cette couche reste transitoire. Elle existe pour que `import_nifff.py` ne redevienne pas un fichier fourre-tout pendant la migration.
 
 ### Transitional rule
 

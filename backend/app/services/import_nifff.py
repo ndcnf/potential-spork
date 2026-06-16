@@ -3,13 +3,12 @@ from __future__ import annotations
 import logging
 from typing import Protocol
 
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session
 
-from app.models.film import Film
 from app.schemas.imports import ImportSummary
 from app.services.import_bundle import apply_import_bundle
 from app.services.import_catalog import import_catalog
-from app.sources.nifff_html.normalizer import category_tokens
+from app.services.import_postprocessing import sync_existing_package_member_planning_types
 from app.sources.nifff_html.source import NifffArchiveHtmlSource, NifffHtmlSource, NifffLiveHtmlSource
 
 
@@ -34,40 +33,10 @@ def _summary_from_report(report: object) -> ImportSummary:
     )
 
 
-def _is_package_url(source_url: str | None) -> bool:
-    return source_url is not None and "/film-package/" in source_url
-
-
-def _sync_existing_package_member_planning_types(db: Session) -> None:
-    films = db.query(Film).options(joinedload(Film.cycle), selectinload(Film.screenings)).all()
-    package_cycle_tokens = set().union(
-        *(
-            category_tokens(film.cycle.name if film.cycle else None)
-            for film in films
-            if film.planning_type == "package" or _is_package_url(film.source_url)
-        )
-    )
-
-    if not package_cycle_tokens:
-        return
-
-    for film in films:
-        if film.planning_type == "package" or _is_package_url(film.source_url):
-            film.planning_type = "package"
-            continue
-
-        if not film.screenings and category_tokens(film.cycle.name if film.cycle else None).intersection(package_cycle_tokens):
-            film.planning_type = "package_member"
-            continue
-
-        if film.planning_type == "package_member":
-            film.planning_type = "standalone"
-
-
 def _import_nifff_from_source(db: Session, source: _SourceWithMode, year: int) -> ImportSummary:
     bundle, report = import_catalog(source=source, year=year)
     apply_import_bundle(db=db, bundle=bundle, report=report)
-    _sync_existing_package_member_planning_types(db)
+    sync_existing_package_member_planning_types(db)
 
     db.commit()
     logger.info(
