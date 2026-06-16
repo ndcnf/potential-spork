@@ -715,9 +715,10 @@ Responsabilité :
 - fetch listing
 - déléguer le parsing du listing HTML au parser NIFFF HTML
 - enrichir avec le détail si disponible
-- retourner une collection de `ParsedFilm`
+- retourner un `NifffHtmlCatalogPayload` source-specific contenant les `ParsedFilm`
 
 Cette couche connaît encore la source NIFFF et les URLs, mais ne doit pas orchestrer directement `BeautifulSoup` ou les cartes DOM.
+Le payload explicite évite que `fetch_catalog()` retourne un `object` ou une liste ambiguë.
 
 #### `sources/nifff_html/parser.py`
 
@@ -744,7 +745,7 @@ Cette couche ne doit pas connaître SQLAlchemy.
 Responsabilité :
 
 - dépendre d’un `FestivalSource`
-- normaliser le payload source
+- normaliser le payload source-specific explicite
 - produire un `CanonicalImportBundle`
 - préparer un `ImportReport`
 

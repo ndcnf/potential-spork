@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from app.sources.nifff_html.source import NifffArchiveHtmlSource, NifffLiveHtmlSource
+from app.sources.nifff_html.source import NifffArchiveHtmlSource, NifffHtmlCatalogPayload, NifffLiveHtmlSource
 
 
 def test_archive_source_fetches_wayback_listing_without_detail_fetch(
@@ -21,11 +21,12 @@ def test_archive_source_fetches_wayback_listing_without_detail_fetch(
 
     monkeypatch.setattr("app.sources.nifff_html.source.fetch_html", fake_fetch_html)
 
-    parsed_films = NifffArchiveHtmlSource().fetch_catalog(2025)
+    payload = NifffArchiveHtmlSource().fetch_catalog(2025)
 
     assert fetched_urls == ["https://web.archive.org/web/20250704120326/https://nifff.ch/programme/"]
-    parsed_by_slug = {film.slug: film for film in parsed_films}
-    assert len(parsed_films) == 2
+    assert isinstance(payload, NifffHtmlCatalogPayload)
+    parsed_by_slug = {film.slug: film for film in payload.parsed_films}
+    assert len(payload.parsed_films) == 2
     assert parsed_by_slug["a-useful-ghost"].title == "A Useful Ghost"
     assert len(parsed_by_slug["a-useful-ghost"].screenings) == 3
     assert parsed_by_slug["asian-shorts"].title == "Asian Shorts"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import Literal
 
 import requests
@@ -15,6 +16,11 @@ NIFFF_LIVE_PROGRAMME_URL = "https://nifff.ch/programme/"
 NIFFF_2025_WAYBACK_PROGRAMME_URL = "https://web.archive.org/web/20250704120326/https://nifff.ch/programme/"
 
 
+@dataclass(slots=True)
+class NifffHtmlCatalogPayload:
+    parsed_films: list[ParsedFilm]
+
+
 class BaseNifffHtmlSource:
     source_name = "nifff_html"
 
@@ -26,20 +32,20 @@ class BaseNifffHtmlSource:
     def schedule_url_for_year(self, year: int) -> str:
         return self._schedule_url_template.format(year=year)
 
-    def fetch_catalog(self, year: int) -> list[ParsedFilm]:
+    def fetch_catalog(self, year: int) -> NifffHtmlCatalogPayload:
         url = self.schedule_url_for_year(year)
         session = build_session()
         listing_html = fetch_html(session, url)
         parsed_films = parse_catalog_html(listing_html, base_url=url, year=year)
 
         if not self._fetch_details:
-            return parsed_films
+            return NifffHtmlCatalogPayload(parsed_films=parsed_films)
 
         enriched_films: list[ParsedFilm] = []
         for parsed in parsed_films:
             enriched_films.append(self._enrich_with_detail_if_available(session, parsed))
 
-        return enriched_films
+        return NifffHtmlCatalogPayload(parsed_films=enriched_films)
 
     def _enrich_with_detail_if_available(self, session: requests.Session, parsed: ParsedFilm) -> ParsedFilm:
         try:
