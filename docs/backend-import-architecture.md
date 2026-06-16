@@ -706,6 +706,7 @@ Une première ossature source-agnostique a été posée pour éviter que la proc
 - `backend/app/sources/nifff_html/normalizer.py`
 - `backend/app/services/import_catalog.py`
 - `backend/app/services/import_bundle.py`
+- `backend/app/services/import_pipeline.py`
 - `backend/app/services/import_postprocessing.py`
 
 ### Current responsibility split
@@ -764,17 +765,26 @@ Responsabilité :
 
 Cette couche est source-agnostic : elle ne doit pas importer `sources/nifff_html`, `BeautifulSoup`, ni de logique de parsing.
 
+#### `services/import_pipeline.py`
+
+Responsabilité :
+
+- orchestrer le pipeline générique `import_catalog -> import_bundle -> postprocessors`
+- gérer le `commit`
+- produire le log final d’import
+- convertir `ImportReport` en `ImportSummary`
+
+Cette couche est source-agnostic. Elle reçoit un `FestivalSource` et une liste optionnelle de postprocessors.
+
 #### `services/import_nifff.py`
 
 Responsabilité transitoire :
 
 - choisir la source NIFFF (`demo` / `prod`)
-- appeler `import_catalog`
-- appeler `apply_import_bundle`
-- appeler le post-processing d’import
-- gérer le `commit`, le log final et le résumé API
+- appeler `run_import_pipeline`
+- fournir le postprocessor legacy `package_member`
 
-Le fichier reste temporairement spécifique NIFFF, mais il ne porte plus l’orchestration générique des repositories pour `cycles`, `films`, `venues` et `screenings`.
+Le fichier reste spécifique NIFFF, mais il ne porte plus l’orchestration générique de l’import, ni le `commit`, ni le log final.
 
 #### `services/import_postprocessing.py`
 
@@ -790,7 +800,7 @@ Cette couche reste transitoire. Elle existe pour que `import_nifff.py` ne redevi
 Le but de cette ossature n’est pas encore de finir l’architecture. Le but est de couper la dépendance directe :
 
 - avant : `HTML -> parser -> SQLAlchemy direct`
-- maintenant : `HTML -> source -> parser -> normalizer -> bundle canonique -> import_bundle -> repositories -> DB`
+- maintenant : `HTML -> source -> parser -> normalizer -> bundle canonique -> import_pipeline -> import_bundle -> repositories -> postprocessing -> DB commit`
 
 Ce n’est pas l’état final, mais c’est déjà une dépendance bien moins fragile.
 

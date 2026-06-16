@@ -47,7 +47,7 @@ def fake_report() -> ImportReport:
 
 def test_import_nifff_catalog_creates_cycles_and_films(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.services.import_nifff.import_catalog",
+        "app.services.import_pipeline.import_catalog",
         lambda source, year: (build_bundle(short_description="A young executive discovers a terrifying secret."), fake_report()),
     )
 
@@ -70,7 +70,7 @@ def test_import_nifff_catalog_creates_cycles_and_films(db_session: Session, monk
 
 def test_import_nifff_catalog_is_idempotent_for_existing_film(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.services.import_nifff.import_catalog",
+        "app.services.import_pipeline.import_catalog",
         lambda source, year: (build_bundle(short_description="A young executive discovers a terrifying secret."), fake_report()),
     )
 
@@ -89,13 +89,13 @@ def test_import_nifff_catalog_is_idempotent_for_existing_film(db_session: Sessio
 
 def test_import_nifff_catalog_updates_existing_film_fields(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.services.import_nifff.import_catalog",
+        "app.services.import_pipeline.import_catalog",
         lambda source, year: (build_bundle(short_description="A young executive discovers a terrifying secret."), fake_report()),
     )
     import_nifff_catalog(db=db_session, year=2025)
 
     monkeypatch.setattr(
-        "app.services.import_nifff.import_catalog",
+        "app.services.import_pipeline.import_catalog",
         lambda source, year: (build_bundle(short_description="Updated description.", tagline="Updated genre"), fake_report()),
     )
     result = import_nifff_catalog(db=db_session, year=2025)
@@ -143,7 +143,7 @@ def test_import_nifff_catalog_reclassifies_existing_pack_members(db_session: Ses
             )
         ],
     )
-    monkeypatch.setattr("app.services.import_nifff.import_catalog", lambda source, year: (bundle, fake_report()))
+    monkeypatch.setattr("app.services.import_pipeline.import_catalog", lambda source, year: (bundle, fake_report()))
 
     import_nifff_catalog(db=db_session, year=2025)
 
@@ -168,7 +168,7 @@ def test_import_nifff_catalog_persists_venues_and_screenings_from_bundle(db_sess
             source_url="https://nifff.ch/screening/1",
         )
     )
-    monkeypatch.setattr("app.services.import_nifff.import_catalog", lambda source, year: (bundle, fake_report()))
+    monkeypatch.setattr("app.services.import_pipeline.import_catalog", lambda source, year: (bundle, fake_report()))
 
     result = import_nifff_catalog(db=db_session, year=2025)
     film = db_session.scalar(select(Film).where(Film.slug == "a-cure-for-wellness"))
@@ -207,7 +207,7 @@ def test_import_nifff_catalog_logs_warning_when_screening_film_is_unknown(
             )
         ],
     )
-    monkeypatch.setattr("app.services.import_nifff.import_catalog", lambda source, year: (bundle, fake_report()))
+    monkeypatch.setattr("app.services.import_pipeline.import_catalog", lambda source, year: (bundle, fake_report()))
 
     with caplog.at_level("WARNING"):
         result = import_nifff_catalog(db=db_session, year=2025)
@@ -218,7 +218,7 @@ def test_import_nifff_catalog_logs_warning_when_screening_film_is_unknown(
 
 def test_import_nifff_catalog_skips_invalid_cards(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.services.import_nifff.import_catalog",
+        "app.services.import_pipeline.import_catalog",
         lambda source, year: (CanonicalImportBundle(source_name="nifff_html", year=2025), fake_report()),
     )
 
@@ -239,7 +239,7 @@ def test_archive_import_uses_wayback_source_by_default(db_session: Session, monk
         captured["schedule_url"] = source.schedule_url_for_year(year)
         return CanonicalImportBundle(source_name="nifff_html", year=year), fake_report()
 
-    monkeypatch.setattr("app.services.import_nifff.import_catalog", fake_import_catalog)
+    monkeypatch.setattr("app.services.import_pipeline.import_catalog", fake_import_catalog)
 
     import_nifff_catalog_from_archive(db=db_session, year=2025)
 

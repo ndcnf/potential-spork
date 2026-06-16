@@ -30,8 +30,9 @@ Ordre recommandé :
 - continuer la séparation backend par petites passes :
   - `import_catalog` doit rester responsable du fetch + normalisation vers `CanonicalImportBundle`
   - `import_bundle` applique maintenant le bundle canonique en DB via les repositories
+  - `import_pipeline` orchestre le flow générique, le `commit`, le log final et le résumé API
   - `import_postprocessing` isole la correction legacy `package_member`
-  - `import_nifff` reste un wrapper transitoire spécifique NIFFF pour le choix de source, le `commit`, le log final et le résumé API
+  - `import_nifff` reste un wrapper spécifique NIFFF pour le choix de source et les postprocessors nécessaires
 - réduire ensuite la dette `must-see` / `low`
 - définir plus tard une stratégie si synchronisation serveur des choix devient nécessaire
 - revoir la règle actuelle de persistance locale > état distant dès que les vraies données seront accessibles de manière fiable
