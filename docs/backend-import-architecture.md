@@ -713,11 +713,21 @@ Une première ossature source-agnostique a été posée pour éviter que la proc
 Responsabilité :
 
 - fetch listing
-- parser les cartes
+- déléguer le parsing du listing HTML au parser NIFFF HTML
 - enrichir avec le détail si disponible
 - retourner une collection de `ParsedFilm`
 
-Cette couche connaît encore le HTML NIFFF, ce qui est normal.
+Cette couche connaît encore la source NIFFF et les URLs, mais ne doit pas orchestrer directement `BeautifulSoup` ou les cartes DOM.
+
+#### `sources/nifff_html/parser.py`
+
+Responsabilité :
+
+- transformer un HTML de listing en collection de `ParsedFilm`
+- isoler `BeautifulSoup`, les sélecteurs DOM et les heuristiques de cards
+- enrichir un `ParsedFilm` depuis un HTML de détail
+
+Cette couche est la seule qui doit connaître les détails DOM NIFFF.
 
 #### `sources/nifff_html/normalizer.py`
 
@@ -745,7 +755,7 @@ Responsabilité :
 Le but de cette ossature n’est pas encore de finir l’architecture. Le but est de couper la dépendance directe :
 
 - avant : `HTML -> parser -> SQLAlchemy direct`
-- maintenant : `HTML -> source -> normalizer -> bundle canonique -> wrapper ORM`
+- maintenant : `HTML -> source -> parser -> normalizer -> bundle canonique -> repositories -> DB`
 
 Ce n’est pas l’état final, mais c’est déjà une dépendance bien moins fragile.
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from bs4 import BeautifulSoup
 
-from app.sources.nifff_html.parser import ParsedFilm, enrich_from_detail, extract_archive_cards, parse_listing_card
+from app.sources.nifff_html.parser import ParsedFilm, enrich_from_detail, extract_archive_cards, parse_catalog_html, parse_listing_card
 
 
 def test_listing_snapshot_extracts_expected_number_of_cards(fixture_text_loader) -> None:
@@ -25,6 +25,21 @@ def test_listing_snapshot_parses_expected_film_fields(fixture_text_loader) -> No
     assert parsed.title == "A Cure for Wellness"
     assert parsed.slug == "a-cure-for-wellness"
     assert parsed.cycle_name == "International Competition"
+
+
+def test_catalog_snapshot_parses_listing_html_without_source_dom_orchestration(fixture_text_loader) -> None:
+    html = fixture_text_loader("nifff_html/listing_nominal.html")
+
+    parsed_films = parse_catalog_html(
+        html,
+        base_url="https://nifff.ch/archives/2025/schedule?type=film",
+        year=2025,
+    )
+
+    assert len(parsed_films) == 1
+    assert parsed_films[0].title == "A Cure for Wellness"
+    assert parsed_films[0].slug == "a-cure-for-wellness"
+    assert parsed_films[0].cycle_name == "International Competition"
 
 
 def test_detail_snapshot_extracts_expected_optional_fields(fixture_text_loader) -> None:

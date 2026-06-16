@@ -196,6 +196,18 @@ def extract_archive_cards(soup: BeautifulSoup, year: int) -> list[Tag]:
     return cards
 
 
+def parse_catalog_html(html: str, *, base_url: str, year: int) -> list[ParsedFilm]:
+    soup = BeautifulSoup(html, "html.parser")
+    parsed_films: list[ParsedFilm] = []
+
+    for card in extract_archive_cards(soup, year):
+        parsed = parse_listing_card(card, base_url, year)
+        if parsed is not None:
+            parsed_films.append(parsed)
+
+    return parsed_films
+
+
 def parse_listing_screening_line(value: str, year: int, base_url: str) -> ParsedScreening | None:
     text = " ".join(value.split())
     match = re.match(r"(?P<day>\d{2})\.(?P<month>\d{2}),\s*(?P<venue>.+?),\s*(?P<hour>\d{2}):(\d{2})$", text)

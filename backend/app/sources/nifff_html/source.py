@@ -4,10 +4,9 @@ import logging
 from typing import Literal
 
 import requests
-from bs4 import BeautifulSoup
 
 from app.sources.nifff_html.client import build_session, fetch_html
-from app.sources.nifff_html.parser import ParsedFilm, enrich_from_detail, extract_archive_cards, parse_listing_card
+from app.sources.nifff_html.parser import ParsedFilm, enrich_from_detail, parse_catalog_html
 
 
 logger = logging.getLogger(__name__)
@@ -31,20 +30,16 @@ class BaseNifffHtmlSource:
         url = self.schedule_url_for_year(year)
         session = build_session()
         listing_html = fetch_html(session, url)
-        soup = BeautifulSoup(listing_html, "html.parser")
-        cards = extract_archive_cards(soup, year)
+        parsed_films = parse_catalog_html(listing_html, base_url=url, year=year)
 
-        parsed_films: list[ParsedFilm] = []
-        for card in cards:
-            parsed = parse_listing_card(card, url, year)
-            if parsed is None:
-                continue
-            if self._fetch_details:
-                parsed_films.append(self._enrich_with_detail_if_available(session, parsed))
-            else:
-                parsed_films.append(parsed)
+        if not self._fetch_details:
+            return parsed_films
 
-        return parsed_films
+        enriched_films: list[ParsedFilm] = []
+        for parsed in parsed_films:
+            enriched_films.append(self._enrich_with_detail_if_available(session, parsed))
+
+        return enriched_films
 
     def _enrich_with_detail_if_available(self, session: requests.Session, parsed: ParsedFilm) -> ParsedFilm:
         try:
