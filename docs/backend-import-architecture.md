@@ -1054,6 +1054,16 @@ et non :
 
 Ce choix est plus robuste pour la phase actuelle, car le point d’entrée live ne garantit pas forcément le même schéma de query que l’archive.
 
+Au 18 juin 2026, le programme live est disponible sur ce point d’entrée et le frontend demande explicitement l’année `2026` pour `source_mode="prod"`.
+Le mode `demo` reste lié à l’archive Wayback 2025.
+
+Pour le live courant, l’adapter HTML utilise volontairement les données du listing programme sans fetcher chaque page détail.
+Raison pratique : le listing contient déjà les champs nécessaires au planning, alors que le chargement séquentiel des pages détail peut bloquer longtemps l’import.
+Les `ends_at` restent inférés depuis `duration_minutes` quand la source ne donne pas une fin explicite ; ces inférences remontent comme warnings.
+
+La persistence NIFFF traite chaque import comme un bundle complet de catalogue.
+Quand un bundle live 2026 est appliqué, les entités `nifff:*` absentes du bundle courant sont supprimées pour éviter un mélange 2025/2026.
+
 ## Current Regression Fixes And Known Limits
 
 ### Film default status on fresh import

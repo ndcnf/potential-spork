@@ -19,6 +19,7 @@ Le frontend courant assume :
 - mode live strict quand l’utilisateur choisit `Live` : si le live ne charge pas, l’UI affiche une erreur au lieu de retomber sur la démo
 - confirmation explicite avant de récupérer les données live depuis `nifff.ch`
 - URL source live configurable dans `Paramètres` seulement quand `Live` est sélectionné, avec placeholder `https://nifff.ch/programme/` et CTA de récupération au bout du champ
+- `Live` importe l’édition courante 2026 ; `Démo` reste liée au programme 2025 Wayback
 - les erreurs Live conservent le détail renvoyé par le backend quand il existe, au lieu d’afficher seulement un message générique
 - fallback démo appliqué comme bundle cohérent uniquement dans le mode `Démo`, pas comme mélange partiel films réels / séances démo
 - la bascule de source remplace le catalogue courant comme un set complet : cycles, films et séances viennent de la même source chargée
@@ -99,6 +100,7 @@ Le frontend courant assume :
 - persistance locale déjà en place
 - bascule explicite `Démo (archive)` / `Live (prod)`
 - `Démo (archive)` lit la DB déjà alimentée depuis Wayback, sans réimport automatique
+- `Live (prod)` appelle l’import backend avec l’année 2026 et l’URL live choisie, puis recharge uniquement le catalogue live
 - possibilité de relancer explicitement un import propre depuis la source active
 - possibilité de reset les choix utilisateur pour repartir d’un état propre
 - résumé visible des signaux qui font remonter une séance

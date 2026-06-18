@@ -7,9 +7,10 @@ from sqlalchemy.orm import Session
 
 from app.models.film import Film
 from app.models.screening import Screening
+from app.models.cycle import Cycle
 from app.models.venue import Venue
 from app.schemas.imported import CanonicalImportBundle, ImportReport, ImportedCycle, ImportedFilm, ImportedScreening, ImportedVenue
-from app.services.import_bundle import apply_import_bundle
+from app.services.import_bundle import apply_import_bundle, prune_stale_catalog_entities
 
 
 def test_apply_import_bundle_persists_catalog_entities_and_updates_report(db_session: Session) -> None:
@@ -201,3 +202,65 @@ def test_apply_import_bundle_prunes_stale_screenings_for_imported_films(
     assert len(screenings) == 1
     assert screenings[0].source_key == "nifff:screening:clown-in-a-cornfield:open-air:2025-07-05T00:45:00"
     assert report.screenings_pruned == 1
+
+
+def test_apply_import_bundle_prunes_stale_nifff_catalog_entities(
+    db_session: Session,
+) -> None:
+    stale_cycle = Cycle(source_key="nifff:cycle:old-cycle", name="Old Cycle", slug="old-cycle")
+    stale_venue = Venue(source_key="nifff:venue:old-venue", name="Old Venue")
+    stale_film = Film(
+        source_key="nifff:film:old-film",
+        title="Old Film",
+        slug="old-film",
+        priority="high",
+        cycle=stale_cycle,
+    )
+    db_session.add_all([stale_cycle, stale_venue, stale_film])
+    db_session.flush()
+    db_session.add(
+        Screening(
+            source_key="nifff:screening:old-film:old-venue:2025-07-05T18:00:00",
+            film_id=stale_film.id,
+            venue_id=stale_venue.id,
+            starts_at=datetime(2025, 7, 5, 18, 0),
+            ends_at=datetime(2025, 7, 5, 20, 0),
+            selection_status="confirmed",
+        )
+    )
+    db_session.commit()
+
+    bundle = CanonicalImportBundle(
+        source_name="nifff_html",
+        year=2026,
+        cycles=[ImportedCycle(source_key="nifff:cycle:new-cycle", name="New Cycle", slug="new-cycle")],
+        films=[
+            ImportedFilm(
+                source_key="nifff:film:new-film",
+                title="New Film",
+                slug="new-film",
+                source_url="https://nifff.ch/prog/2026/film/new-film",
+                cycle_source_key="nifff:cycle:new-cycle",
+            )
+        ],
+        venues=[ImportedVenue(source_key="nifff:venue:new-venue", name="New Venue")],
+        screenings=[
+            ImportedScreening(
+                source_key="nifff:screening:new-film:new-venue:2026-07-05T18:00:00",
+                film_source_key="nifff:film:new-film",
+                venue_source_key="nifff:venue:new-venue",
+                starts_at=datetime(2026, 7, 5, 18, 0),
+                ends_at=datetime(2026, 7, 5, 20, 0),
+            )
+        ],
+    )
+
+    report = ImportReport(source_name="nifff_html", year=2026)
+    apply_import_bundle(db=db_session, bundle=bundle, report=report)
+    prune_stale_catalog_entities(db=db_session, bundle=bundle, report=report)
+
+    assert db_session.scalar(select(Film).where(Film.source_key == "nifff:film:old-film")) is None
+    assert db_session.scalar(select(Screening).where(Screening.source_key.like("nifff:screening:old-film:%"))) is None
+    assert db_session.scalar(select(Cycle).where(Cycle.source_key == "nifff:cycle:old-cycle")) is None
+    assert db_session.scalar(select(Venue).where(Venue.source_key == "nifff:venue:old-venue")) is None
+    assert db_session.scalar(select(Film).where(Film.source_key == "nifff:film:new-film")) is not None

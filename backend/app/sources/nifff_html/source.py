@@ -74,7 +74,7 @@ class NifffArchiveHtmlSource(BaseNifffHtmlSource):
 
 class NifffLiveHtmlSource(BaseNifffHtmlSource):
     def __init__(self, schedule_url_template: str = NIFFF_LIVE_PROGRAMME_URL) -> None:
-        super().__init__(schedule_url_template=schedule_url_template, source_mode="prod", fetch_details=True)
+        super().__init__(schedule_url_template=schedule_url_template, source_mode="prod", fetch_details=False)
 
 
 class NifffHtmlSource(NifffArchiveHtmlSource):

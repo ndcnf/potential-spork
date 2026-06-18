@@ -97,12 +97,14 @@ Règles :
 
 - `Démo` affiche uniquement cycles, films et séances de démonstration
 - `Live` affiche uniquement cycles, films et séances live
+- `Démo` importe/charge l’archive 2025 Wayback ; `Live` importe/charge l’édition courante 2026 depuis `nifff.ch`
 - l’URL live apparaît seulement quand `Live` est sélectionné dans les paramètres ; vide, elle retombe sur `https://nifff.ch/programme/`
 - choisir `Live` affiche le champ URL, puis le CTA de récupération demande une confirmation explicite avant de récupérer les données depuis `nifff.ch`
 - si `Live` ne charge pas, le catalogue courant est vidé et un message d’erreur live est affiché
 - si `Live` récupère une page mais que le backend ne détecte aucun film, c’est une erreur live explicite, pas un import réussi à zéro résultat
 - si le backend renvoie un détail d’erreur pour `Live`, le frontend doit l’afficher pour expliquer la cause concrète
 - le frontend ne doit pas mélanger un cycle live avec des films mock, ni des films live avec des séances démo
+- une bascule `Live` réussie remplace donc le set catalogue complet en DB pour la source NIFFF : films, cycles, lieux et séances absents du bundle live courant sont supprimés
 - un fallback démo peut exister pour le mode `Démo`, mais pas comme fallback automatique du mode `Live`
 - les choix utilisateur peuvent être réhydratés par-dessus le catalogue chargé, mais le catalogue lui-même reste mono-source
 

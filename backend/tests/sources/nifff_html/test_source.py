@@ -37,7 +37,28 @@ def test_archive_source_fetches_wayback_listing_without_detail_fetch(
 def test_live_source_keeps_live_programme_entrypoint() -> None:
     source = NifffLiveHtmlSource()
 
-    assert source.schedule_url_for_year(2025) == "https://nifff.ch/programme/"
+    assert source.schedule_url_for_year(2026) == "https://nifff.ch/programme/"
+
+
+def test_live_source_fetches_listing_without_detail_fetch(
+    fixture_text_loader: Callable[[str], str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fetched_urls: list[str] = []
+
+    def fake_fetch_html(session, url: str) -> str:
+        fetched_urls.append(url)
+        if len(fetched_urls) > 1:
+            raise AssertionError(f"live source must not block on detail pages during catalog import: {url}")
+        return fixture_text_loader("nifff_html/listing_wayback_programme.html").replace("/2025/", "/2026/")
+
+    monkeypatch.setattr("app.sources.nifff_html.source.fetch_html", fake_fetch_html)
+
+    payload = NifffLiveHtmlSource("https://nifff.ch/programme/?").fetch_catalog(2026)
+
+    assert fetched_urls == ["https://nifff.ch/programme/?"]
+    assert isinstance(payload, NifffHtmlCatalogPayload)
+    assert len(payload.parsed_films) == 2
 
 
 def test_archive_source_rejects_direct_nifff_url() -> None:

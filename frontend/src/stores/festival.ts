@@ -8,6 +8,8 @@ import { useSettingsStore } from '@/stores/settings'
 import type { Cycle, DataSourceMode, Film, ImportSummary, Priority, Screening } from '@/types'
 
 const STORAGE_KEY = 'potential-spork-festival-ui-state'
+const DEMO_CATALOG_YEAR = 2025
+const LIVE_CATALOG_YEAR = 2026
 const previewDataset = buildPreviewDataset()
 const mockCycles: Cycle[] = previewDataset.cycles
 const mockFilms: Film[] = previewDataset.films
@@ -25,6 +27,10 @@ function sanitizePlanningType(planningType: Film['planning_type'] | null | undef
 
 function isPlannableFilm(film: Film): boolean {
   return film.planning_type !== 'package_member'
+}
+
+function catalogYearForSource(mode: DataSourceMode): number {
+  return mode === 'prod' ? LIVE_CATALOG_YEAR : DEMO_CATALOG_YEAR
 }
 
 function sanitizeFilms(films: Film[]): Film[] {
@@ -421,7 +427,7 @@ export const useFestivalStore = defineStore('festival', {
         }
 
         try {
-          const summary = await api.importCatalog(2025, mode, scheduleUrl)
+          const summary = await api.importCatalog(catalogYearForSource(mode), mode, scheduleUrl)
           this.lastImportSummary = summary
           this.effectiveSourceMode = mode
           await this.bootstrap(mode)
@@ -451,7 +457,7 @@ export const useFestivalStore = defineStore('festival', {
       this.loadError = null
       try {
         clearPersistedUiState()
-        const summary = await api.importCatalog(2025, mode, scheduleUrl)
+        const summary = await api.importCatalog(catalogYearForSource(mode), mode, scheduleUrl)
         this.lastImportSummary = summary
         this.effectiveSourceMode = mode
         await api.resetUserChoices()

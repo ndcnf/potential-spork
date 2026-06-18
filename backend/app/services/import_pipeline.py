@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.schemas.imported import ImportReport
 from app.schemas.imports import ImportSummary
-from app.services.import_bundle import apply_import_bundle
+from app.services.import_bundle import apply_import_bundle, prune_stale_catalog_entities
 from app.services.import_catalog import import_catalog
 from app.sources.base import FestivalSource
 
@@ -44,6 +44,7 @@ def run_import_pipeline(
     apply_import_bundle(db=db, bundle=bundle, report=report)
     for postprocessor in postprocessors:
         postprocessor(db)
+    prune_stale_catalog_entities(db=db, bundle=bundle, report=report)
 
     db.commit()
     logger.info(

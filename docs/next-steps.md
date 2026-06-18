@@ -38,6 +38,8 @@ Ordre recommandé :
   - les fins de séance non déductibles doivent aussi remonter comme warnings pour préparer le contrôle des vraies données
   - garder la séparation `real datetime` / `festival day` : iCal et conflits utilisent les vraies dates, l’affichage planning utilise le jour festival
   - garder les tests de non-régression sur les séances après minuit et sur le nettoyage des anciennes séances quand une date corrigée change le `source_key`
+  - garder la séparation stricte `demo=2025 Wayback` / `prod=2026 live`, sans fallback automatique du live vers la démo
+  - ne réactiver le fetch des pages détail live que si un besoin concret apparaît et avec timeouts / concurrence contrôlée
   - garder le mapping frontend des priorités legacy dans `frontend/src/lib/priorities.ts`
   - garder les règles backend de priorité dans `backend/app/core/priorities.py`
 - réduire ensuite la dette `must-see` / `low` côté contrat/API public, pas en dupliquant des règles internes

@@ -267,7 +267,7 @@ describe('festival store', () => {
 
     await store.switchSource('prod', 'https://nifff.ch/programme/')
 
-    expect(apiMock.importCatalog).toHaveBeenCalledWith(2025, 'prod', 'https://nifff.ch/programme/')
+    expect(apiMock.importCatalog).toHaveBeenCalledWith(2026, 'prod', 'https://nifff.ch/programme/')
     expect(store.films.map((item) => item.title)).toEqual(['Live Film'])
   })
 })
