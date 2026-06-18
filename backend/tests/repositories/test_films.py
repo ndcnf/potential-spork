@@ -55,7 +55,7 @@ def test_film_repository_updates_existing_film_without_duplication(db_session, f
     assert result.film.priority == "high"
 
 
-def test_film_repository_resets_legacy_default_medium_to_low(db_session, film_factory) -> None:
+def test_film_repository_preserves_existing_maybe_choice(db_session, film_factory) -> None:
     existing = film_factory(title="Old Title", slug="a-cure-for-wellness", priority="medium", source_key=None)
     repository = FilmRepository(db_session)
 
@@ -71,7 +71,7 @@ def test_film_repository_resets_legacy_default_medium_to_low(db_session, film_fa
 
     assert result.created is False
     assert result.film.id == existing.id
-    assert result.film.priority == "low"
+    assert result.film.priority == "medium"
 
 
 def test_film_repository_persists_planning_type(db_session) -> None:

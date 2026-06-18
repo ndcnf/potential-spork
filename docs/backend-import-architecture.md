@@ -1069,8 +1069,9 @@ Conséquence technique actuelle :
 Règle de migration transitoire appliquée :
 
 - les films nouvellement importés reçoivent `low`
-- les anciennes valeurs par défaut `medium` sont normalisées vers `low` pendant l’upsert
-- les choix explicites existants (`high`, `must-see`, `ignore`) sont préservés
+- les anciennes bases où tous les films étaient encore à `medium` sont normalisées vers `low` par la migration SQLite
+- les choix explicites existants (`medium`, `high`, `must-see`, `ignore`) sont préservés pendant l’upsert
+- la règle backend est centralisée dans `app/core/priorities.py`
 
 ### Runtime display for durations
 

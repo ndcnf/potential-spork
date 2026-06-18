@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.priorities import DEFAULT_FILM_PRIORITY, priority_after_import
 from app.models.cycle import Cycle
 from app.models.film import Film
 from app.schemas.imported import ImportedFilm
@@ -31,11 +32,10 @@ class FilmRepository:
                 source_key=imported_film.source_key,
                 title=imported_film.title,
                 slug=imported_film.slug,
-                priority="low",
+                priority=DEFAULT_FILM_PRIORITY,
             )
 
-        if film.priority not in {"high", "must-see", "ignore"}:
-            film.priority = "low"
+        film.priority = priority_after_import(film.priority)
         film.source_key = imported_film.source_key
         film.title = imported_film.title
         film.directors = imported_film.directors

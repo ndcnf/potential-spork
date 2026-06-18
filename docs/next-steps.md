@@ -38,7 +38,8 @@ Ordre recommandé :
   - les fins de séance non déductibles doivent aussi remonter comme warnings pour préparer le contrôle des vraies données
   - garder la séparation `real datetime` / `festival day` : iCal et conflits utilisent les vraies dates, l’affichage planning utilise le jour festival
   - garder le mapping frontend des priorités legacy dans `frontend/src/lib/priorities.ts`
-- réduire ensuite la dette `must-see` / `low` côté contrat/API, pas en dupliquant des règles dans l’UI
+  - garder les règles backend de priorité dans `backend/app/core/priorities.py`
+- réduire ensuite la dette `must-see` / `low` côté contrat/API public, pas en dupliquant des règles internes
 - définir plus tard une stratégie si synchronisation serveur des choix devient nécessaire
 - revoir la règle actuelle de persistance locale > état distant dès que les vraies données seront accessibles de manière fiable
 
