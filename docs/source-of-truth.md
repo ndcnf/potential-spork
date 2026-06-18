@@ -182,6 +182,7 @@ Règles :
 - le panneau détail porte la complexité utile
 - dans le panneau détail, le statut utilisateur (`Confirmée`, `Tentative`, `Ignorée`, `Conflit`) doit rester visuellement dominant
 - les recommendations système doivent être secondaires et visuellement différentes des statuts utilisateur
+- les recommendations doivent prioriser les films `Immanquable` avant les films `Peut-être`; les préférences salle/horaire servent ensuite à départager les séances
 - une séance ignorée affiche l’état `Ignoré` et une action `Annuler` pour revenir à l’état neutre
 - les venues/lieux doivent être repris comme données explicites avant d’étendre les paramètres de préférences de lieux
 

@@ -12,6 +12,7 @@ import {
   isHighPriority,
   isPlanningPriority,
   priorityDotCount,
+  priorityRank,
 } from "@/lib/priorities";
 import { useFestivalStore } from "@/stores/festival";
 import { useSettingsStore } from "@/stores/settings";
@@ -369,6 +370,14 @@ export function usePlanningModel() {
         return !hasSelected && scored.length > 0;
       })
       .sort((left, right) => {
+        const leftFilm = filmById.value.get(left[0]);
+        const rightFilm = filmById.value.get(right[0]);
+        const priorityDelta =
+          priorityRank(rightFilm?.priority) - priorityRank(leftFilm?.priority);
+        if (priorityDelta !== 0) {
+          return priorityDelta;
+        }
+
         const leftBestScore = left[1][0]?.score ?? Number.NEGATIVE_INFINITY;
         const rightBestScore = right[1][0]?.score ?? Number.NEGATIVE_INFINITY;
         return (
