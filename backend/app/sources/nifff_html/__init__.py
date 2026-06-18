@@ -1,0 +1,1 @@
+"""NIFFF HTML source adapter."""

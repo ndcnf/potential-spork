@@ -1,0 +1,108 @@
+:root {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Canonical colors */
+  --color-background: #0f1117;
+  --color-foreground: #f4f6fb;
+  --color-accent: #f0c15a;
+  --color-state-positive: var(--color-accent);
+  --color-state-neutral: color-mix(in srgb, var(--color-foreground) 68%, var(--color-background));
+  --color-state-negative: var(--color-accent);
+
+  /* Derived neutrals */
+  --color-muted: color-mix(in srgb, var(--color-foreground) 74%, var(--color-background));
+  --color-muted-subtle: color-mix(in srgb, var(--color-foreground) 58%, var(--color-background));
+  --color-surface-soft: color-mix(in srgb, var(--color-foreground) 3%, var(--color-background));
+  --color-surface-strong: color-mix(in srgb, var(--color-foreground) 5%, var(--color-background));
+  --color-surface-shell: color-mix(in srgb, var(--color-background) 82%, black);
+  --color-surface-shell-strong: color-mix(in srgb, var(--color-background) 96%, black);
+  --color-border-color: color-mix(in srgb, var(--color-foreground) 8%, var(--color-background));
+  --color-border-strong: color-mix(in srgb, var(--color-foreground) 14%, var(--color-background));
+  --color-border-faint: color-mix(in srgb, var(--color-foreground) 4%, var(--color-background));
+  --color-border-mid: color-mix(in srgb, var(--color-foreground) 12%, var(--color-background));
+
+  /* Derived semantic fills */
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 14%, var(--color-background));
+  --color-accent-border: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
+  --color-positive-soft: color-mix(in srgb, var(--color-accent) 14%, var(--color-background));
+  --color-positive-border: color-mix(in srgb, var(--color-accent) 28%, var(--color-background));
+  --color-neutral-soft: color-mix(in srgb, var(--color-foreground) 14%, var(--color-background));
+  --color-neutral-soft-strong: color-mix(in srgb, var(--color-foreground) 22%, var(--color-background));
+  --color-negative-soft: color-mix(in srgb, var(--color-accent) 16%, var(--color-background));
+  --color-negative-border: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
+  --color-negative-strong: color-mix(in srgb, var(--color-accent) 78%, var(--color-background));
+
+  /* Compatibility aliases */
+  --color-text: var(--color-foreground);
+  --color-text-muted: var(--color-muted);
+  --color-text-subtle: var(--color-muted-subtle);
+  --color-bg: var(--color-background);
+  --color-bg-soft: var(--color-surface-soft);
+  --color-border-soft: var(--color-border-color);
+
+  --color-priority-must: var(--color-accent);
+  --color-priority-high: var(--color-accent);
+  --color-priority-medium: var(--color-foreground);
+  --color-priority-low: var(--color-muted-subtle);
+  --color-priority-muted: var(--color-state-neutral);
+
+  --color-state-confirmed: #8fbf9f;
+  --color-state-tentative: #8fa9c8;
+  --color-state-recommended: var(--color-accent);
+  --color-state-must-lock: var(--color-accent);
+  --color-state-conflict: #df9274;
+  --color-state-rejected: var(--color-neutral-soft);
+  --color-state-disabled: color-mix(in srgb, var(--color-foreground) 24%, var(--color-background));
+  --color-state-available: color-mix(in srgb, var(--color-foreground) 58%, var(--color-background));
+
+  --color-state-confirmed-soft: color-mix(in srgb, var(--color-state-confirmed) 15%, var(--color-background));
+  --color-state-tentative-soft: color-mix(in srgb, var(--color-state-tentative) 15%, var(--color-background));
+  --color-state-recommended-soft: var(--color-accent-soft);
+  --color-state-must-lock-soft: var(--color-accent-soft);
+  --color-state-conflict-soft: color-mix(in srgb, var(--color-state-conflict) 16%, var(--color-background));
+
+  /* Shared control tokens */
+  --control-height: 2.4rem;
+  --control-height-lg: 2.7rem;
+  --control-padding-x: 0.8rem;
+  --control-padding-y: 0.55rem;
+  --control-radius: var(--radius-md);
+  --control-border-color: color-mix(in srgb, var(--color-foreground) 6%, var(--color-background));
+  --control-bg: transparent;
+  --control-bg-active: var(--color-border-color);
+  --field-padding-y: 0.45rem;
+  --field-padding-x: 0.7rem;
+  --pill-gap: var(--field-padding-y);
+  --swatch-size: 0.7rem;
+  --dot-size-sm: var(--field-padding-y);
+  --dot-size-md: 0.9rem;
+  --space-micro: 0.2rem;
+  --space-micro-lg: 0.4rem;
+  --space-tight: 0.35rem;
+  --space-tight-lg: var(--dot-size-md);
+  --panel-padding-x: 1.25rem;
+  --radius-card: 14px;
+
+  --space-2xs: 0.15rem;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.25rem;
+  --space-2xl: 1.5rem;
+
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  --font-size-xs: 0.72rem;
+  --font-size-sm: 0.78rem;
+  --font-size-md: 0.88rem;
+  --font-size-lg: 1.1rem;
+  --font-size-xl: 1.15rem;
+
+  /* Reference values for JS/layout. Plain CSS cannot reuse vars inside @media conditions. */
+  --breakpoint-mobile: 960px;
+  --breakpoint-content-max: 76rem;
+}
