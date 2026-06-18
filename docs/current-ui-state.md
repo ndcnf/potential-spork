@@ -116,6 +116,7 @@ Composants :
 
 - `frontend/src/components/ui/PrioritySelect.vue`
 - `frontend/src/components/ui/PriorityBadge.vue`
+- `frontend/src/lib/priorities.ts`
 
 ## Known Debts
 
@@ -123,7 +124,8 @@ Composants :
 
 - `Priority` porte encore des valeurs legacy dans `frontend/src/types.ts`
 - `must-see` et `low` existent encore pour compatibilité
-- il faut surveiller les endroits où l’ancienne logique 5 niveaux peut réapparaître dans l’UI
+- le mapping legacy est centralisé dans `frontend/src/lib/priorities.ts`
+- il faut éviter de réintroduire des comparaisons directes à `must-see` ou `low` hors de ce helper
 
 ### UX
 

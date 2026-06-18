@@ -99,6 +99,11 @@ Mapping legacy :
 - `ignore` -> `Non merci`
 - `low` -> `À traiter` transitoire
 
+Frontend :
+
+- le mapping legacy est centralisé dans `frontend/src/lib/priorities.ts`
+- l’UI doit consommer ce helper au lieu de comparer directement `must-see` ou `low`
+
 Règles :
 
 - un film arrive sans décision préalable

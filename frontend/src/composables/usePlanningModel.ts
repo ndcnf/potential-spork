@@ -8,6 +8,11 @@ import {
   screeningsOverlapWithBuffer,
   toMinutes,
 } from "@/lib/planning";
+import {
+  isHighPriority,
+  isPlanningPriority,
+  priorityDotCount,
+} from "@/lib/priorities";
 import { useFestivalStore } from "@/stores/festival";
 import { useSettingsStore } from "@/stores/settings";
 import type { Film, Screening } from "@/types";
@@ -50,18 +55,8 @@ export function usePlanningModel() {
     isMobile.value = mobileMedia?.matches ?? false;
   };
 
-  function isPlanningPriority(priority: Film["priority"]): boolean {
-    return (
-      priority === "medium" || priority === "high" || priority === "must-see"
-    );
-  }
-
   function isPlannableFilm(film: Film): boolean {
     return film.planning_type !== "package_member";
-  }
-
-  function isHighPriority(priority: Film["priority"] | undefined): boolean {
-    return priority === "high" || priority === "must-see";
   }
 
   function toFestivalPreferenceMinutes(minutes: number | null): number | null {
@@ -721,9 +716,7 @@ export function usePlanningModel() {
   }
 
   function filmPriorityDots(priority: Film["priority"] | undefined): number {
-    if (priority === "must-see" || priority === "high") return 2;
-    if (priority === "medium") return 1;
-    return 0;
+    return priorityDotCount(priority);
   }
 
   function filmMeta(screening: PlanningScreening): string {

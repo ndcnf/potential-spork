@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 
 import { screeningsOverlapWithBuffer } from '@/lib/planning'
+import { normalizePriority, sanitizePriority } from '@/lib/priorities'
 import { buildPreviewDataset } from '@/mock/nifff2025Preview'
 import { api } from '@/services/api'
 import { useSettingsStore } from '@/stores/settings'
@@ -16,30 +17,6 @@ type PersistedFestivalUiState = {
   version: 1
   filmPriorities: Record<number, Priority>
   screeningSelections: Record<number, Screening['selection_status']>
-}
-
-function normalizePriority(priority: Priority): 'pending' | 'ignore' | 'medium' | 'high' {
-  if (priority === 'must-see' || priority === 'high') {
-    return 'high'
-  }
-
-  if (priority === 'medium') {
-    return 'medium'
-  }
-
-  if (priority === 'unreviewed' || priority === 'low') {
-    return 'pending'
-  }
-
-  return 'ignore'
-}
-
-function sanitizePriority(priority: Priority | null | undefined): Priority {
-  if (!priority || priority === 'low') {
-    return 'unreviewed'
-  }
-
-  return priority
 }
 
 function sanitizePlanningType(planningType: Film['planning_type'] | null | undefined): Film['planning_type'] {

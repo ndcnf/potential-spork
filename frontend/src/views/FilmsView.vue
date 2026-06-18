@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 
 import { filmCastLabel, filmDirectorLabel, filmMetaLabel, filmTaglineLabel, filmYearLabel, hasFilmCardCopy, isFilmCardMetaOnly } from '@/lib/filmDisplay'
 import { formatTimeRange, getFestivalDayKey } from '@/lib/planning'
+import { normalizePriority, priorityLabel, priorityRank } from '@/lib/priorities'
 import PriorityBadge from '@/components/ui/PriorityBadge.vue'
 import PrioritySelect from '@/components/ui/PrioritySelect.vue'
 import { useFestivalStore } from '@/stores/festival'
@@ -28,22 +29,6 @@ onMounted(() => {
     store.bootstrap()
   }
 })
-
-function normalizePriority(priority: Priority): Exclude<PriorityFilter, 'all'> {
-  if (priority === 'must-see' || priority === 'high') {
-    return 'high'
-  }
-
-  if (priority === 'medium') {
-    return 'medium'
-  }
-
-  if (priority === 'unreviewed' || priority === 'low') {
-    return 'pending'
-  }
-
-  return 'ignore'
-}
 
 const filteredGroups = computed(() => {
   const priorityFilters = new Set(activePriorityFilters.value)
@@ -136,15 +121,6 @@ const filmsEmptyState = computed(() => {
     action: 'Réinitialiser les filtres',
   }
 })
-
-function priorityRank(priority: Priority): number {
-  return {
-    ignore: 0,
-    pending: 1,
-    medium: 2,
-    high: 3,
-  }[normalizePriority(priority)]
-}
 
 function isCycleOpen(cycleId: number): boolean {
   return openCycles[cycleId] ?? true
@@ -248,15 +224,6 @@ function showTransitionFeedback(message: string, tone: 'success' | 'info' = 'suc
     transitionFeedback.visible = false
     transitionFeedback.timer = null
   }, 2600)
-}
-
-function priorityLabel(priority: Priority): string {
-  const simplified = normalizePriority(priority)
-
-  if (simplified === 'high') return 'Immanquable'
-  if (simplified === 'medium') return 'Peut-être'
-  if (simplified === 'ignore') return 'Non merci'
-  return 'À traiter'
 }
 
 function applyFilmPriority(film: Film, priority: Priority) {
