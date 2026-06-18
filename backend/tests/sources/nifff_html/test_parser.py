@@ -170,6 +170,14 @@ def test_parse_listing_screening_line_keeps_late_night_screening_on_real_next_da
     assert screening.starts_at == datetime(2025, 7, 6, 1, 0)
 
 
+def test_parse_listing_screening_line_keeps_first_festival_day_after_midnight_on_real_next_day() -> None:
+    screening = parse_listing_screening_line("04.07, Open Air, 00:45", 2025, "https://nifff.ch/prog/2025/film/clown-in-a-cornfield")
+
+    assert screening is not None
+    assert screening.venue_name == "Open Air"
+    assert screening.starts_at == datetime(2025, 7, 5, 0, 45)
+
+
 def test_extract_listing_screenings_reads_multiple_lines_from_wayback_card() -> None:
     html = """
     <div class="archive-movie__item">

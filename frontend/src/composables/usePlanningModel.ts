@@ -931,6 +931,21 @@ export function usePlanningModel() {
     return "planning__visual-block--available";
   }
 
+  function visualizationBlockTone(screening: PlanningScreening): string {
+    return screeningStatusTone(screening);
+  }
+
+  function visualizationBlockLabel(screening: PlanningScreening): string {
+    const parts = [
+      screening.film_title,
+      screening.starts_at || screening.ends_at ? formatTimeRange(screening) : "",
+      screening.venue_name,
+      screeningComparisonStatus(screening),
+    ];
+
+    return parts.filter(Boolean).join(" · ");
+  }
+
   function selectedCountForDay(dayKey: string): number {
     if (dayKey === FESTIVAL_VIEW_KEY) {
       return planningScreenings.value.filter(
@@ -1022,6 +1037,8 @@ export function usePlanningModel() {
     screeningDecisionNote,
     screeningPrimaryActionLabel,
     visualizationBlockClass,
+    visualizationBlockTone,
+    visualizationBlockLabel,
     selectedCountForDay,
     dayChipLabel,
     setScreeningSelection,

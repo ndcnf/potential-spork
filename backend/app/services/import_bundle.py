@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import logging
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.models.screening import Screening
 from app.repositories.cycles import CycleRepository
 from app.repositories.films import FilmRepository
 from app.repositories.screenings import ScreeningRepository
@@ -51,6 +53,7 @@ def apply_import_bundle(*, db: Session, bundle: CanonicalImportBundle, report: I
             report.venues_updated += 1
         venues_by_source_key[imported_venue.source_key] = result.venue
 
+    incoming_screening_source_keys = {screening.source_key for screening in bundle.screenings}
     for imported_screening in bundle.screenings:
         film = films_by_source_key.get(imported_screening.film_source_key)
         if film is None:
@@ -76,5 +79,20 @@ def apply_import_bundle(*, db: Session, bundle: CanonicalImportBundle, report: I
             report.screenings_created += 1
         else:
             report.screenings_updated += 1
+
+    imported_film_ids = [film.id for film in films_by_source_key.values()]
+    if imported_film_ids:
+        stale_screenings = db.scalars(
+            select(Screening).where(
+                Screening.film_id.in_(imported_film_ids),
+                Screening.source_key.is_not(None),
+                Screening.source_key.not_in(incoming_screening_source_keys),
+            )
+        ).all()
+        for stale_screening in stale_screenings:
+            db.delete(stale_screening)
+            report.screenings_pruned += 1
+        if stale_screenings:
+            db.flush()
 
     return report

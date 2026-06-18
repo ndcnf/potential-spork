@@ -37,6 +37,8 @@ const {
   screeningDecisionNote,
   screeningPrimaryActionLabel,
   visualizationBlockClass,
+  visualizationBlockTone,
+  visualizationBlockLabel,
   selectedCountForDay,
   dayChipLabel,
   setScreeningSelection,
@@ -435,13 +437,16 @@ async function removeScreeningSelection(screeningId: number) {
                 <div class="planning__visual-lanes">
                   <div v-for="lane in group.lanes" :key="`${group.dayKey}-${lane.venueName}`" class="planning__visual-lane">
                     <div class="planning__visual-track">
-                      <div
+                      <button
                         v-for="block in lane.blocks"
                         :key="block.id"
+                        type="button"
                         class="planning__visual-block"
                         :class="visualizationBlockClass(block)"
                         :style="{ gridRow: `${block.visualRowStart} / span ${block.visualRowSpan}` }"
-                        :title="`${block.film_title} · ${formatTimeRange(block)}`"
+                        :aria-label="visualizationBlockLabel(block)"
+                        :data-tooltip="visualizationBlockLabel(block)"
+                        :data-status="visualizationBlockTone(block)"
                         @click="openDetailPanel(block.id)"
                       />
                     </div>

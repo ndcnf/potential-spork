@@ -68,12 +68,20 @@ Questions auxquelles la vue doit répondre vite :
 - qu’est-ce qui est déjà retenu
 - où sont les conflits
 - que vais-je perdre si je choisis cette séance
+- dans la visualisation compacte, quel statut porte chaque bloc et quelle séance se cache derrière
 
 Ce n’est pas :
 
 - un catalogue bis
 - un écran de découverte
 - une console multi-CTA
+
+Règles visualisation :
+
+- les blocs restent compacts et ne portent pas de texte permanent
+- le statut est visible par la couleur, la forme de bordure et un marqueur interne
+- l’identité de séance est disponible au hover/focus via un tooltip et au clic via le panneau détail
+- si une donnée secondaire manque, le tooltip omet ce morceau au lieu d’afficher un placeholder
 
 ### `Settings`
 

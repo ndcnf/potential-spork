@@ -110,4 +110,43 @@ describe('usePlanningModel recommendations', () => {
     expect(model.planningScreenings.value.find((item) => item.id === 101)?.isRecommended).toBe(false)
     expect(model.planningScreenings.value.find((item) => item.id === 201)?.isRecommended).toBe(true)
   })
+
+  it('describes visualization blocks with screening identity and status', () => {
+    const festivalStore = useFestivalStore()
+    festivalStore.films = [film({ id: 1, title: 'Visual Film', priority: 'high' })]
+    festivalStore.screenings = [
+      screening({
+        id: 101,
+        film_id: 1,
+        film_title: 'Visual Film',
+        venue_name: 'Rex',
+        selection_status: 'confirmed',
+      }),
+    ]
+
+    const model = usePlanningModel()
+    const block = model.planningScreenings.value[0]
+
+    expect(model.visualizationBlockTone(block)).toBe('confirmed')
+    expect(model.visualizationBlockLabel(block)).toBe('Visual Film · 18:00 - 19:30 · Rex · Confirmée')
+  })
+
+  it('omits absent visualization block details instead of showing placeholders', () => {
+    const festivalStore = useFestivalStore()
+    festivalStore.films = [film({ id: 1, title: 'Quiet Block', priority: 'medium' })]
+    festivalStore.screenings = [
+      screening({
+        id: 101,
+        film_id: 1,
+        film_title: 'Quiet Block',
+        venue_name: null,
+      }),
+    ]
+
+    const model = usePlanningModel()
+    const block = model.planningScreenings.value[0]
+
+    expect(model.visualizationBlockLabel(block)).toBe('Quiet Block · 18:00 - 19:30 · Séance unique')
+    expect(model.visualizationBlockLabel(block)).not.toContain('Lieu inconnu')
+  })
 })

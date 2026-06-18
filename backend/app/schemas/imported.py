@@ -76,5 +76,6 @@ class ImportReport:
     venues_updated: int = 0
     screenings_created: int = 0
     screenings_updated: int = 0
+    screenings_pruned: int = 0
     warnings: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)

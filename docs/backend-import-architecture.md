@@ -1225,10 +1225,14 @@ Règle actuelle :
 
 - une séance indiquée par la source comme `05.07, 01:00` appartient au festival day `2025-07-05`
 - sa vraie date de projection est `2025-07-06T01:00`
+- le premier jour suit la même règle : une séance indiquée comme `04.07, 00:45` appartient au festival day `2025-07-04`, mais sa vraie projection est `2025-07-05T00:45`
 - le cutoff de journée festival est `06:00`
 - l’export iCal utilise toujours `starts_at` / `ends_at`, donc les vraies dates/heures, jamais le festival day
 
 Cette séparation évite de casser les conflits réels, l’export calendrier et l’affichage par journée festival.
+
+Quand une correction de parsing change une vraie date de séance, le `source_key` peut changer car il contient `starts_at`.
+L’import du catalogue doit alors reconnaître la séance corrigée, mettre à jour l’ancienne ligne en conservant le choix utilisateur, puis supprimer les anciennes séances source-keyées qui ne sont plus présentes dans le bundle courant.
 
 ### About Wayback data
 

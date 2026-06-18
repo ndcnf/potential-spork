@@ -76,6 +76,7 @@ Le frontend courant assume :
   - conflits entre recommandations concurrentes
 - logique horaire des recommandations alignée sur la journée festival
 - les séances après minuit restent groupées sur la journée festival précédente, tout en conservant leur vraie date/heure pour les conflits et l’export iCal
+- en DB, ces séances après minuit doivent donc être stockées avec la vraie date du lendemain ; le regroupement sur la veille est uniquement une règle d’affichage `festival day`
 - `must-lock` limité à la vraie dernière séance viable
 - panneau détail orienté décision :
   - film compact en contexte
@@ -85,6 +86,8 @@ Le frontend courant assume :
   - recommendations en chips secondaires
 - `Confirmée` utilise un vert doux, `Recommendation` utilise le doré, et `Tentative` / `Conflit` gardent des nuances et formes distinctes
 - l’ordre des critères secondaires de recommendation est réglable dans `Paramètres`, après la priorité fixe `Immanquable` avant `Peut-être`
+- la vue visualisation garde des blocs compacts, mais expose le statut de chaque séance par couleur/forme et marqueur interne
+- les blocs de visualisation sont des boutons accessibles : le hover/focus affiche film, horaire, lieu si présent, et statut sans agrandir la grille
 - chantier à reprendre : venues/lieux comme données explicites, puis paramètres de préférences de lieux
 - suppression des pastilles dans les pills d’état
 - suppression des compteurs redondants dans les headers de groupes timeline/visualisation

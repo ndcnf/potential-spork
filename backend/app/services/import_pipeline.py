@@ -60,6 +60,7 @@ def run_import_pipeline(
             "venues_updated": report.venues_updated,
             "screenings_created": report.screenings_created,
             "screenings_updated": report.screenings_updated,
+            "screenings_pruned": report.screenings_pruned,
             "warnings": report.warnings,
             "errors": report.errors,
         },

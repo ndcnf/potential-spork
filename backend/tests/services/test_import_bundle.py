@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -87,3 +89,115 @@ def test_apply_import_bundle_warns_when_screening_references_unknown_film(
     assert report.warnings == [
         "Skipping screening import because film source key is unknown: screening=test:screening:unknown-film film=test:film:missing"
     ]
+
+
+def test_apply_import_bundle_updates_corrected_screening_source_key_without_losing_choice(
+    db_session: Session,
+) -> None:
+    initial_bundle = CanonicalImportBundle(
+        source_name="nifff_html",
+        year=2025,
+        films=[
+            ImportedFilm(
+                source_key="nifff:film:clown-in-a-cornfield",
+                title="Clown in a Cornfield",
+                slug="clown-in-a-cornfield",
+                source_url="https://nifff.ch/prog/2025/film/clown-in-a-cornfield",
+                cycle_source_key=None,
+            )
+        ],
+        venues=[ImportedVenue(source_key="nifff:venue:open-air", name="Open Air")],
+        screenings=[
+            ImportedScreening(
+                source_key="nifff:screening:clown-in-a-cornfield:open-air:2025-07-04T00:45:00",
+                film_source_key="nifff:film:clown-in-a-cornfield",
+                venue_source_key="nifff:venue:open-air",
+                starts_at=datetime(2025, 7, 4, 0, 45),
+                ends_at=datetime(2025, 7, 4, 2, 22),
+                source_url="https://nifff.ch/prog/2025/film/clown-in-a-cornfield",
+            )
+        ],
+    )
+    apply_import_bundle(db=db_session, bundle=initial_bundle, report=ImportReport(source_name="nifff_html", year=2025))
+    existing = db_session.scalar(select(Screening))
+    assert existing is not None
+    existing.selection_status = "tentative"
+    db_session.commit()
+
+    corrected_bundle = CanonicalImportBundle(
+        source_name="nifff_html",
+        year=2025,
+        films=initial_bundle.films,
+        venues=initial_bundle.venues,
+        screenings=[
+            ImportedScreening(
+                source_key="nifff:screening:clown-in-a-cornfield:open-air:2025-07-05T00:45:00",
+                film_source_key="nifff:film:clown-in-a-cornfield",
+                venue_source_key="nifff:venue:open-air",
+                starts_at=datetime(2025, 7, 5, 0, 45),
+                ends_at=datetime(2025, 7, 5, 2, 22),
+                source_url="https://nifff.ch/prog/2025/film/clown-in-a-cornfield",
+            )
+        ],
+    )
+    report = ImportReport(source_name="nifff_html", year=2025)
+
+    apply_import_bundle(db=db_session, bundle=corrected_bundle, report=report)
+
+    screenings = db_session.scalars(select(Screening)).all()
+
+    assert len(screenings) == 1
+    assert screenings[0].source_key == "nifff:screening:clown-in-a-cornfield:open-air:2025-07-05T00:45:00"
+    assert screenings[0].starts_at == datetime(2025, 7, 5, 0, 45)
+    assert screenings[0].selection_status == "tentative"
+    assert report.screenings_updated == 1
+
+
+def test_apply_import_bundle_prunes_stale_screenings_for_imported_films(
+    db_session: Session,
+) -> None:
+    bundle = CanonicalImportBundle(
+        source_name="nifff_html",
+        year=2025,
+        films=[
+            ImportedFilm(
+                source_key="nifff:film:clown-in-a-cornfield",
+                title="Clown in a Cornfield",
+                slug="clown-in-a-cornfield",
+                source_url="https://nifff.ch/prog/2025/film/clown-in-a-cornfield",
+                cycle_source_key=None,
+            )
+        ],
+        venues=[ImportedVenue(source_key="nifff:venue:open-air", name="Open Air")],
+        screenings=[
+            ImportedScreening(
+                source_key="nifff:screening:clown-in-a-cornfield:open-air:2025-07-05T00:45:00",
+                film_source_key="nifff:film:clown-in-a-cornfield",
+                venue_source_key="nifff:venue:open-air",
+                starts_at=datetime(2025, 7, 5, 0, 45),
+                ends_at=datetime(2025, 7, 5, 2, 22),
+            )
+        ],
+    )
+    apply_import_bundle(db=db_session, bundle=bundle, report=ImportReport(source_name="nifff_html", year=2025))
+    film = db_session.scalar(select(Film).where(Film.source_key == "nifff:film:clown-in-a-cornfield"))
+    assert film is not None
+    db_session.add(
+        Screening(
+            source_key="nifff:screening:clown-in-a-cornfield:open-air:obsolete",
+            film_id=film.id,
+            starts_at=datetime(2025, 7, 4, 0, 45),
+            ends_at=datetime(2025, 7, 4, 2, 22),
+        )
+    )
+    db_session.commit()
+
+    report = ImportReport(source_name="nifff_html", year=2025)
+
+    apply_import_bundle(db=db_session, bundle=bundle, report=report)
+
+    screenings = db_session.scalars(select(Screening)).all()
+
+    assert len(screenings) == 1
+    assert screenings[0].source_key == "nifff:screening:clown-in-a-cornfield:open-air:2025-07-05T00:45:00"
+    assert report.screenings_pruned == 1
