@@ -1188,6 +1188,8 @@ Le résumé d’import remonte désormais :
 - `screenings_updated`
 - `warnings_count`
 - `errors_count`
+- `warnings`
+- `errors`
 
 ### Why this matters now
 
@@ -1197,6 +1199,7 @@ Même avec des données Wayback non parfaitement fidèles, ces compteurs sont pr
 - vérifier que des screenings remontent bien dans le pipeline
 - voir rapidement si le parse produit beaucoup d’objets mais peu de persistence
 - repérer des warnings structurels lors d’un essai sur snapshot historique
+- lire les messages de warning sans devoir aller chercher les logs backend
 
 ### Missing vs inferred data
 

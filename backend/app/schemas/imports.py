@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class ImportCatalogPayload(BaseModel):
@@ -19,3 +19,5 @@ class ImportSummary(BaseModel):
     screenings_updated: int = 0
     warnings_count: int = 0
     errors_count: int = 0
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)

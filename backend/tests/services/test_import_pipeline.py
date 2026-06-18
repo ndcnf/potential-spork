@@ -4,7 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.film import Film
-from app.services.import_pipeline import run_import_pipeline
+from app.schemas.imported import ImportReport
+from app.services.import_pipeline import run_import_pipeline, summary_from_report
 from app.sources.nifff_html.parser import ParsedFilm
 from app.sources.nifff_html.source import NifffHtmlCatalogPayload
 
@@ -42,3 +43,19 @@ def test_run_import_pipeline_applies_bundle_then_postprocessors(db_session: Sess
 
     assert summary.films_created == 1
     assert observed_titles == ["A Cure for Wellness"]
+
+
+def test_summary_from_report_exposes_warning_and_error_messages() -> None:
+    report = ImportReport(
+        source_name="nifff_html",
+        year=2025,
+        warnings=["Inferred screening end from film duration"],
+        errors=["Source payload incomplete"],
+    )
+
+    summary = summary_from_report(report)
+
+    assert summary.warnings_count == 1
+    assert summary.errors_count == 1
+    assert summary.warnings == ["Inferred screening end from film duration"]
+    assert summary.errors == ["Source payload incomplete"]

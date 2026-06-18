@@ -32,6 +32,8 @@ def test_import_catalog_accepts_minimal_payload(client, monkeypatch) -> None:
         "screenings_updated": 0,
         "warnings_count": 0,
         "errors_count": 0,
+        "warnings": [],
+        "errors": [],
     }
 
 

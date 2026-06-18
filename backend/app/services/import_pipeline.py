@@ -28,6 +28,8 @@ def summary_from_report(report: ImportReport) -> ImportSummary:
         screenings_updated=report.screenings_updated,
         warnings_count=len(report.warnings),
         errors_count=len(report.errors),
+        warnings=list(report.warnings),
+        errors=list(report.errors),
     )
 
 
