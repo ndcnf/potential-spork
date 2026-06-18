@@ -4,11 +4,16 @@ import { RouterLink } from 'vue-router'
 
 import { useFestivalStore } from '@/stores/festival'
 import { useSettingsStore } from '@/stores/settings'
-import type { DataSourceMode } from '@/types'
+import type { DataSourceMode, RecommendationSortCriterion } from '@/types'
 
 const festivalStore = useFestivalStore()
 const settingsStore = useSettingsStore()
 const draftDataSourceMode = ref<DataSourceMode>('demo')
+const recommendationCriterionOptions: Array<{ value: RecommendationSortCriterion; label: string }> = [
+  { value: 'options', label: 'Peu d’options restantes' },
+  { value: 'score', label: 'Meilleure salle / horaire' },
+  { value: 'conflicts', label: 'Moins de conflits' },
+]
 
 onMounted(() => {
   settingsStore.load()
@@ -44,6 +49,12 @@ const activeRecommendationSignals = computed(() => {
     signals.push(`éviter après ${formatMinutesForInput(settingsStore.recommendationSettings.avoidAfterMinutes)}`)
   }
 
+  signals.push(
+    `ordre : ${settingsStore.recommendationSettings.criterionOrder
+      .map((criterion) => recommendationCriterionOptions.find((option) => option.value === criterion)?.label.toLowerCase() ?? criterion)
+      .join(' · ')}`,
+  )
+
   return signals
 })
 
@@ -64,6 +75,12 @@ function parseInputTime(value: string): number | null {
 function updateAvoidWindow(beforeValue: string, afterValue: string) {
   settingsStore.setAvoidBeforeMinutes(parseInputTime(beforeValue))
   settingsStore.setAvoidAfterMinutes(parseInputTime(afterValue))
+}
+
+function updateRecommendationCriterionOrder(index: number, value: string) {
+  if (value === 'options' || value === 'score' || value === 'conflicts') {
+    settingsStore.setRecommendationCriterionOrder(index, value)
+  }
 }
 
 function liveSourceUrlForRequest(): string | undefined {
@@ -296,6 +313,7 @@ async function reimportCurrentSource() {
       <div class="settings__impact">
         <p class="settings__impact-title">Ce qui peut faire remonter une séance</p>
         <div class="settings__impact-list">
+          <span class="settings__impact-pill">films immanquables d’abord</span>
           <span class="settings__impact-pill">moins de conflits avec le planning</span>
           <span class="settings__impact-pill">peu d’options restantes pour un film</span>
           <span class="settings__impact-pill">salle mieux notée</span>
@@ -304,6 +322,36 @@ async function reimportCurrentSource() {
         <p v-if="activeRecommendationSignals.length" class="settings__status">Préférences actives : {{ activeRecommendationSignals.join(' · ') }}</p>
         <RouterLink to="/planning" class="ghost-button settings__impact-link">Voir le rendu dans Planning</RouterLink>
       </div>
+    </section>
+
+    <section class="settings__panel" :class="{ 'settings__panel--inactive': !settingsStore.recommendationSettings.enabled }">
+      <header class="settings__section-header">
+        <div>
+          <h3>Ordre d’arbitrage</h3>
+          <p class="page-copy">Les films immanquables restent toujours prioritaires. Ces réglages départagent ensuite les séances entre elles.</p>
+        </div>
+      </header>
+
+      <fieldset class="settings__fieldset" :disabled="!settingsStore.recommendationSettings.enabled">
+        <div class="settings__order-list">
+          <div class="settings__select-row">
+            <span>Priorité fixe</span>
+            <strong>Immanquables avant peut-être</strong>
+          </div>
+          <label
+            v-for="(criterion, index) in settingsStore.recommendationSettings.criterionOrder"
+            :key="`${criterion}-${index}`"
+            class="settings__select-row"
+          >
+            <span>Critère {{ index + 1 }}</span>
+            <select :value="criterion" @change="updateRecommendationCriterionOrder(index, ($event.target as HTMLSelectElement).value)">
+              <option v-for="option in recommendationCriterionOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
     </section>
 
     <section class="settings__panel" :class="{ 'settings__panel--inactive': !settingsStore.recommendationSettings.enabled }">

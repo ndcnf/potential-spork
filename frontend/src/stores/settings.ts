@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import type { DataSourceMode, RecommendationSettings } from '@/types'
+import type { DataSourceMode, RecommendationSettings, RecommendationSortCriterion } from '@/types'
 
 const STORAGE_KEY = 'potential-spork-settings'
 
@@ -10,11 +10,27 @@ type PersistedSettings = {
   liveSourceUrl: string
 }
 
+export const defaultRecommendationCriterionOrder: RecommendationSortCriterion[] = ['options', 'score', 'conflicts']
+
+export function sanitizeRecommendationCriterionOrder(
+  value: RecommendationSortCriterion[] | undefined,
+): RecommendationSortCriterion[] {
+  const validCriteria = new Set<RecommendationSortCriterion>(defaultRecommendationCriterionOrder)
+  const ordered = (value ?? []).filter(
+    (item, index, items): item is RecommendationSortCriterion => validCriteria.has(item) && items.indexOf(item) === index,
+  )
+  return [...ordered, ...defaultRecommendationCriterionOrder.filter((item) => !ordered.includes(item))].slice(
+    0,
+    defaultRecommendationCriterionOrder.length,
+  )
+}
+
 const defaultSettings = (): RecommendationSettings => ({
   enabled: false,
   preferredVenueScores: {},
   avoidBeforeMinutes: null,
   avoidAfterMinutes: null,
+  criterionOrder: [...defaultRecommendationCriterionOrder],
 })
 
 export const useSettingsStore = defineStore('settings', {
@@ -59,6 +75,7 @@ export const useSettingsStore = defineStore('settings', {
             preferredVenueScores: persistedRecommendationSettings?.preferredVenueScores ?? {},
             avoidBeforeMinutes: persistedRecommendationSettings?.avoidBeforeMinutes ?? null,
             avoidAfterMinutes: persistedRecommendationSettings?.avoidAfterMinutes ?? null,
+            criterionOrder: sanitizeRecommendationCriterionOrder(persistedRecommendationSettings?.criterionOrder),
           }
           this.dataSourceMode = parsed.dataSourceMode === 'prod' ? 'prod' : 'demo'
           this.liveSourceUrl = parsed.liveSourceUrl ?? ''
@@ -100,6 +117,13 @@ export const useSettingsStore = defineStore('settings', {
     },
     setAvoidAfterMinutes(value: number | null) {
       this.recommendationSettings.avoidAfterMinutes = value
+      this.persist()
+    },
+    setRecommendationCriterionOrder(index: number, criterion: RecommendationSortCriterion) {
+      const current = sanitizeRecommendationCriterionOrder(this.recommendationSettings.criterionOrder)
+      const withoutSelected = current.filter((item) => item !== criterion)
+      withoutSelected.splice(index, 0, criterion)
+      this.recommendationSettings.criterionOrder = sanitizeRecommendationCriterionOrder(withoutSelected)
       this.persist()
     },
     setDataSourceMode(mode: DataSourceMode) {

@@ -84,6 +84,7 @@ Le frontend courant assume :
   - statut utilisateur dominant
   - recommendations en chips secondaires
 - `Confirmée` utilise un vert doux, `Recommendation` utilise le doré, et `Tentative` / `Conflit` gardent des nuances et formes distinctes
+- l’ordre des critères secondaires de recommendation est réglable dans `Paramètres`, après la priorité fixe `Immanquable` avant `Peut-être`
 - chantier à reprendre : venues/lieux comme données explicites, puis paramètres de préférences de lieux
 - suppression des pastilles dans les pills d’état
 - suppression des compteurs redondants dans les headers de groupes timeline/visualisation

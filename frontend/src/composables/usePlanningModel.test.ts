@@ -87,4 +87,27 @@ describe('usePlanningModel recommendations', () => {
     expect(model.planningScreenings.value.find((item) => item.id === 101)?.isRecommended).toBe(false)
     expect(model.planningScreenings.value.find((item) => item.id === 201)?.isRecommended).toBe(true)
   })
+
+  it('uses the configured secondary criterion order after film priority', () => {
+    const festivalStore = useFestivalStore()
+    const settingsStore = useSettingsStore()
+
+    settingsStore.setRecommendationEnabled(true)
+    settingsStore.setVenueScore('Arcades', 1)
+    settingsStore.setRecommendationCriterionOrder(0, 'score')
+    festivalStore.films = [
+      film({ id: 1, title: 'Few Options', priority: 'high' }),
+      film({ id: 2, title: 'Better Venue', priority: 'high' }),
+    ]
+    festivalStore.screenings = [
+      screening({ id: 101, film_id: 1, film_title: 'Few Options', venue_name: 'Rex', starts_at: '2025-07-05T18:00:00+02:00', ends_at: '2025-07-05T19:30:00+02:00' }),
+      screening({ id: 201, film_id: 2, film_title: 'Better Venue', venue_name: 'Arcades', starts_at: '2025-07-05T18:15:00+02:00', ends_at: '2025-07-05T19:45:00+02:00' }),
+      screening({ id: 202, film_id: 2, film_title: 'Better Venue', venue_name: 'Studio', starts_at: '2025-07-06T18:15:00+02:00', ends_at: '2025-07-06T19:45:00+02:00' }),
+    ]
+
+    const model = usePlanningModel()
+
+    expect(model.planningScreenings.value.find((item) => item.id === 101)?.isRecommended).toBe(false)
+    expect(model.planningScreenings.value.find((item) => item.id === 201)?.isRecommended).toBe(true)
+  })
 })

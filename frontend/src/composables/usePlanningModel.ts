@@ -16,7 +16,7 @@ import {
 } from "@/lib/priorities";
 import { useFestivalStore } from "@/stores/festival";
 import { useSettingsStore } from "@/stores/settings";
-import type { Film, Screening } from "@/types";
+import type { Film, RecommendationSortCriterion, Screening } from "@/types";
 
 export type PlanningScreening = Screening & {
   film: Film | null;
@@ -131,6 +131,7 @@ export function usePlanningModel() {
     reasons: string[];
     drawbacks: string[];
     hasConflict: boolean;
+    preferenceScore: number;
   } {
     const settings = settingsStore.recommendationSettings;
     const reasons: string[] = [];
@@ -151,7 +152,8 @@ export function usePlanningModel() {
       settings.avoidAfterMinutes,
     );
     const timePenalty = timePreference ? -1 : 0;
-    const total = conflictPenalty + comfortBonus + timePenalty;
+    const preferenceScore = comfortBonus + timePenalty;
+    const total = conflictPenalty + preferenceScore;
 
     if (conflictPenalty < 0) {
       drawbacks.push("conflit avec une autre séance déjà retenue");
@@ -184,7 +186,28 @@ export function usePlanningModel() {
       reasons,
       drawbacks,
       hasConflict,
+      preferenceScore,
     };
+  }
+
+  function compareRecommendationCriterion(
+    criterion: RecommendationSortCriterion,
+    left: Array<ReturnType<typeof screeningRecommendationScore> & { screening: Screening }>,
+    right: Array<ReturnType<typeof screeningRecommendationScore> & { screening: Screening }>,
+  ): number {
+    if (criterion === "options") {
+      return left.length - right.length;
+    }
+
+    if (criterion === "score") {
+      const leftBestScore = Math.max(...left.map((entry) => entry.preferenceScore));
+      const rightBestScore = Math.max(...right.map((entry) => entry.preferenceScore));
+      return rightBestScore - leftBestScore;
+    }
+
+    const leftConflictCount = left.filter((entry) => entry.hasConflict).length;
+    const rightConflictCount = right.filter((entry) => entry.hasConflict).length;
+    return leftConflictCount - rightConflictCount;
   }
 
   function countConflictPairs(screenings: Screening[]): number {
@@ -378,11 +401,14 @@ export function usePlanningModel() {
           return priorityDelta;
         }
 
-        const leftBestScore = left[1][0]?.score ?? Number.NEGATIVE_INFINITY;
-        const rightBestScore = right[1][0]?.score ?? Number.NEGATIVE_INFINITY;
-        return (
-          left[1].length - right[1].length || rightBestScore - leftBestScore
-        );
+        for (const criterion of settingsStore.recommendationSettings.criterionOrder) {
+          const result = compareRecommendationCriterion(criterion, left[1], right[1]);
+          if (result !== 0) {
+            return result;
+          }
+        }
+
+        return left[0] - right[0];
       });
 
     for (const [filmId, scored] of filmIdsToRecommend) {
