@@ -9,6 +9,7 @@ from app.models.screening import Screening
 from app.models.venue import Venue
 from app.schemas.imported import CanonicalImportBundle, ImportReport, ImportedCycle, ImportedFilm, ImportedScreening, ImportedVenue
 from app.services.import_nifff import import_nifff_catalog, import_nifff_catalog_from_archive
+from app.sources.nifff_html.source import NifffLiveHtmlSource
 
 
 def build_bundle(*, short_description: str | None, tagline: str = "Psychological horror") -> CanonicalImportBundle:
@@ -247,4 +248,42 @@ def test_archive_import_uses_wayback_source_by_default(db_session: Session, monk
         "year": 2025,
         "source_mode": "demo",
         "schedule_url": "https://web.archive.org/web/20250704120326/https://nifff.ch/programme/",
+    }
+
+
+def test_import_nifff_catalog_routes_to_live_source_mode(db_session: Session, monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run_import_pipeline(*, db, source, year, postprocessors=()):
+        captured["year"] = year
+        captured["source"] = source
+        captured["schedule_url"] = source.schedule_url_for_year(year)
+        captured["postprocessor_count"] = len(postprocessors)
+        return {
+            "cycles_created": 0,
+            "films_created": 0,
+            "films_updated": 0,
+            "venues_created": 0,
+            "venues_updated": 0,
+            "screenings_created": 0,
+            "screenings_updated": 0,
+            "warnings_count": 0,
+            "errors_count": 0,
+        }
+
+    monkeypatch.setattr("app.services.import_nifff.run_import_pipeline", fake_run_import_pipeline)
+
+    import_nifff_catalog(
+        db=db_session,
+        year=2025,
+        source_mode="prod",
+        schedule_url="https://example.test/programme",
+    )
+
+    assert isinstance(captured["source"], NifffLiveHtmlSource)
+    assert captured == {
+        "year": 2025,
+        "source": captured["source"],
+        "schedule_url": "https://example.test/programme",
+        "postprocessor_count": 1,
     }

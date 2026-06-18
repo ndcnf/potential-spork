@@ -33,6 +33,8 @@ Ordre recommandé :
   - `import_pipeline` orchestre le flow générique, le `commit`, le log final et le résumé API
   - `import_postprocessing` isole la correction legacy `package_member`
   - `import_nifff` reste un wrapper spécifique NIFFF pour le choix de source et les postprocessors nécessaires
+  - la route d’import API reste une façade fine qui transmet `source_mode` au service
+  - les données déduites doivent remonter comme warnings, les données vraiment absentes restent `None`
 - réduire ensuite la dette `must-see` / `low`
 - définir plus tard une stratégie si synchronisation serveur des choix devient nécessaire
 - revoir la règle actuelle de persistance locale > état distant dès que les vraies données seront accessibles de manière fiable

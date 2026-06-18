@@ -5,8 +5,8 @@ import requests
 
 def test_import_catalog_accepts_minimal_payload(client, monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.api.routes.imports.import_nifff_catalog_from_archive",
-        lambda db, year, schedule_url=None: {
+        "app.api.routes.imports.import_nifff_catalog",
+        lambda db, year, source_mode="demo", schedule_url=None: {
             "cycles_created": 1,
             "films_created": 2,
             "films_updated": 3,
@@ -38,8 +38,9 @@ def test_import_catalog_accepts_minimal_payload(client, monkeypatch) -> None:
 def test_import_catalog_accepts_schedule_url(client, monkeypatch) -> None:
     captured: dict[str, object] = {}
 
-    def fake_import_nifff_catalog(db, year, schedule_url=None):
+    def fake_import_nifff_catalog(db, year, source_mode="demo", schedule_url=None):
         captured["year"] = year
+        captured["source_mode"] = source_mode
         captured["schedule_url"] = schedule_url
         return {
             "cycles_created": 0,
@@ -53,7 +54,7 @@ def test_import_catalog_accepts_schedule_url(client, monkeypatch) -> None:
             "errors_count": 0,
         }
 
-    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog_from_archive", fake_import_nifff_catalog)
+    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog", fake_import_nifff_catalog)
 
     response = client.post(
         "/api/imports/nifff/catalog",
@@ -66,6 +67,7 @@ def test_import_catalog_accepts_schedule_url(client, monkeypatch) -> None:
     assert response.status_code == 200
     assert captured == {
         "year": 2025,
+        "source_mode": "demo",
         "schedule_url": "https://example.test/schedule?type=film",
     }
 
@@ -73,8 +75,9 @@ def test_import_catalog_accepts_schedule_url(client, monkeypatch) -> None:
 def test_import_catalog_routes_to_live_source_mode(client, monkeypatch) -> None:
     captured: dict[str, object] = {}
 
-    def fake_import_nifff_catalog(db, year, schedule_url=None):
+    def fake_import_nifff_catalog(db, year, source_mode="demo", schedule_url=None):
         captured["year"] = year
+        captured["source_mode"] = source_mode
         captured["schedule_url"] = schedule_url
         return {
             "cycles_created": 0,
@@ -88,7 +91,7 @@ def test_import_catalog_routes_to_live_source_mode(client, monkeypatch) -> None:
             "errors_count": 0,
         }
 
-    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog_from_live", fake_import_nifff_catalog)
+    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog", fake_import_nifff_catalog)
 
     response = client.post(
         "/api/imports/nifff/catalog",
@@ -102,6 +105,7 @@ def test_import_catalog_routes_to_live_source_mode(client, monkeypatch) -> None:
     assert response.status_code == 200
     assert captured == {
         "year": 2025,
+        "source_mode": "prod",
         "schedule_url": "https://example.test/programme?type=film",
     }
 
@@ -116,10 +120,10 @@ def test_import_catalog_returns_422_for_invalid_payload(client) -> None:
 
 
 def test_import_catalog_returns_502_when_source_fetch_fails(client, monkeypatch) -> None:
-    def fake_import_nifff_catalog(db, year, schedule_url=None):
+    def fake_import_nifff_catalog(db, year, source_mode="demo", schedule_url=None):
         raise requests.HTTPError("404 Client Error")
 
-    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog_from_live", fake_import_nifff_catalog)
+    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog", fake_import_nifff_catalog)
 
     response = client.post(
         "/api/imports/nifff/catalog",

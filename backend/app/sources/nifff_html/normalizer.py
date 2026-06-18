@@ -55,6 +55,7 @@ def normalize_parsed_films(*, parsed_films: list[ParsedFilm], year: int) -> Cano
     venues_by_key: dict[str, ImportedVenue] = {}
     imported_films: list[ImportedFilm] = []
     imported_screenings: list[ImportedScreening] = []
+    warnings: list[str] = []
     package_category_tokens = set().union(
         *(category_tokens(parsed.cycle_name) for parsed in parsed_films if is_package(parsed))
     )
@@ -104,13 +105,18 @@ def normalize_parsed_films(*, parsed_films: list[ParsedFilm], year: int) -> Cano
                     ImportedVenue(source_key=venue_source_key, name=parsed_screening.venue_name),
                 )
 
+            ends_at = infer_screening_end(parsed, parsed_screening)
+            if parsed_screening.ends_at is None and ends_at is not None:
+                starts_at_token = parsed_screening.starts_at.isoformat() if parsed_screening.starts_at else "unknown"
+                warnings.append(f"Inferred screening end from film duration: film={parsed.slug} starts_at={starts_at_token}")
+
             imported_screenings.append(
                 ImportedScreening(
                     source_key=build_screening_source_key(parsed, parsed_screening),
                     film_source_key=build_film_source_key(parsed),
                     venue_source_key=venue_source_key,
                     starts_at=parsed_screening.starts_at,
-                    ends_at=infer_screening_end(parsed, parsed_screening),
+                    ends_at=ends_at,
                     source_url=parsed_screening.source_url,
                     ticket_url=parsed_screening.ticket_url,
                 )
@@ -123,4 +129,5 @@ def normalize_parsed_films(*, parsed_films: list[ParsedFilm], year: int) -> Cano
         films=imported_films,
         venues=list(venues_by_key.values()),
         screenings=imported_screenings,
+        warnings=warnings,
     )

@@ -489,6 +489,9 @@ Créer les repositories d’upsert.
 
 Faire de `app/api/routes/imports.py` un simple appel au service.
 
+État actuel : la route d’import transmet `source_mode`, `year` et `schedule_url` à `import_nifff_catalog`.
+Elle ne choisit plus directement entre `NifffArchiveHtmlSource` et `NifffLiveHtmlSource`.
+
 ## Testing Strategy
 
 Minimum requis :
@@ -995,6 +998,9 @@ But :
 - éviter une logique implicite côté backend
 - permettre plus tard une bascule contrôlée depuis l’UI ou la config
 
+Le choix runtime `demo` / `prod` est centralisé dans `services/import_nifff.py`.
+La route API reste une façade fine autour du service.
+
 ### UI recommendation for Settings
 
 Oui, un CTA dans `Settings` est possible.
@@ -1191,6 +1197,16 @@ Même avec des données Wayback non parfaitement fidèles, ces compteurs sont pr
 - vérifier que des screenings remontent bien dans le pipeline
 - voir rapidement si le parse produit beaucoup d’objets mais peu de persistence
 - repérer des warnings structurels lors d’un essai sur snapshot historique
+
+### Missing vs inferred data
+
+Règle actuelle :
+
+- si une donnée source est absente et ne peut pas être déduite proprement, le backend conserve `None`
+- si une donnée est déduite, le normalizer doit rendre cette déduction visible via `CanonicalImportBundle.warnings`
+- exemple actuel : si `ends_at` manque sur une séance mais que `duration_minutes` existe, `ends_at` est inféré et un warning est ajouté
+
+But : ne pas présenter une donnée déduite comme si elle venait directement de la source NIFFF.
 
 ### About Wayback data
 
@@ -1896,7 +1912,7 @@ Cas à couvrir :
 Nom de tests recommandés :
 
 - `test_import_catalog_orchestrates_source_parser_normalizer_and_repositories`
-- `test_import_catalog_collects_warnings_in_report`
+- `test_import_catalog_copies_normalizer_warnings_to_report`
 - `test_import_catalog_raises_explicit_error_when_source_fetch_fails`
 
 ### `backend/tests/repositories/test_cycles.py`

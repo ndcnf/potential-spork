@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from sqlalchemy.orm import Session
 
 from app.schemas.imports import ImportSummary
@@ -18,16 +20,25 @@ def _import_nifff_from_source(db: Session, source: FestivalSource, year: int) ->
     )
 
 
-def import_nifff_catalog(db: Session, year: int, schedule_url: str | None = None) -> ImportSummary:
-    source = NifffHtmlSource(schedule_url_template=schedule_url) if schedule_url else NifffHtmlSource()
+def build_nifff_source(*, source_mode: Literal["demo", "prod"], schedule_url: str | None = None) -> FestivalSource:
+    if source_mode == "prod":
+        return NifffLiveHtmlSource(schedule_url_template=schedule_url) if schedule_url else NifffLiveHtmlSource()
+    return NifffArchiveHtmlSource(schedule_url_template=schedule_url) if schedule_url else NifffArchiveHtmlSource()
+
+
+def import_nifff_catalog(
+    db: Session,
+    year: int,
+    source_mode: Literal["demo", "prod"] = "demo",
+    schedule_url: str | None = None,
+) -> ImportSummary:
+    source = build_nifff_source(source_mode=source_mode, schedule_url=schedule_url)
     return _import_nifff_from_source(db=db, source=source, year=year)
 
 
 def import_nifff_catalog_from_archive(db: Session, year: int, schedule_url: str | None = None) -> ImportSummary:
-    source = NifffArchiveHtmlSource(schedule_url_template=schedule_url) if schedule_url else NifffArchiveHtmlSource()
-    return _import_nifff_from_source(db=db, source=source, year=year)
+    return import_nifff_catalog(db=db, year=year, source_mode="demo", schedule_url=schedule_url)
 
 
 def import_nifff_catalog_from_live(db: Session, year: int, schedule_url: str | None = None) -> ImportSummary:
-    source = NifffLiveHtmlSource(schedule_url_template=schedule_url) if schedule_url else NifffLiveHtmlSource()
-    return _import_nifff_from_source(db=db, source=source, year=year)
+    return import_nifff_catalog(db=db, year=year, source_mode="prod", schedule_url=schedule_url)
