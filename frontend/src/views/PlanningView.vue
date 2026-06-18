@@ -361,15 +361,23 @@ async function removeScreeningSelection(screeningId: number) {
                     <button
                       v-if="screening.selection_status === 'tentative'"
                       type="button"
-                      class="planning__action planning__action--primary"
+                      class="planning__action planning__action--primary planning__action--confirm"
                       @click="applyScreeningSelection(screening.id, 'confirmed')"
                     >
                       Confirmer cette séance
                     </button>
                     <button
+                      v-else-if="screening.selection_status === 'rejected'"
+                      type="button"
+                      class="planning__action planning__action--state"
+                      disabled
+                    >
+                      Ignoré
+                    </button>
+                    <button
                       v-else-if="screening.selection_status !== 'confirmed'"
                       type="button"
-                      class="planning__action planning__action--primary"
+                      class="planning__action planning__action--primary planning__action--tentative"
                       @click="applyScreeningSelection(screening.id, 'tentative')"
                     >
                       {{ screeningPrimaryActionLabel(screening) }}
@@ -382,6 +390,14 @@ async function removeScreeningSelection(screeningId: number) {
                       @click="applyScreeningSelection(screening.id, 'rejected')"
                     >
                       Ignorer
+                    </button>
+                    <button
+                      v-else
+                      type="button"
+                      class="planning__action planning__action--ghost"
+                      @click="removeScreeningSelection(screening.id)"
+                    >
+                      Annuler
                     </button>
                    </div>
                    <p v-if="screening.isConflict || screening.isAlternative || screening.isMustLock" class="planning__timeline-note">
@@ -442,7 +458,7 @@ async function removeScreeningSelection(screeningId: number) {
       </section>
 
       <aside v-if="detailScreening" class="planning__detail-panel">
-        <header class="planning__panel-header">
+        <header class="planning__detail-film-header">
           <div>
             <p class="eyebrow">Détail film</p>
             <h3 class="planning__detail-title">
@@ -456,35 +472,110 @@ async function removeScreeningSelection(screeningId: number) {
           <button type="button" class="planning__action planning__action--ghost" @click="closeDetailPanel">Fermer</button>
         </header>
 
-        <div class="planning__detail-media" v-if="detailScreening.film?.poster_url">
-          <img :src="detailScreening.film.poster_url" :alt="`Affiche ${detailScreening.film_title}`" />
-        </div>
-
-        <div class="planning__detail-topline">
-          <p class="planning__detail-time">{{ formatTimeRange(detailScreening) }}</p>
-          <p class="planning__detail-venue">{{ detailScreening.venue_name || 'Salle inconnue' }}</p>
-        </div>
-
-        <div class="planning__detail-grid">
-          <div>
-            <p class="planning__detail-line"><strong>Cycle</strong> {{ detailScreening.film?.cycle_name || 'Non renseigné' }}</p>
+        <section class="planning__active-screening" :class="screeningStateClass(detailScreening)" aria-label="Séance active">
+          <div class="planning__active-screening-main">
+            <div>
+              <p class="planning__section-label">Séance active</p>
+              <p class="planning__detail-time">{{ formatDayLabel(detailScreening.dayKey) }} · {{ formatTimeRange(detailScreening) }}</p>
+              <p class="planning__detail-venue">{{ detailScreening.venue_name || 'Salle inconnue' }}</p>
+            </div>
+            <span class="planning__decision-badge" :class="`planning__decision-badge--${screeningStatusTone(detailScreening)}`">
+              <span class="planning__decision-marker" aria-hidden="true" />
+              {{ screeningComparisonStatus(detailScreening) }}
+            </span>
           </div>
-          <div v-if="hasFilmDetailInfo(detailScreening.film)">
-            <p v-if="filmDirectorLabel(detailScreening.film)" class="planning__detail-line"><strong>Réalisation</strong> {{ filmDirectorLabel(detailScreening.film) }}</p>
-            <p v-if="filmTaglineLabel(detailScreening.film)" class="planning__detail-line"><strong>Tagline</strong> {{ filmTaglineLabel(detailScreening.film) }}</p>
-            <p v-if="filmDetailMeta(detailScreening)" class="planning__detail-line"><strong>Infos</strong> {{ filmDetailMeta(detailScreening) }}</p>
+          <div v-if="detailScreening.recommendationReasons.length || detailScreening.recommendationDrawbacks.length || detailScreening.recommendationBlockedBy" class="planning__recommendation-strip">
+            <span v-for="reason in detailScreening.recommendationReasons" :key="reason" class="planning__recommendation-chip planning__recommendation-chip--positive">{{ reason }}</span>
+            <span v-for="reason in detailScreening.recommendationDrawbacks" :key="reason" class="planning__recommendation-chip planning__recommendation-chip--warning">{{ reason }}</span>
+            <span v-if="detailScreening.recommendationBlockedBy" class="planning__recommendation-chip planning__recommendation-chip--warning">{{ detailScreening.recommendationBlockedBy }}</span>
           </div>
-        </div>
+          <p v-if="screeningDecisionNote(detailScreening)" class="planning__detail-note">{{ screeningDecisionNote(detailScreening) }}</p>
+          <div class="planning__detail-actions">
+            <button
+              v-if="detailScreening.selection_status === 'tentative'"
+              type="button"
+              class="planning__action planning__action--primary planning__action--confirm"
+              @click="applyScreeningSelection(detailScreening.id, 'confirmed')"
+            >
+              Confirmer cette séance
+            </button>
+            <button
+              v-else-if="detailScreening.selection_status === 'rejected'"
+              type="button"
+              class="planning__action planning__action--state"
+              disabled
+            >
+              Ignoré
+            </button>
+            <button
+              v-else-if="detailScreening.selection_status !== 'confirmed'"
+              type="button"
+              class="planning__action planning__action--primary planning__action--tentative"
+              @click="applyScreeningSelection(detailScreening.id, 'tentative')"
+            >
+              {{ screeningPrimaryActionLabel(detailScreening) }}
+            </button>
+            <button
+              v-if="detailScreening.selection_status === 'confirmed'"
+              type="button"
+              class="planning__action planning__action--secondary"
+              @click="applyScreeningSelection(detailScreening.id, 'tentative')"
+            >
+              Repasser en tentative
+            </button>
+            <button
+              v-if="detailScreening.selection_status === 'tentative' || detailScreening.selection_status === 'confirmed'"
+              type="button"
+              class="planning__action planning__action--ghost"
+              @click="removeScreeningSelection(detailScreening.id)"
+            >
+              Retirer du planning
+            </button>
+            <button
+              v-else-if="detailScreening.selection_status !== 'rejected'"
+              type="button"
+              class="planning__action planning__action--ghost"
+              @click="applyScreeningSelection(detailScreening.id, 'rejected')"
+            >
+              Ignorer cette séance
+            </button>
+            <button
+              v-else
+              type="button"
+              class="planning__action planning__action--ghost"
+              @click="removeScreeningSelection(detailScreening.id)"
+            >
+              Annuler
+            </button>
+          </div>
+        </section>
 
-        <div v-if="detailScreening.film?.cast" class="planning__detail-copy">
-          <p class="planning__detail-copy-title">Casting</p>
-          <p>{{ detailScreening.film.cast }}</p>
-        </div>
+        <section class="planning__film-context">
+          <div class="planning__detail-media" v-if="detailScreening.film?.poster_url">
+            <img :src="detailScreening.film.poster_url" :alt="`Affiche ${detailScreening.film_title}`" />
+          </div>
+
+          <div class="planning__detail-grid">
+            <div>
+              <p class="planning__detail-line"><strong>Cycle</strong> {{ detailScreening.film?.cycle_name || 'Non renseigné' }}</p>
+            </div>
+            <div v-if="hasFilmDetailInfo(detailScreening.film)">
+              <p v-if="filmDirectorLabel(detailScreening.film)" class="planning__detail-line"><strong>Réalisation</strong> {{ filmDirectorLabel(detailScreening.film) }}</p>
+              <p v-if="filmTaglineLabel(detailScreening.film)" class="planning__detail-line"><strong>Tagline</strong> {{ filmTaglineLabel(detailScreening.film) }}</p>
+              <p v-if="filmDetailMeta(detailScreening)" class="planning__detail-line"><strong>Infos</strong> {{ filmDetailMeta(detailScreening) }}</p>
+            </div>
+          </div>
+
+          <div v-if="detailScreening.film?.cast" class="planning__detail-copy">
+            <p class="planning__detail-copy-title">Casting</p>
+            <p>{{ detailScreening.film.cast }}</p>
+          </div>
+        </section>
 
         <div v-if="relatedFilmScreenings.length" class="planning__detail-copy">
-          <p class="planning__detail-copy-title">{{ relatedFilmScreenings.length > 1 ? 'Comparer les séances de ce film' : 'Séance de ce film' }}</p>
+          <p class="planning__section-label">{{ relatedFilmScreenings.length > 1 ? 'Comparer les séances' : 'Séance de ce film' }}</p>
           <p class="planning__detail-copy-subtitle">
-            {{ relatedFilmScreenings.length > 1 ? 'Commence par choisir ou remplacer une séance, puis ajuste son statut si besoin.' : 'Cette séance peut être retenue telle quelle ou remplacée plus tard.' }}
+            {{ relatedFilmScreenings.length > 1 ? 'Choisis la meilleure option, puis confirme seulement quand elle est sûre.' : 'Cette séance peut être retenue telle quelle ou remplacée plus tard.' }}
           </p>
           <div class="planning__detail-screenings">
             <article
@@ -500,47 +591,43 @@ async function removeScreeningSelection(screeningId: number) {
                       {{ formatDayLabel(option.dayKey) }} · {{ formatTimeRange(option) }}
                     </button>
                   </strong>
-                  <span>{{ option.venue_name }}</span>
+                  <span class="planning__venue-slot">{{ option.venue_name || 'Salle inconnue' }}</span>
                 </div>
-                <span class="planning__status-pill" :class="`planning__status-pill--${screeningStatusTone(option)}`">
+                <span class="planning__decision-badge planning__decision-badge--compact" :class="`planning__decision-badge--${screeningStatusTone(option)}`">
+                  <span class="planning__decision-marker" aria-hidden="true" />
                   {{ screeningComparisonStatus(option) }}
                 </span>
               </div>
                <div v-if="screeningComparisonHints(option).length" class="planning__detail-hints">
                  <span v-for="hint in screeningComparisonHints(option)" :key="hint" class="planning__detail-hint">{{ hint }}</span>
                </div>
-               <div v-if="option.recommendationReasons.length" class="planning__detail-recommendation-block">
-                 <p class="planning__detail-copy-title">Pour cette séance</p>
-                 <div class="planning__detail-hints">
-                  <span v-for="reason in option.recommendationReasons" :key="reason" class="planning__detail-hint planning__detail-hint--recommended">{{ reason }}</span>
-                 </div>
-               </div>
-               <div v-if="option.recommendationDrawbacks.length" class="planning__detail-recommendation-block">
-                 <p class="planning__detail-copy-title">Pour pas cette séance</p>
-                 <div class="planning__detail-hints">
-                   <span v-for="reason in option.recommendationDrawbacks" :key="reason" class="planning__detail-hint planning__detail-hint--warning">{{ reason }}</span>
-                 </div>
-                </div>
-               <div v-if="option.recommendationBlockedBy" class="planning__detail-recommendation-block">
-                 <p class="planning__detail-copy-title">Pour pas cette séance</p>
-                 <div class="planning__detail-hints">
-                   <span class="planning__detail-hint planning__detail-hint--warning">{{ option.recommendationBlockedBy }}</span>
-                 </div>
+               <div v-if="option.recommendationReasons.length || option.recommendationDrawbacks.length || option.recommendationBlockedBy" class="planning__recommendation-strip">
+                <span v-for="reason in option.recommendationReasons" :key="reason" class="planning__recommendation-chip planning__recommendation-chip--positive">{{ reason }}</span>
+                <span v-for="reason in option.recommendationDrawbacks" :key="reason" class="planning__recommendation-chip planning__recommendation-chip--warning">{{ reason }}</span>
+                <span v-if="option.recommendationBlockedBy" class="planning__recommendation-chip planning__recommendation-chip--warning">{{ option.recommendationBlockedBy }}</span>
                </div>
                <p class="planning__detail-note">{{ screeningDecisionNote(option) }}</p>
               <div class="planning__detail-actions">
                 <button
                   v-if="option.selection_status === 'tentative'"
                   type="button"
-                  class="planning__action planning__action--primary"
+                  class="planning__action planning__action--primary planning__action--confirm"
                   @click="applyScreeningSelection(option.id, 'confirmed')"
                 >
                   Confirmer cette séance
                 </button>
                 <button
+                  v-else-if="option.selection_status === 'rejected'"
+                  type="button"
+                  class="planning__action planning__action--state"
+                  disabled
+                >
+                  Ignoré
+                </button>
+                <button
                   v-else-if="option.selection_status !== 'confirmed'"
                   type="button"
-                  class="planning__action planning__action--primary"
+                  class="planning__action planning__action--primary planning__action--tentative"
                   @click="applyScreeningSelection(option.id, 'tentative')"
                 >
                   {{ screeningPrimaryActionLabel(option) }}
@@ -569,6 +656,14 @@ async function removeScreeningSelection(screeningId: number) {
                   @click="applyScreeningSelection(option.id, 'rejected')"
                 >
                   Ignorer cette séance
+                </button>
+                <button
+                  v-else
+                  type="button"
+                  class="planning__action planning__action--ghost"
+                  @click="removeScreeningSelection(option.id)"
+                >
+                  Annuler
                 </button>
               </div>
               <div class="planning__session-links">

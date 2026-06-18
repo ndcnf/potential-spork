@@ -77,14 +77,14 @@ Le frontend courant assume :
 - logique horaire des recommandations alignée sur la journée festival
 - les séances après minuit restent groupées sur la journée festival précédente, tout en conservant leur vraie date/heure pour les conflits et l’export iCal
 - `must-lock` limité à la vraie dernière séance viable
-- panneau détail conserve :
-  - poster
-  - cycle
-  - tagline
-  - réalisation
-  - casting
-  - infos séance
-  - comparatif `Pour cette séance` / `Pour pas cette séance`
+- panneau détail orienté décision :
+  - film compact en contexte
+  - séance active lisible en premier
+  - alternatives comparables par rows
+  - statut utilisateur dominant
+  - recommendations en chips secondaires
+- `Confirmée` utilise un vert doux, `Recommendation` utilise le doré, et `Tentative` / `Conflit` gardent des nuances et formes distinctes
+- chantier à reprendre : venues/lieux comme données explicites, puis paramètres de préférences de lieux
 - suppression des pastilles dans les pills d’état
 - suppression des compteurs redondants dans les headers de groupes timeline/visualisation
 

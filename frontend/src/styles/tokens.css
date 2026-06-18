@@ -46,20 +46,20 @@
   --color-priority-low: var(--color-muted-subtle);
   --color-priority-muted: var(--color-state-neutral);
 
-  --color-state-confirmed: var(--color-accent);
-  --color-state-tentative: var(--color-state-neutral);
+  --color-state-confirmed: #8fbf9f;
+  --color-state-tentative: #8fa9c8;
   --color-state-recommended: var(--color-accent);
   --color-state-must-lock: var(--color-accent);
-  --color-state-conflict: var(--color-accent);
+  --color-state-conflict: #df9274;
   --color-state-rejected: var(--color-neutral-soft);
   --color-state-disabled: color-mix(in srgb, var(--color-foreground) 24%, var(--color-background));
   --color-state-available: color-mix(in srgb, var(--color-foreground) 58%, var(--color-background));
 
-  --color-state-confirmed-soft: var(--color-positive-soft);
-  --color-state-tentative-soft: var(--color-neutral-soft);
+  --color-state-confirmed-soft: color-mix(in srgb, var(--color-state-confirmed) 15%, var(--color-background));
+  --color-state-tentative-soft: color-mix(in srgb, var(--color-state-tentative) 15%, var(--color-background));
   --color-state-recommended-soft: var(--color-accent-soft);
   --color-state-must-lock-soft: var(--color-accent-soft);
-  --color-state-conflict-soft: var(--color-negative-soft);
+  --color-state-conflict-soft: color-mix(in srgb, var(--color-state-conflict) 16%, var(--color-background));
 
   /* Shared control tokens */
   --control-height: 2.4rem;

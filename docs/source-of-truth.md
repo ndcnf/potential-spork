@@ -180,6 +180,10 @@ Règles :
 - densité d’actions basse
 - pas de surcharge de badges, icônes ou tags
 - le panneau détail porte la complexité utile
+- dans le panneau détail, le statut utilisateur (`Confirmée`, `Tentative`, `Ignorée`, `Conflit`) doit rester visuellement dominant
+- les recommendations système doivent être secondaires et visuellement différentes des statuts utilisateur
+- une séance ignorée affiche l’état `Ignoré` et une action `Annuler` pour revenir à l’état neutre
+- les venues/lieux doivent être repris comme données explicites avant d’étendre les paramètres de préférences de lieux
 
 Exception admise :
 
