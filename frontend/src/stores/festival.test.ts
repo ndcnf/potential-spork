@@ -178,7 +178,7 @@ describe('festival store', () => {
     expect(store.films).toEqual([])
     expect(store.screenings).toEqual([])
     expect(store.groupedFilms).toEqual([])
-    expect(store.loadError).toBe('Impossible de charger les données live pour le moment.')
+    expect(store.loadError).toBe('live unavailable')
     expect(store.sourceStatus).toMatchObject({
       label: 'Live indisponible',
       tone: 'warning',
@@ -222,10 +222,25 @@ describe('festival store', () => {
     expect(store.cycles).toEqual([])
     expect(store.films).toEqual([])
     expect(store.screenings).toEqual([])
-    expect(store.loadError).toBe('Impossible de récupérer les données live depuis nifff.ch pour le moment.')
+    expect(store.loadError).toBe('nifff.ch unavailable')
     expect(store.sourceStatus).toMatchObject({
       label: 'Live indisponible',
       tone: 'warning',
+    })
+  })
+
+  it('keeps the backend detail message when live import fails', async () => {
+    stubLocalStorage()
+    const store = useFestivalStore()
+
+    apiMock.importCatalog.mockRejectedValue(new Error('Source NIFFF indisponible: 404 Client Error'))
+
+    await store.switchSource('prod')
+
+    expect(store.loadError).toBe('Source NIFFF indisponible: 404 Client Error')
+    expect(store.sourceStatus).toMatchObject({
+      label: 'Live indisponible',
+      description: 'Source NIFFF indisponible: 404 Client Error',
     })
   })
 

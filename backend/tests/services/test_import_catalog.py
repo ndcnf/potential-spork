@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 
 from app.schemas.imported import CanonicalImportBundle
-from app.services.import_catalog import import_catalog, normalize_source_payload
+import pytest
+
+from app.services.import_catalog import EmptyCatalogError, import_catalog, normalize_source_payload
 from app.sources.nifff_html.parser import ParsedFilm, ParsedScreening
 from app.sources.nifff_html.source import NifffHtmlCatalogPayload
 
@@ -51,6 +53,22 @@ class FakeNifffHtmlSourceWithInferredScreeningEnd:
         )
 
 
+class FakeEmptyLiveNifffHtmlSource:
+    source_name = "nifff_html"
+    source_mode = "prod"
+
+    def fetch_catalog(self, year: int) -> NifffHtmlCatalogPayload:
+        return NifffHtmlCatalogPayload(parsed_films=[])
+
+
+class FakeEmptyDemoNifffHtmlSource:
+    source_name = "nifff_html"
+    source_mode = "demo"
+
+    def fetch_catalog(self, year: int) -> NifffHtmlCatalogPayload:
+        return NifffHtmlCatalogPayload(parsed_films=[])
+
+
 def test_normalize_source_payload_builds_canonical_bundle() -> None:
     payload = FakeNifffHtmlSource().fetch_catalog(2025)
 
@@ -81,3 +99,15 @@ def test_import_catalog_copies_normalizer_warnings_to_report() -> None:
         "Inferred screening end from film duration: film=a-useful-ghost starts_at=2025-07-05T19:00:00+02:00"
     ]
     assert report.warnings == bundle.warnings
+
+
+def test_import_catalog_rejects_empty_live_catalog() -> None:
+    with pytest.raises(EmptyCatalogError, match="aucun film"):
+        import_catalog(source=FakeEmptyLiveNifffHtmlSource(), year=2025)
+
+
+def test_import_catalog_allows_empty_demo_catalog() -> None:
+    bundle, report = import_catalog(source=FakeEmptyDemoNifffHtmlSource(), year=2025)
+
+    assert bundle.films == []
+    assert report.warnings == []

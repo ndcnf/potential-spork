@@ -1034,6 +1034,7 @@ Règle backend :
 - une erreur réseau ou HTTP de la source ne doit pas remonter en `500` brut non qualifié
 - l’API d’import doit traduire cela en erreur `502`
 - le message doit indiquer que la source NIFFF est indisponible
+- en mode `prod`, une page récupérée mais parsée avec `0` film n’est pas un succès : l’import doit renvoyer une erreur explicite, car cela signale probablement une URL live incorrecte ou un parser HTML dépassé
 
 Pourquoi :
 

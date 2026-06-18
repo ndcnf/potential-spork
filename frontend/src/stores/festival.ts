@@ -108,6 +108,10 @@ function clearPersistedUiState() {
   window.localStorage.removeItem(STORAGE_KEY)
 }
 
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 function persistUiState(films: Film[], screenings: Screening[]) {
   if (typeof window === 'undefined') {
     return
@@ -400,8 +404,8 @@ export const useFestivalStore = defineStore('festival', {
         this.sourceFallbackReason = screenings.length
           ? null
           : 'Le catalogue live est chargé, mais aucune séance exploitable n’est encore disponible.'
-      } catch {
-        this.clearCatalogForLiveError('Impossible de charger les données live pour le moment.')
+      } catch (error) {
+        this.clearCatalogForLiveError(errorMessage(error, 'Impossible de charger les données live pour le moment.'))
       } finally {
         this.loading = false
       }
@@ -421,9 +425,9 @@ export const useFestivalStore = defineStore('festival', {
           this.lastImportSummary = summary
           this.effectiveSourceMode = mode
           await this.bootstrap(mode)
-        } catch {
+        } catch (error) {
           this.lastImportSummary = null
-          this.clearCatalogForLiveError('Impossible de récupérer les données live depuis nifff.ch pour le moment.')
+          this.clearCatalogForLiveError(errorMessage(error, 'Impossible de récupérer les données live depuis nifff.ch pour le moment.'))
         }
       } finally {
         this.sourceSwitchPending = false

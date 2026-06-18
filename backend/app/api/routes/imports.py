@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import db_session
 from app.schemas.imports import ImportCatalogPayload, ImportSummary
+from app.services.import_catalog import EmptyCatalogError
 from app.services.import_nifff import import_nifff_catalog
 
 
@@ -22,3 +23,5 @@ def import_catalog(payload: ImportCatalogPayload, db: Session = Depends(db_sessi
         )
     except requests.RequestException as exc:
         raise HTTPException(status_code=502, detail=f"Source NIFFF indisponible: {exc}") from exc
+    except EmptyCatalogError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc

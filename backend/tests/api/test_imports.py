@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import requests
 
+from app.services.import_catalog import EmptyCatalogError
+
 
 def test_import_catalog_accepts_minimal_payload(client, monkeypatch) -> None:
     monkeypatch.setattr(
@@ -134,3 +136,18 @@ def test_import_catalog_returns_502_when_source_fetch_fails(client, monkeypatch)
 
     assert response.status_code == 502
     assert "Source NIFFF indisponible" in response.json()["detail"]
+
+
+def test_import_catalog_returns_502_when_live_catalog_is_empty(client, monkeypatch) -> None:
+    def fake_import_nifff_catalog(db, year, source_mode="demo", schedule_url=None):
+        raise EmptyCatalogError("Source NIFFF chargée, mais aucun film n’a été détecté.")
+
+    monkeypatch.setattr("app.api.routes.imports.import_nifff_catalog", fake_import_nifff_catalog)
+
+    response = client.post(
+        "/api/imports/nifff/catalog",
+        json={"year": 2025, "source_mode": "prod"},
+    )
+
+    assert response.status_code == 502
+    assert response.json()["detail"] == "Source NIFFF chargée, mais aucun film n’a été détecté."
