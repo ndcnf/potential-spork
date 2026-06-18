@@ -8,6 +8,8 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, Tag
 
+from app.core.festival_time import real_datetime_from_festival_day
+
 
 @dataclass(slots=True)
 class ParsedScreening:
@@ -218,7 +220,7 @@ def parse_listing_screening_line(value: str, year: int, base_url: str) -> Parsed
     if hour_minute is None:
         return None
 
-    starts_at = datetime(
+    starts_at = real_datetime_from_festival_day(
         year=year,
         month=int(match.group("month")),
         day=int(match.group("day")),

@@ -162,6 +162,14 @@ def test_parse_listing_screening_line_reads_inline_listing_screening() -> None:
     assert screening.starts_at == datetime(2025, 7, 5, 19, 0)
 
 
+def test_parse_listing_screening_line_keeps_late_night_screening_on_real_next_day() -> None:
+    screening = parse_listing_screening_line("05.07, Rex, 01:00", 2025, "https://nifff.ch/prog/2025/film/midnight-madness")
+
+    assert screening is not None
+    assert screening.venue_name == "Rex"
+    assert screening.starts_at == datetime(2025, 7, 6, 1, 0)
+
+
 def test_extract_listing_screenings_reads_multiple_lines_from_wayback_card() -> None:
     html = """
     <div class="archive-movie__item">

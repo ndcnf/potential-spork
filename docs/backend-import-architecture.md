@@ -1212,6 +1212,22 @@ Règle actuelle :
 
 But : ne pas présenter une donnée déduite comme si elle venait directement de la source NIFFF.
 
+### Real datetime vs festival day
+
+Les séances doivent garder deux notions séparées :
+
+- `starts_at` / `ends_at` représentent la vraie date et heure de projection
+- le `festival day` représente le jour éditorial utilisé pour l’affichage et le grouping
+
+Règle actuelle :
+
+- une séance indiquée par la source comme `05.07, 01:00` appartient au festival day `2025-07-05`
+- sa vraie date de projection est `2025-07-06T01:00`
+- le cutoff de journée festival est `06:00`
+- l’export iCal utilise toujours `starts_at` / `ends_at`, donc les vraies dates/heures, jamais le festival day
+
+Cette séparation évite de casser les conflits réels, l’export calendrier et l’affichage par journée festival.
+
 ### About Wayback data
 
 Des snapshots Wayback de l’année passée sont utiles, même s’ils ne sont pas 1:1 avec la version courante.

@@ -70,6 +70,7 @@ Le frontend courant assume :
   - conflits avec des séances déjà retenues
   - conflits entre recommandations concurrentes
 - logique horaire des recommandations alignée sur la journée festival
+- les séances après minuit restent groupées sur la journée festival précédente, tout en conservant leur vraie date/heure pour les conflits et l’export iCal
 - `must-lock` limité à la vraie dernière séance viable
 - panneau détail conserve :
   - poster
