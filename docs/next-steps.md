@@ -35,6 +35,7 @@ Ordre recommandé :
   - `import_nifff` reste un wrapper spécifique NIFFF pour le choix de source et les postprocessors nécessaires
   - la route d’import API reste une façade fine qui transmet `source_mode` au service
   - les données déduites doivent remonter comme warnings, les données vraiment absentes restent `None`
+  - les fins de séance non déductibles doivent aussi remonter comme warnings pour préparer le contrôle des vraies données
 - réduire ensuite la dette `must-see` / `low`
 - définir plus tard une stratégie si synchronisation serveur des choix devient nécessaire
 - revoir la règle actuelle de persistance locale > état distant dès que les vraies données seront accessibles de manière fiable

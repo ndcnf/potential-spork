@@ -106,9 +106,17 @@ def normalize_parsed_films(*, parsed_films: list[ParsedFilm], year: int) -> Cano
                 )
 
             ends_at = infer_screening_end(parsed, parsed_screening)
+            starts_at_token = parsed_screening.starts_at.isoformat() if parsed_screening.starts_at else "unknown"
             if parsed_screening.ends_at is None and ends_at is not None:
-                starts_at_token = parsed_screening.starts_at.isoformat() if parsed_screening.starts_at else "unknown"
                 warnings.append(f"Inferred screening end from film duration: film={parsed.slug} starts_at={starts_at_token}")
+            elif (
+                parsed_screening.ends_at is None
+                and parsed_screening.starts_at is not None
+                and parsed.duration_minutes is None
+            ):
+                warnings.append(
+                    f"Missing screening end and film duration: film={parsed.slug} starts_at={starts_at_token}"
+                )
 
             imported_screenings.append(
                 ImportedScreening(

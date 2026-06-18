@@ -1208,6 +1208,7 @@ Règle actuelle :
 - si une donnée source est absente et ne peut pas être déduite proprement, le backend conserve `None`
 - si une donnée est déduite, le normalizer doit rendre cette déduction visible via `CanonicalImportBundle.warnings`
 - exemple actuel : si `ends_at` manque sur une séance mais que `duration_minutes` existe, `ends_at` est inféré et un warning est ajouté
+- si `ends_at` manque et que `duration_minutes` manque aussi, `ends_at` reste `None` et un warning signale que la fin de séance ne peut pas être déduite
 
 But : ne pas présenter une donnée déduite comme si elle venait directement de la source NIFFF.
 

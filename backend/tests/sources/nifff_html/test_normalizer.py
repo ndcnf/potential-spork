@@ -101,6 +101,29 @@ def test_normalize_parsed_films_warns_when_screening_end_is_inferred() -> None:
     ]
 
 
+def test_normalize_parsed_films_warns_when_screening_end_cannot_be_inferred() -> None:
+    parsed_film = ParsedFilm(
+        title="A Useful Ghost",
+        slug="a-useful-ghost",
+        source_url="https://nifff.ch/prog/2025/film/a-useful-ghost",
+        duration_minutes=None,
+        screenings=[
+            ParsedScreening(
+                starts_at=datetime.fromisoformat("2025-07-05T19:00:00+02:00"),
+                ends_at=None,
+                venue_name="Arcades",
+            )
+        ],
+    )
+
+    bundle = normalize_parsed_films(parsed_films=[parsed_film], year=2025)
+
+    assert bundle.screenings[0].ends_at is None
+    assert bundle.warnings == [
+        "Missing screening end and film duration: film=a-useful-ghost starts_at=2025-07-05T19:00:00+02:00"
+    ]
+
+
 def test_normalize_parsed_films_classifies_packages_and_members() -> None:
     package_start = datetime.fromisoformat("2025-07-05T16:45:00+02:00")
     package = ParsedFilm(
