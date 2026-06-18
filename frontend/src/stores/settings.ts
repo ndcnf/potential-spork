@@ -7,6 +7,7 @@ const STORAGE_KEY = 'potential-spork-settings'
 type PersistedSettings = {
   recommendationSettings: RecommendationSettings
   dataSourceMode: DataSourceMode
+  liveSourceUrl: string
 }
 
 const defaultSettings = (): RecommendationSettings => ({
@@ -20,6 +21,7 @@ export const useSettingsStore = defineStore('settings', {
   state: () => ({
     recommendationSettings: defaultSettings() as RecommendationSettings,
     dataSourceMode: 'demo' as DataSourceMode,
+    liveSourceUrl: '',
     loaded: false,
   }),
   getters: {
@@ -59,9 +61,11 @@ export const useSettingsStore = defineStore('settings', {
             avoidAfterMinutes: persistedRecommendationSettings?.avoidAfterMinutes ?? null,
           }
           this.dataSourceMode = parsed.dataSourceMode === 'prod' ? 'prod' : 'demo'
+          this.liveSourceUrl = parsed.liveSourceUrl ?? ''
         } catch {
           this.recommendationSettings = defaultSettings()
           this.dataSourceMode = 'demo'
+          this.liveSourceUrl = ''
         }
       }
 
@@ -74,6 +78,7 @@ export const useSettingsStore = defineStore('settings', {
       const payload: PersistedSettings = {
         recommendationSettings: this.recommendationSettings,
         dataSourceMode: this.dataSourceMode,
+        liveSourceUrl: this.liveSourceUrl,
       }
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     },
@@ -99,6 +104,10 @@ export const useSettingsStore = defineStore('settings', {
     },
     setDataSourceMode(mode: DataSourceMode) {
       this.dataSourceMode = mode
+      this.persist()
+    },
+    setLiveSourceUrl(url: string) {
+      this.liveSourceUrl = url.trim()
       this.persist()
     },
     resetRecommendationSettings() {

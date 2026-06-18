@@ -15,8 +15,12 @@ Le frontend courant assume :
 
 - navigation sans étapes numérotées
 - ton UI homogène au `tu`
-- mode démo explicite si les données réelles ne chargent pas
-- fallback démo appliqué comme bundle cohérent, pas comme mélange partiel films réels / séances démo
+- mode démo explicite quand l’utilisateur choisit `Démo`
+- mode live strict quand l’utilisateur choisit `Live` : si le live ne charge pas, l’UI affiche une erreur au lieu de retomber sur la démo
+- confirmation explicite avant de récupérer les données live depuis `nifff.ch`
+- URL source live configurable dans `Paramètres` seulement quand `Live` est sélectionné, avec placeholder `https://nifff.ch/programme/` et CTA de récupération au bout du champ
+- fallback démo appliqué comme bundle cohérent uniquement dans le mode `Démo`, pas comme mélange partiel films réels / séances démo
+- la bascule de source remplace le catalogue courant comme un set complet : cycles, films et séances viennent de la même source chargée
 - source `Démo` chargée comme environnement de validation cohérent tant que les vraies données ne sont pas disponibles
 - source `Live` réservée à l’intégration backend réelle, avec signal explicite si les séances ne sont pas encore chargées
 - titre de marque `PLANIFFFICATEUR`

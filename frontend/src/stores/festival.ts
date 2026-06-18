@@ -245,8 +245,10 @@ export const useFestivalStore = defineStore('festival', {
   }),
   getters: {
     groupedFilms(state) {
-      const cycles = state.cycles.length ? state.cycles : mockCycles
-      const films = state.films.length ? state.films : mockFilms
+      const hasLoadedCatalog = state.cycles.length > 0 || state.films.length > 0 || state.screenings.length > 0
+      const shouldUseMockCatalog = !hasLoadedCatalog && state.effectiveSourceMode === 'demo'
+      const cycles = shouldUseMockCatalog ? mockCycles : state.cycles
+      const films = shouldUseMockCatalog ? mockFilms : state.films
 
       return cycles.map((cycle) => ({
         cycle,
@@ -284,6 +286,15 @@ export const useFestivalStore = defineStore('festival', {
         }
       }
 
+      if (state.effectiveSourceMode === 'prod' && state.loadError) {
+        return {
+          label: 'Live indisponible',
+          tone: 'warning' as const,
+          description: state.loadError,
+          showBadge: true,
+        }
+      }
+
       if (state.usingMocks) {
         return {
           label: 'Démo',
@@ -312,6 +323,15 @@ export const useFestivalStore = defineStore('festival', {
     },
   },
   actions: {
+    clearCatalogForLiveError(message: string) {
+      this.cycles = []
+      this.films = []
+      this.screenings = []
+      this.usingMocks = false
+      this.effectiveSourceMode = 'prod'
+      this.sourceFallbackReason = null
+      this.loadError = message
+    },
     loadDemoData(reason: string | null = null) {
       const demo = demoDataset()
       const hydrated = applyPersistedUiState(demo.films, demo.screenings)
@@ -367,7 +387,7 @@ export const useFestivalStore = defineStore('festival', {
         const { cycles, films, screenings, hasData } = await loadBackendCatalog()
 
         if (!hasData) {
-          this.loadDemoData('Le backend a répondu sans catalogue exploitable. Démonstration locale activée.')
+          this.clearCatalogForLiveError('Aucun catalogue live exploitable n’est disponible pour le moment.')
           return
         }
 
@@ -381,13 +401,12 @@ export const useFestivalStore = defineStore('festival', {
           ? null
           : 'Le catalogue live est chargé, mais aucune séance exploitable n’est encore disponible.'
       } catch {
-        this.loadDemoData('Impossible de charger les données réelles. Démonstration locale activée.')
-        this.loadError = 'Impossible de charger les données réelles. Démonstration locale activée.'
+        this.clearCatalogForLiveError('Impossible de charger les données live pour le moment.')
       } finally {
         this.loading = false
       }
     },
-    async switchSource(mode: DataSourceMode) {
+    async switchSource(mode: DataSourceMode, scheduleUrl?: string) {
       this.sourceSwitchPending = true
       this.loadError = null
       try {
@@ -397,10 +416,15 @@ export const useFestivalStore = defineStore('festival', {
           return
         }
 
-        const summary = await api.importCatalog(2025, mode)
-        this.lastImportSummary = summary
-        this.effectiveSourceMode = mode
-        await this.bootstrap(mode)
+        try {
+          const summary = await api.importCatalog(2025, mode, scheduleUrl)
+          this.lastImportSummary = summary
+          this.effectiveSourceMode = mode
+          await this.bootstrap(mode)
+        } catch {
+          this.lastImportSummary = null
+          this.clearCatalogForLiveError('Impossible de récupérer les données live depuis nifff.ch pour le moment.')
+        }
       } finally {
         this.sourceSwitchPending = false
       }
@@ -418,12 +442,12 @@ export const useFestivalStore = defineStore('festival', {
       this.films = reset.films
       this.screenings = reset.screenings
     },
-    async reimportCurrentSource(mode: DataSourceMode) {
+    async reimportCurrentSource(mode: DataSourceMode, scheduleUrl?: string) {
       this.sourceSwitchPending = true
       this.loadError = null
       try {
         clearPersistedUiState()
-        const summary = await api.importCatalog(2025, mode)
+        const summary = await api.importCatalog(2025, mode, scheduleUrl)
         this.lastImportSummary = summary
         this.effectiveSourceMode = mode
         await api.resetUserChoices()

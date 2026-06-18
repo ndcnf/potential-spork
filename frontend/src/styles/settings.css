@@ -189,8 +189,23 @@
   justify-content: space-between;
 }
 
+.settings__source-url {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-md);
+  align-items: end;
+}
+
+.settings__source-url label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-micro-lg);
+}
+
 .settings__venue-row select,
 .settings__select-row select,
+.settings__source-url input,
 .settings__time-window input {
   min-height: 2.5rem;
   padding: var(--field-padding-y) var(--field-padding-x);
@@ -236,5 +251,9 @@
 
   .settings__choice-group {
     justify-content: flex-start;
+  }
+
+  .settings__source-url {
+    grid-template-columns: 1fr;
   }
 }

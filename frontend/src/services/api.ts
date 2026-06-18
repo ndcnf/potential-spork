@@ -28,9 +28,9 @@ export const api = {
     readJson<ResetUserChoicesSummary>('/user-choices/reset', {
       method: 'POST',
     }),
-  importCatalog: (year = 2025, source_mode: DataSourceMode = 'demo') =>
+  importCatalog: (year = 2025, source_mode: DataSourceMode = 'demo', schedule_url?: string) =>
     readJson<ImportSummary>('/imports/nifff/catalog', {
       method: 'POST',
-      body: JSON.stringify({ year, source_mode }),
+      body: JSON.stringify({ year, source_mode, schedule_url: schedule_url || null }),
     }),
 }

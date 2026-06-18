@@ -81,6 +81,21 @@ Rôle : configuration secondaire.
 
 Les réglages ne doivent pas absorber des décisions produit qui devraient vivre dans `Films` ou `Planning`.
 
+### Data Source Switching
+
+La source de données est un catalogue complet, pas un patch partiel.
+
+Règles :
+
+- `Démo` affiche uniquement cycles, films et séances de démonstration
+- `Live` affiche uniquement cycles, films et séances live
+- l’URL live apparaît seulement quand `Live` est sélectionné dans les paramètres ; vide, elle retombe sur `https://nifff.ch/programme/`
+- choisir `Live` affiche le champ URL, puis le CTA de récupération demande une confirmation explicite avant de récupérer les données depuis `nifff.ch`
+- si `Live` ne charge pas, le catalogue courant est vidé et un message d’erreur live est affiché
+- le frontend ne doit pas mélanger un cycle live avec des films mock, ni des films live avec des séances démo
+- un fallback démo peut exister pour le mode `Démo`, mais pas comme fallback automatique du mode `Live`
+- les choix utilisateur peuvent être réhydratés par-dessus le catalogue chargé, mais le catalogue lui-même reste mono-source
+
 ## Business Rules
 
 ### Film Priority

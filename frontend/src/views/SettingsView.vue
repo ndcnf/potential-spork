@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { useFestivalStore } from '@/stores/festival'
@@ -8,9 +8,11 @@ import type { DataSourceMode } from '@/types'
 
 const festivalStore = useFestivalStore()
 const settingsStore = useSettingsStore()
+const draftDataSourceMode = ref<DataSourceMode>('demo')
 
 onMounted(() => {
   settingsStore.load()
+  draftDataSourceMode.value = settingsStore.dataSourceMode
   if (!festivalStore.cycles.length && !festivalStore.loading) {
     festivalStore.bootstrap()
   }
@@ -64,9 +66,18 @@ function updateAvoidWindow(beforeValue: string, afterValue: string) {
   settingsStore.setAvoidAfterMinutes(parseInputTime(afterValue))
 }
 
+function liveSourceUrlForRequest(): string | undefined {
+  const value = settingsStore.liveSourceUrl.trim()
+  return value || undefined
+}
+
+function liveSourceUrlForDisplay(): string {
+  return liveSourceUrlForRequest() ?? 'https://nifff.ch/programme/'
+}
+
 const currentSourceDescription = computed(() =>
-  settingsStore.dataSourceMode === 'prod'
-    ? 'Source sélectionnée : Live (prod). Utilise le programme courant quand il est disponible.'
+  draftDataSourceMode.value === 'prod'
+    ? 'Source sélectionnée : Live (prod). Renseigne l’URL puis récupère le programme courant.'
     : 'Source sélectionnée : Démo (archive). Lit la DB démo déjà importée depuis Wayback.',
 )
 
@@ -94,18 +105,37 @@ const resetChoicesSummary = computed(() =>
 )
 
 async function switchDataSource(mode: DataSourceMode) {
-  if (festivalStore.sourceSwitchPending || settingsStore.dataSourceMode === mode) {
+  if (festivalStore.sourceSwitchPending || (mode === 'demo' && settingsStore.dataSourceMode === mode)) {
+    return
+  }
+
+  if (
+    mode === 'prod' &&
+    !window.confirm(`Récupérer les données live depuis ${liveSourceUrlForDisplay()} ? Le catalogue courant sera remplacé par la source live.`)
+  ) {
     return
   }
 
   try {
-    await festivalStore.switchSource(mode)
+    await festivalStore.switchSource(mode, mode === 'prod' ? liveSourceUrlForRequest() : undefined)
     settingsStore.setDataSourceMode(mode)
   } catch {
     festivalStore.loadError =
       mode === 'prod'
         ? 'Impossible de charger la source live pour le moment.'
         : 'Impossible de recharger la source démo archive pour le moment.'
+  }
+}
+
+function selectDataSource(mode: DataSourceMode) {
+  if (festivalStore.sourceSwitchPending) {
+    return
+  }
+
+  draftDataSourceMode.value = mode
+
+  if (mode === 'demo') {
+    switchDataSource('demo')
   }
 }
 
@@ -127,7 +157,10 @@ async function reimportCurrentSource() {
   }
 
   try {
-    await festivalStore.reimportCurrentSource(settingsStore.dataSourceMode)
+    await festivalStore.reimportCurrentSource(
+      settingsStore.dataSourceMode,
+      settingsStore.dataSourceMode === 'prod' ? liveSourceUrlForRequest() : undefined,
+    )
   } catch {
     festivalStore.loadError = 'Impossible de relancer un import propre pour le moment.'
   }
@@ -186,13 +219,29 @@ async function reimportCurrentSource() {
       <p class="settings__status">{{ sourceRuntimeDescription }}</p>
 
       <div class="settings__choice-group settings__choice-group--start" role="radiogroup" aria-label="Source de données">
-        <button type="button" class="settings__choice-pill" :class="{ 'settings__choice-pill--active': settingsStore.dataSourceMode === 'demo' }" :disabled="festivalStore.sourceSwitchPending" @click="switchDataSource('demo')">
+        <button type="button" class="settings__choice-pill" :class="{ 'settings__choice-pill--active': draftDataSourceMode === 'demo' }" :disabled="festivalStore.sourceSwitchPending" @click="selectDataSource('demo')">
           <span class="settings__choice-mark" aria-hidden="true">D</span>
           <span>Démo (archive)</span>
         </button>
-        <button type="button" class="settings__choice-pill" :class="{ 'settings__choice-pill--active': settingsStore.dataSourceMode === 'prod' }" :disabled="festivalStore.sourceSwitchPending" @click="switchDataSource('prod')">
+        <button type="button" class="settings__choice-pill" :class="{ 'settings__choice-pill--active': draftDataSourceMode === 'prod' }" :disabled="festivalStore.sourceSwitchPending" @click="selectDataSource('prod')">
           <span class="settings__choice-mark" aria-hidden="true">L</span>
           <span>Live (prod)</span>
+        </button>
+      </div>
+
+      <div v-if="draftDataSourceMode === 'prod'" class="settings__source-url">
+        <label>
+          <span>URL source live</span>
+          <input
+            type="url"
+            :value="settingsStore.liveSourceUrl"
+            placeholder="https://nifff.ch/programme/"
+            :disabled="festivalStore.sourceSwitchPending"
+            @change="settingsStore.setLiveSourceUrl(($event.target as HTMLInputElement).value)"
+          />
+        </label>
+        <button type="button" class="ghost-button" :disabled="festivalStore.sourceSwitchPending" @click="switchDataSource('prod')">
+          Récupérer Live
         </button>
       </div>
 
@@ -200,7 +249,7 @@ async function reimportCurrentSource() {
       <p v-else-if="sourceSwitchSummary" class="settings__status">{{ sourceSwitchSummary }}</p>
       <p v-if="festivalStore.loadError" class="settings__status settings__status--error">{{ festivalStore.loadError }}</p>
 
-      <div class="settings__actions-row">
+      <div v-if="draftDataSourceMode !== 'prod'" class="settings__actions-row">
         <button type="button" class="ghost-button" :disabled="festivalStore.sourceSwitchPending" @click="reimportCurrentSource()">
           Refaire un import propre
         </button>
