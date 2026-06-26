@@ -34,6 +34,13 @@ Le frontend courant assume :
 - persistance locale au refresh pour :
   - priorités film
   - sélections de séances
+- base UI réutilisable introduite pour les prochaines passes de simplification :
+  - `UiButton`
+  - `UiBadge`
+  - `UiChip`
+  - `UiPanel`
+  - helpers de classes BEM dans `uiClasses.ts`
+- ces composants de base ne remplacent pas encore les vues existantes ; ils servent de fondation pour migrer `Planning`, `Films` et `Settings` par petites passes
 
 ### `Films`
 
@@ -68,7 +75,7 @@ Le frontend courant assume :
 - les infos film manquantes ne sont pas remplacées par des placeholders `?`
 - note de conséquence visible seulement dans les cas utiles
 - action directe `Ignorer` disponible dans la timeline
-- panneau détail non sticky
+- panneau détail sticky sur desktop, puis statique sur mobile
 - centrage horizontal aligné sur les autres pages
 - recommandations visibles surtout dans le panneau détail, pas dans la timeline elle-même
 - distinction explicite entre `Conflit` et `Conflit potentiel`
@@ -127,6 +134,11 @@ Composants :
 
 - `frontend/src/components/ui/PrioritySelect.vue`
 - `frontend/src/components/ui/PriorityBadge.vue`
+- `frontend/src/components/ui/UiButton.vue`
+- `frontend/src/components/ui/UiBadge.vue`
+- `frontend/src/components/ui/UiChip.vue`
+- `frontend/src/components/ui/UiPanel.vue`
+- `frontend/src/components/ui/uiClasses.ts`
 - `frontend/src/lib/priorities.ts`
 
 ## Known Debts
@@ -144,3 +156,4 @@ Composants :
 - la hiérarchie visuelle de `Planning` peut encore être simplifiée
 - le wording des recommandations et des conflits potentiels doit encore être surveillé sur cas réels
 - les états `error` réels vs mode démo doivent rester surveillés dans les prochaines passes
+- les nouveaux composants UI de base doivent maintenant être utilisés pour réduire progressivement les classes spécifiques `planning__action`, `planning__decision-badge`, `planning__recommendation-chip`, `ghost-button` et équivalents

@@ -1,0 +1,211 @@
+/* BUJO THEME LAYER (DRY & TOKEN-EXTENDED) */
+
+/* 1. CONTEXTE VISUEL PAPIER (Light Journal Context) */
+.bujo-theme {
+  /* Overrides contextuelles uniquement pour l'esthétique carnet */
+  --color-background: #f9f7f2;
+  --color-surface-soft: rgba(255, 255, 255, 0.6);
+  --color-surface-strong: rgba(255, 255, 255, 0.85);
+  --color-border-color: #e3ddd4;
+  --color-text: #3a3530;
+  --color-text-muted: #7d756c;
+
+  /* Tokens spécifiques au style Bujo */
+  --bujo-highlight-yellow: rgba(253, 243, 208, 0.7);
+  --bujo-highlight-pink: rgba(255, 219, 228, 0.65);
+  --bujo-highlight-blue: rgba(222, 240, 255, 0.6);
+
+  --bujo-tape-1: #f4c76e;
+  --bujo-tape-2: #ffb8b8;
+  --bujo-tape-3: #a8d8ea;
+
+  --bujo-radii-hand: 3px 5px 4px 6px / 4px 6px 3px 5px;
+  --shadow-bujo-soft: 0 6px 18px rgba(60, 55, 50, 0.06);
+  --shadow-bujo-hover:
+    0 12px 28px rgba(60, 55, 50, 0.1), 0 3px 8px rgba(60, 55, 50, 0.07);
+
+  /* Typographie manuscrite (fallback system-ui si police manquante) */
+  --font-handwriting: "Caveat", "Patrick Hand", "Comic Neue", var(--font-sans);
+}
+
+/* 2. MISE EN PAGE & TYPOGRAPHIE (Réutilise vos tokens base) */
+.bujo-theme {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.65;
+  padding: var(--space-2xl);
+}
+
+.bujo-theme h1,
+.bujo-theme h2,
+.bujo-theme h3 {
+  font-family: var(--font-handwriting);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-block: var(--space-lg) 0.4em;
+}
+
+.bujo-theme h1 {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+}
+.bujo-theme h2 {
+  font-size: 1.6rem;
+}
+.bujo-theme h3 {
+  font-size: 1.35rem;
+}
+
+.bujo-theme p {
+  color: var(--color-text-muted);
+  margin-block: 0.8em 0;
+  max-width: 65ch;
+}
+
+/* 3. SURLIGNEUR ORGANIQUE */
+.bujo-highlight {
+  position: relative;
+  display: inline-block;
+  padding: 0.1em 0.35em;
+  background-color: var(--bujo-highlight-yellow);
+  border-radius: var(--bujo-radii-hand);
+  transform: rotate(-0.4deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  z-index: 1;
+}
+
+.bujo-highlight::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.bujo-highlight--pink {
+  background-color: var(--bujo-highlight-pink);
+}
+.bujo-highlight--blue {
+  background-color: var(--bujo-highlight-blue);
+}
+
+/* 4. CARTE JOURNAL */
+.bujo-card {
+  position: relative;
+  background: var(--color-surface-strong);
+  border: 1.5px solid var(--color-border-color);
+  border-radius: var(--radius-card);
+  padding: var(--space-xl) var(--space-lg) var(--space-lg);
+  margin-block-end: var(--space-2xl);
+  box-shadow: var(--shadow-bujo-soft);
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.3s ease;
+}
+
+.bujo-card:hover {
+  transform: translateY(-4px) rotate(0.6deg);
+  box-shadow: var(--shadow-bujo-hover);
+}
+
+.bujo-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-block-end: var(--space-md);
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.bujo-meta {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  display: flex;
+  gap: var(--space-md);
+  opacity: 0.85;
+}
+
+.bujo-rating {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2xs) var(--space-xs);
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+}
+
+/* 5. DECORATIONS (Washi tape & separateur style cahier) */
+.bujo-washi {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2.5deg);
+  width: min(60%, 280px);
+  height: 26px;
+  background-color: var(--bujo-tape-1);
+  border-radius: 3px;
+  opacity: 0.75;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.bujo-washi::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    60deg,
+    transparent,
+    transparent 4px,
+    rgba(255, 255, 255, 0.3) 4px,
+    rgba(255, 255, 255, 0.3) 5px
+  );
+}
+
+.bujo-washi--alt {
+  background-color: var(--bujo-tape-2);
+  transform: translateX(-50%) rotate(1.8deg);
+}
+.bujo-washi--cool {
+  background-color: var(--bujo-tape-3);
+  transform: translateX(-50%) rotate(-3.2deg);
+}
+
+.bujo-divider {
+  border: none;
+  height: 16px;
+  margin-block: var(--space-2xl) var(--space-lg);
+  background-image: radial-gradient(
+    circle,
+    var(--color-border-color) 22%,
+    transparent 22%
+  );
+  background-size: 8px 8px;
+  opacity: 0.5;
+}
+
+/* 6. GRILLE ORGANIQUE */
+.bujo-container {
+  max-width: var(--breakpoint-content-max, 76rem);
+  margin-inline: auto;
+}
+
+.bujo-grid {
+  display: grid;
+  gap: var(--space-2xl);
+  margin-top: var(--space-xl);
+  place-items: center;
+}
+
+@media (min-width: 768px) {
+  .bujo-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(30%, 280px), 1fr));
+  }
+}
