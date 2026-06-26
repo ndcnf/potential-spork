@@ -75,7 +75,7 @@ Le frontend courant assume :
 - les infos film manquantes ne sont pas remplacées par des placeholders `?`
 - note de conséquence visible seulement dans les cas utiles
 - action directe `Ignorer` disponible dans la timeline
-- panneau détail non sticky
+- panneau détail sticky sur desktop, puis statique sur mobile
 - centrage horizontal aligné sur les autres pages
 - recommandations visibles surtout dans le panneau détail, pas dans la timeline elle-même
 - distinction explicite entre `Conflit` et `Conflit potentiel`

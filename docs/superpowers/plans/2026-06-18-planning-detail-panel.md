@@ -8,6 +8,8 @@
 
 **Tech Stack:** Vue 3 Composition API, Pinia store data, CSS custom properties, Vitest, Vite.
 
+**Status:** Implementation and documentation are reflected in the current branch. Verification commands and visual QA remain explicit checklist items so they can be rerun and evidenced in a fresh session.
+
 ---
 
 ### Task 1: Detail Panel Structure
@@ -17,9 +19,9 @@
 - Modify: `frontend/src/views/PlanningView.vue`
 - Modify: `frontend/src/styles/planning.css`
 
-- [ ] Move the panel content into four readable sections: compact film header, active screening, comparison rows, external links.
-- [ ] Keep current actions and event handlers: `applyScreeningSelection`, `removeScreeningSelection`, `exportScreeningIcal`.
-- [ ] Do not change backend data or selection behavior.
+- [x] Move the panel content into four readable sections: compact film header, active screening, comparison rows, external links.
+- [x] Keep current actions and event handlers: `applyScreeningSelection`, `removeScreeningSelection`, `exportScreeningIcal`.
+- [x] Do not change backend data or selection behavior.
 
 ### Task 2: Status And Recommendation Language
 
@@ -29,10 +31,10 @@
 - Modify: `frontend/src/styles/planning.css`
 - Modify if necessary: `frontend/src/styles/tokens.css`
 
-- [ ] Use distinct classes for user status markers and recommendation chips.
-- [ ] Make `confirmed` stronger than `tentative`.
-- [ ] Keep recommendation chips secondary and visually different from status pills.
-- [ ] Keep conflict readable through text and border, not color alone.
+- [x] Use distinct classes for user status markers and recommendation chips.
+- [x] Make `confirmed` stronger than `tentative`.
+- [x] Keep recommendation chips secondary and visually different from status pills.
+- [x] Keep conflict readable through text and border, not color alone.
 
 ### Task 3: Documentation And Verification
 
@@ -41,8 +43,8 @@
 - Modify: `docs/current-ui-state.md`
 - Modify: `docs/source-of-truth.md`
 
-- [ ] Document that Planning separates user decision status from recommendation signals.
-- [ ] Document venues/lieux as a follow-up priority.
+- [x] Document that Planning separates user decision status from recommendation signals.
+- [x] Document venues/lieux as a follow-up priority.
 - [ ] Run `npm run test`.
 - [ ] Run `npm run build`.
 - [ ] Start the frontend locally and visually inspect Planning at desktop and mobile widths.
