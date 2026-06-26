@@ -45,6 +45,7 @@ Le frontend courant assume :
 - `getScreeningActions` centralise les libellés et actions disponibles selon l'état d'une séance, pour éviter de garder cette logique dans le template
 - `ScreeningStatusPill` centralise le rendu des statuts de séance dans la timeline, la séance active et les alternatives
 - `getScreeningStatusPresentation` centralise le label et le tone d'un statut, pour éviter de garder cette logique dans `usePlanningModel`
+- direction de simplification UI à privilégier : garder les composants UI primitifs très fins, par exemple un `Button` qui rend seulement un vrai `<button>` et accepte les classes BEM du parent via les attributs Vue
 
 ### `Films`
 

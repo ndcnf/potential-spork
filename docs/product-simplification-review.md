@@ -252,8 +252,9 @@ Les styles Planning sont longs parce qu'ils portent beaucoup d'etats visuels.
 Regle recommandee :
 
 - un composant metier decide l'etat
-- une classe systeme rend l'etat
-- on evite une nouvelle classe pour chaque cas local
+- une classe BEM explicite rend l'etat au point d'usage
+- un composant UI primitif ne doit pas recreer une API de variants si la classe BEM existe deja
+- on evite une nouvelle abstraction pour chaque cas local
 
 Exemples de classes a migrer progressivement :
 
@@ -265,9 +266,10 @@ Exemples de classes a migrer progressivement :
 
 Chaque migration doit supprimer des lignes de CSS.
 
-### P2 - La base UI doit avoir une API moins combinatoire
+### P2 - La base UI doit rester primitive
 
-L'API actuelle de `UiButton` combine `variant`, `tone`, `size`, `active`, `block`.
+La premiere tentative de `UiButton` allait vers une API de variants.
+La direction de simplification est maintenant plus stricte : `UiButton` doit rester une primitive fine.
 
 Risque :
 
@@ -277,15 +279,24 @@ Risque :
 
 Approche plus simple :
 
-- partir d'intentions produit
-- exemples : `primary`, `secondary`, `confirm`, `tentative`, `danger`, `ghost`
-- ne pas permettre des combinaisons qui n'ont pas de sens
+- option minimale recommandee : un `Button` primitif qui rend seulement un vrai `<button>`
+- passer les classes BEM depuis le parent ou depuis un composant metier comme `ScreeningActions`
+- eviter de recreer dans `UiButton` une API de variants qui duplique deja les classes CSS
+- garder les decisions produit dans les composants metier ou les fonctions pures, pas dans le bouton generique
 
 Reference Vue :
 
 - avec `<script setup>`, garder des props typees simples
-- utiliser les fallthrough attrs avec prudence
+- utiliser les fallthrough attrs pour laisser passer `class`, `disabled`, `aria-*` et autres attributs natifs quand le composant a un root element clair
 - reserver `aria-pressed` aux vrais boutons toggle
+
+Ce que cette option permettrait de simplifier :
+
+- supprimer une partie de `uiClasses.ts` si elle ne fait que reconstruire des classes predecibles
+- reduire les tests de classes generiques qui ne protegent pas une regle produit
+- eviter les combinaisons du type `variant + tone + active`
+- garder le BEM visible la ou la decision UI est prise
+- limiter `UiButton.vue` a l'accessibilite de base, au `type`, au `disabled` natif et aux slots
 
 ### P2 - Le theme `bujo` et les fonts doivent etre decides
 
@@ -444,7 +455,7 @@ Points a traiter avant merge ou dans une decision explicite :
 
 - confirmer si `bujo-theme.css` et les fonts restent dans cette PR
 - les fichiers de licence des fonts ont ete normalises en `LF`; le point restant est uniquement produit : garder ces assets futurs ou les deplacer dans une branche theme dediee
-- clarifier l'API `UiButton`
+- simplifier `UiButton` vers une primitive fine si les classes BEM suffisent
 - choisir le premier composant metier a migrer
 - eviter que `next-steps.md` devienne la spec detaillee permanente
 

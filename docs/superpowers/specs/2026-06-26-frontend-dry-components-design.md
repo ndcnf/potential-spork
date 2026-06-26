@@ -8,9 +8,9 @@ Reduire la complexite du frontend Planning en centralisant les decisions repetee
 
 L'objectif n'est pas de creer beaucoup de composants. L'objectif est de rendre les decisions DRY :
 
-- une seule source pour les variants de boutons
-- une seule source pour les statuts visuels de seance
 - une seule source pour les actions disponibles selon l'etat d'une seance
+- des classes BEM explicites pour les intentions visuelles de boutons
+- une seule source pour les statuts visuels de seance
 - moins de duplication dans `PlanningView.vue`
 - moins de classes locales dans `planning.css`
 
@@ -32,13 +32,29 @@ Composants concernes :
 Regle :
 
 - props simples et typees
-- peu de variants
+- pas de variants tant qu'une classe BEM explicite suffit
 - pas de logique Planning dedans
 - support des attributs natifs Vue via fallthrough attrs quand c'est utile
 
-Pour `UiButton`, viser une API courte :
+Pour `UiButton`, viser d'abord une primitive tres fine.
 
-- `variant`: `primary`, `secondary`, `ghost`, `state`
+Option preferee pour la simplification :
+
+- `UiButton` rend un vrai `<button>`
+- les classes BEM sont passees depuis le parent ou le composant metier
+- Vue applique ces classes au root element via les `fallthrough attributes`
+- `disabled`, `aria-*`, `data-*` et les listeners natifs restent des attributs du bouton
+
+Exemple cible :
+
+```vue
+<UiButton class="planning__action planning__action--confirm">
+  Confirmer cette seance
+</UiButton>
+```
+
+API maximale acceptable seulement si un besoin concret apparait et qu'une classe BEM ne suffit pas :
+
 - `size`: `sm`, `md`
 - `type`: `button`, `submit`, `reset`
 - `disabled` passe comme attribut natif
@@ -48,6 +64,14 @@ Eviter une API trop combinatoire comme :
 - `variant + tone + size + active + block + compact + elevated`
 
 Cette forme parait DRY, mais elle produit trop de combinaisons possibles et devient difficile a predire.
+
+Ce que l'option primitive permettrait de supprimer ou d'eviter :
+
+- moins de props sur `UiButton`
+- moins de helpers de classes generiques
+- moins de tests qui verifient seulement des noms de classes
+- pas de duplication entre variants TypeScript et classes BEM CSS
+- plus de clarte dans les composants metier : ils choisissent explicitement les classes correspondant a leur decision
 
 ### 2. Components metier Planning
 
@@ -126,9 +150,9 @@ Exemple conceptuel :
 
 ```ts
 type ScreeningAction =
-  | { kind: "select"; status: "confirmed" | "tentative" | "rejected"; label: string; variant: "primary" | "secondary" | "ghost" }
-  | { kind: "clear"; label: string; variant: "ghost" }
-  | { kind: "state"; label: string; variant: "state" }
+  | { kind: "select"; status: "confirmed" | "tentative" | "rejected"; label: string; className: string }
+  | { kind: "clear"; label: string; className: string }
+  | { kind: "state"; label: string; className: string; disabled: true }
 ```
 
 La fonction doit couvrir les decisions existantes :
@@ -148,22 +172,24 @@ Garder les pills, car elles sont appreciees et utiles.
 
 Simplifier le reste :
 
-- utiliser `UiButton` pour les boutons d'action
+- utiliser `UiButton` comme primitive pour les boutons d'action
+- passer les classes BEM depuis `ScreeningActions`
 - utiliser un seul composant pour les statuts de seance
 - utiliser un seul composant pour les chips de recommendation
-- reduire les variantes locales `planning__action--*`
+- garder seulement les classes `planning__action--*` qui correspondent a une intention metier claire
 
 Le CSS doit suivre cette regle :
 
 - tokens globaux pour couleurs, rayons, espacements
-- classes UI pour boutons/badges/chips/panels
+- classes UI seulement pour les primitives vraiment generiques
 - classes Planning seulement pour le layout specifique de Planning
+- classes BEM Planning pour les intentions propres au Planning
 
 Autrement dit :
 
-- `ui-button--primary` est une decision systeme
+- `UiButton` fournit le vrai `<button>` et les slots
 - `planning__timeline-item` est une decision de layout Planning
-- `planning__action--confirm` devrait disparaitre si `UiButton` couvre le cas
+- `planning__action--confirm` est acceptable si cette intention existe seulement dans Planning
 
 ## Boundaries
 
@@ -196,7 +222,7 @@ Tests recommandes :
 - `getScreeningActions` retourne `Remplacer par cette seance` pour une alternative/disabled
 - `ScreeningActions` emet `select("confirmed")` quand on clique sur confirmer
 - `ScreeningActions` emet `clear()` quand on clique sur annuler ou retirer
-- `UiButton` garde des classes previsibles pour chaque variant
+- `UiButton` laisse passer les classes BEM via les fallthrough attributes
 
 Ne pas ajouter de snapshots massifs du markup Planning.
 
