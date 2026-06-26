@@ -4,10 +4,133 @@
 
 Ordre recommandé :
 
-1. continuer à simplifier la lecture de `Planning`
-2. finaliser les états système réels si un cas faible réapparaît
-3. réduire la dette legacy autour des priorités
-4. garder `Trous / Free Slots` hors scope tant qu’un vrai chantier dédié n’est pas lancé
+1. réduire fortement la complexité globale du projet
+2. continuer à simplifier la lecture de `Planning`
+3. finaliser les états système réels si un cas faible réapparaît
+4. réduire la dette legacy autour des priorités
+5. garder `Trous / Free Slots` hors scope tant qu’un vrai chantier dédié n’est pas lancé
+
+## Simplification Mandate
+
+Le projet a dépassé une taille qui n’est plus proportionnée à son usage actuel.
+L’ordre de grandeur est d’environ 18k lignes selon le comptage local complet ; même en excluant les artefacts générés, les sources applicatives et docs restent trop volumineuses pour une app personnelle de planning festival.
+
+Objectif : réduire le code et la surface mentale avant d’ajouter de nouvelles features.
+
+Principes :
+
+- chaque nouvelle passe doit chercher à supprimer ou fusionner du code avant d’en ajouter
+- une abstraction ne doit rester que si elle réduit vraiment la complexité d’usage ou de maintenance
+- les comportements produit utiles priment sur la généricité future
+- les docs doivent rester courtes et prescriptives ; `backend-import-architecture.md` peut être long comme archive technique, mais `source-of-truth.md` et `next-steps.md` doivent rester lisibles rapidement
+- ne pas garder une option UI parce qu’elle existe déjà si elle n’aide pas une décision réelle
+- préférer un chemin utilisateur clair à plusieurs modes équivalents
+- les tests doivent protéger les règles risquées, pas figer chaque détail d’implémentation
+
+### Simplification Targets
+
+#### Frontend
+
+- base UI déjà créée :
+  - `UiButton`
+  - `UiBadge`
+  - `UiChip`
+  - `UiPanel`
+  - helpers BEM `uiClasses.ts`
+- prochaine règle : migrer les vues vers cette base par petites passes, sans changer le comportement visible
+- extraire ou supprimer la logique excessive de `usePlanningModel.ts`
+  - garder le composable comme orchestrateur Vue
+  - déplacer le ranking dans un petit `recommendationEngine`
+  - déplacer le grouping / layout visualisation seulement si cela rend le fichier plus court et testable
+- réduire la densité de `PlanningView.vue`
+  - éviter que summary, légende, filtres, modes, timeline et panel aient tous le même poids visuel
+  - garder visibles seulement les contrôles nécessaires à la prochaine décision
+- réduire les styles spécifiques dans `planning.css`
+  - identifier les boutons, chips, badges, panels et rows réutilisables
+  - ne pas créer de nouveau variant CSS pour chaque micro-état si un token existant suffit
+- vérifier si la vue `Visualisation` apporte assez de valeur pour justifier sa complexité
+  - si oui, la garder compacte et utile
+  - si non, la retirer ou la cacher derrière un état expérimental
+
+#### Backend
+
+- rendre explicite la stratégie d’import `full_replace` vs `merge`
+  - aujourd’hui, une partie de cette règle est implicite dans le traitement `nifff_html`
+  - le contrat devrait être visible côté source ou bundle canonique
+- réduire le nombre de couches si elles ne portent pas encore une responsabilité réelle
+  - `import_catalog`, `import_bundle`, `import_pipeline`, `import_nifff`, `import_postprocessing` ont du sens, mais doivent rester fins
+  - si une couche devient seulement un pass-through, la fusionner
+- typer les warnings d’import au lieu d’accumuler des strings longues
+  - but : résumé UI plus court et moins de bruit
+- conserver strictement la séparation `real datetime` / `festival day`
+  - cette règle est métier, pas une optimisation technique
+
+#### Product / UX
+
+- réduire le nombre d’états visibles simultanément
+  - confirmation, tentative, recommandation, conflit, conflit potentiel, ignoré et must-lock doivent être distinguables, mais pas tous dominants
+- clarifier les recommandations avec une explication courte et comparable
+  - `priorité film`
+  - `nombre d’options`
+  - `conflit`
+  - `préférence salle/horaire`
+- corriger les messages d’erreur live/demo
+  - éviter un titre `Mode démo` quand l’utilisateur vient de demander `Live`
+- repousser les idées non essentielles
+  - `Trous / Free Slots`
+  - préférences avancées de lieux
+  - fetch live des pages détail
+  - nouvelle iconographie complète
+
+### Success Criteria
+
+Une passe de simplification est réussie si :
+
+- elle supprime du code ou réduit un fichier critique sans perdre une règle métier validée
+- elle rend un comportement plus facile à expliquer en une phrase
+- elle garde les tests de non-régression importants verts
+- elle évite d’ajouter une nouvelle option utilisateur sans usage clair
+- elle documente seulement les décisions qui changent réellement le produit
+
+### High-Impact Simplifications
+
+Observations de review :
+
+- les plus gros fichiers applicatifs sont `usePlanningModel.ts`, `planning.css`, `PlanningView.vue`, `festival.ts`, `FilmsView.vue` et `SettingsView.vue`
+- les gains les plus sûrs sont côté Planning, car une même décision de séance est actuellement représentée dans plusieurs zones UI
+- l’objectif n’est pas seulement de déplacer du code dans plus de fichiers, mais de réduire les duplications et les divergences possibles
+
+Ordre recommandé :
+
+1. créer un composant `ScreeningActions`
+   - regrouper les boutons `Confirmer`, `Mettre une option`, `Ignorer`, `Ignoré`, `Annuler`, `Retirer du planning`
+   - s’appuyer sur `UiButton` au lieu de recréer des classes de bouton Planning
+   - l’utiliser dans la timeline, la séance active du panel et les alternatives
+   - bénéfice : moins de duplication UI et moins de risque qu’un état soit corrigé à un endroit mais pas ailleurs
+2. extraire un petit `recommendationEngine`
+   - sortir le scoring et l’ordre des recommandations de `usePlanningModel.ts`
+   - garder une API pure et testable : films, screenings, settings en entrée ; recommandations annotées en sortie
+   - bénéfice : rendre les recommandations explicables et testables sans Vue
+3. découper `PlanningView.vue`
+   - extraire `PlanningSummary`, `PlanningControls`, `PlanningTimeline`, `PlanningVisualization`, `PlanningDetailPanel`
+   - garder la page comme composition de blocs, pas comme fichier qui contient tout le produit Planning
+   - bénéfice : réduire la taille du fichier sans changer le comportement
+4. réduire `planning.css`
+   - réutiliser `UiButton`, `UiBadge`, `UiChip`, `UiPanel` et leurs classes BEM
+   - éviter un nouveau variant CSS pour chaque micro-état Planning
+   - bénéfice : réduire les styles spécifiques et rendre les futurs polish moins coûteux
+5. simplifier la vue `Visualisation`
+   - conserver le clic vers le panel et l’information compacte
+   - questionner la nécessité d’une grille horaire précise à 15 minutes
+   - bénéfice : garder la feature “vue visuelle” sans porter toute la complexité d’un scheduler complet
+6. alléger `festival.ts`
+   - extraire la persistance locale dans `persistedChoices`
+   - extraire la logique demo/live/import dans un module dédié
+   - bénéfice : garder le store Pinia centré sur l’état courant plutôt que sur toutes les responsabilités annexes
+7. réduire les docs actives
+   - garder `source-of-truth.md` et `next-steps.md` courts et prescriptifs
+   - transformer les longues notes historiques en archive
+   - bénéfice : retrouver rapidement les décisions actuelles
 
 ## Concrete Remaining Work
 
@@ -89,6 +212,9 @@ Bien discuter UX et frontend afin que ces icones permettent d'alleger visuelleme
 - rebuild après chaque passe significative
 - préférer simplification + validation à une refonte large
 - mettre la doc à jour seulement si un choix réel change
+
+## Notes en vrac
+- Ajouter le panel dans la vue Films. Trigger depuis le titre du film
 
 ## Validation Command
 
