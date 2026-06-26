@@ -155,12 +155,12 @@ Risque :
 
 - si les migrations suivantes s'arretent ici, on garde deux manieres de construire badges, chips et panels
 - une junior dev doit comprendre l'ancien systeme et le nouveau systeme
-- le nombre de lignes baisse dans `PlanningView.vue`, mais la dette restante est encore dans les pills, chips et panels locaux
+- le nombre de lignes baisse dans `PlanningView.vue`, mais la dette restante est encore dans les chips de recommendation et panels locaux
 
 Decision recommandee :
 
 - continuer uniquement les extractions qui suppriment du code dans `PlanningView.vue` ou `planning.css`
-- prochaine cible recommandee : `ScreeningStatusPill` et `RecommendationChips`
+- prochaine cible recommandee : `RecommendationChips`
 
 ### P1 - `Planning` doit etre le premier chantier de reduction
 
@@ -365,8 +365,7 @@ But : continuer a reduire `Planning` sans changer le comportement.
 
 Actions :
 
-- poursuivre apres `ScreeningActions` avec `ScreeningStatusPill`
-- creer `RecommendationChips`
+- poursuivre apres `ScreeningActions` et `ScreeningStatusPill` avec `RecommendationChips`
 - supprimer les classes CSS remplacees apres migration effective
 - ajouter des tests ciblant les labels, tones et actions visibles
 

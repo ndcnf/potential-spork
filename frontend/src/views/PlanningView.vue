@@ -3,6 +3,7 @@ import { computed, reactive } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import ScreeningActions from '@/components/planning/ScreeningActions.vue'
+import ScreeningStatusPill from '@/components/planning/ScreeningStatusPill.vue'
 import { useIcalExport } from '@/composables/useIcalExport'
 import { usePlanningModel } from '@/composables/usePlanningModel'
 import { filmDirectorLabel, filmTaglineLabel, hasFilmDetailInfo } from '@/lib/filmDisplay'
@@ -30,9 +31,6 @@ const {
   filmPriorityDots,
   filmMeta,
   filmDetailMeta,
-  screeningReason,
-  screeningStatusTone,
-  screeningComparisonStatus,
   screeningStateClass,
   screeningComparisonHints,
   screeningDecisionNote,
@@ -354,9 +352,7 @@ async function removeScreeningSelection(screeningId: number) {
                         <span v-for="dot in filmPriorityDots(screening.film?.priority)" :key="dot" class="planning__film-priority-dot" />
                       </span>
                     </div>
-                    <span class="planning__status-pill" :class="`planning__status-pill--${screeningStatusTone(screening)}`">
-                      {{ screeningReason(screening) }}
-                    </span>
+                    <ScreeningStatusPill :screening="screening" />
                   </div>
                   <p class="planning__timeline-meta">{{ screening.venue_name || 'Salle inconnue' }} · {{ filmMeta(screening) }}</p>
                   <ScreeningActions
@@ -448,10 +444,7 @@ async function removeScreeningSelection(screeningId: number) {
               <p class="planning__detail-time">{{ formatDayLabel(detailScreening.dayKey) }} · {{ formatTimeRange(detailScreening) }}</p>
               <p class="planning__detail-venue">{{ detailScreening.venue_name || 'Salle inconnue' }}</p>
             </div>
-            <span class="planning__decision-badge" :class="`planning__decision-badge--${screeningStatusTone(detailScreening)}`">
-              <span class="planning__decision-marker" aria-hidden="true" />
-              {{ screeningComparisonStatus(detailScreening) }}
-            </span>
+            <ScreeningStatusPill :screening="detailScreening" context="comparison" marker />
           </div>
           <div v-if="detailScreening.recommendationReasons.length || detailScreening.recommendationDrawbacks.length || detailScreening.recommendationBlockedBy" class="planning__recommendation-strip">
             <span v-for="reason in detailScreening.recommendationReasons" :key="reason" class="planning__recommendation-chip planning__recommendation-chip--positive">{{ reason }}</span>
@@ -510,10 +503,7 @@ async function removeScreeningSelection(screeningId: number) {
                   </strong>
                   <span class="planning__venue-slot">{{ option.venue_name || 'Salle inconnue' }}</span>
                 </div>
-                <span class="planning__decision-badge planning__decision-badge--compact" :class="`planning__decision-badge--${screeningStatusTone(option)}`">
-                  <span class="planning__decision-marker" aria-hidden="true" />
-                  {{ screeningComparisonStatus(option) }}
-                </span>
+                <ScreeningStatusPill :screening="option" context="comparison" compact marker />
               </div>
                <div v-if="screeningComparisonHints(option).length" class="planning__detail-hints">
                  <span v-for="hint in screeningComparisonHints(option)" :key="hint" class="planning__detail-hint">{{ hint }}</span>
