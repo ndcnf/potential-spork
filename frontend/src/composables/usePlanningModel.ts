@@ -14,6 +14,7 @@ import {
   priorityDotCount,
   priorityRank,
 } from "@/lib/priorities";
+import { getScreeningStatusPresentation } from "@/lib/screeningStatus";
 import { useFestivalStore } from "@/stores/festival";
 import { useSettingsStore } from "@/stores/settings";
 import type { Film, RecommendationSortCriterion, Screening } from "@/types";
@@ -787,35 +788,6 @@ export function usePlanningModel() {
     );
   }
 
-  function screeningReason(screening: PlanningScreening): string {
-    if (screening.selection_status === "rejected") return "Ignorée";
-    if (screening.isSelected && screening.isConflict) return "Conflit";
-    if (screening.derived_state === "conflict") return "Conflit potentiel";
-    if (screening.selection_status === "confirmed") return "Confirmée";
-    if (screening.selection_status === "tentative") return "Tentative";
-    if (screening.isSingleScreening) return "Séance unique";
-    if (screening.isMustLock) return "À sécuriser";
-    if (screening.isRecommended) return "Recommandée";
-    if (screening.isAlternative || screening.derived_state === "disabled") {
-      return "Autre séance choisie";
-    }
-    return "Disponible";
-  }
-
-  function screeningComparisonStatus(screening: PlanningScreening): string {
-    if (screening.selection_status === "rejected") return "Ignorée";
-    if (screening.isSelected && screening.isConflict) return "Conflit";
-    if (screening.derived_state === "conflict") return "Conflit potentiel";
-    if (screening.selection_status === "confirmed") return "Confirmée";
-    if (screening.selection_status === "tentative") return "Tentative";
-    if (screening.isSingleScreening) return "Séance unique";
-    if (screening.isMustLock) return "À sécuriser";
-    if (screening.isRecommended) return "Recommandée";
-    if (screening.isAlternative || screening.derived_state === "disabled")
-      return "Autre séance du film déjà prévue";
-    return "Disponible";
-  }
-
   function screeningStateClass(screening: PlanningScreening): string {
     if (screening.isSelected && screening.isConflict)
       return "planning__timeline-item--conflict";
@@ -888,28 +860,6 @@ export function usePlanningModel() {
     return "Cette séance reste disponible sans collision immédiate.";
   }
 
-  function screeningPrimaryActionLabel(screening: PlanningScreening): string {
-    if (screening.isAlternative || screening.derived_state === "disabled") {
-      return "Remplacer par cette séance";
-    }
-
-    return "Mettre une option";
-  }
-
-  function screeningStatusTone(screening: PlanningScreening): string {
-    if (screening.selection_status === "rejected") return "rejected";
-    if (screening.isSelected && screening.isConflict) return "conflict";
-    if (screening.derived_state === "conflict") return "warning";
-    if (screening.selection_status === "confirmed") return "confirmed";
-    if (screening.selection_status === "tentative") return "tentative";
-    if (screening.isSingleScreening) return "single";
-    if (screening.isMustLock) return "must-lock";
-    if (screening.isAlternative || screening.derived_state === "disabled")
-      return "disabled";
-    if (screening.isRecommended) return "recommended";
-    return "available";
-  }
-
   function visualizationBlockClass(screening: PlanningScreening): string {
     if (screening.isSelected && screening.isConflict) {
       return screening.selection_status === "confirmed"
@@ -932,7 +882,7 @@ export function usePlanningModel() {
   }
 
   function visualizationBlockTone(screening: PlanningScreening): string {
-    return screeningStatusTone(screening);
+    return getScreeningStatusPresentation(screening).tone;
   }
 
   function visualizationBlockLabel(screening: PlanningScreening): string {
@@ -940,7 +890,7 @@ export function usePlanningModel() {
       screening.film_title,
       screening.starts_at || screening.ends_at ? formatTimeRange(screening) : "",
       screening.venue_name,
-      screeningComparisonStatus(screening),
+      getScreeningStatusPresentation(screening, { context: "comparison" }).label,
     ];
 
     return parts.filter(Boolean).join(" · ");
@@ -1029,13 +979,9 @@ export function usePlanningModel() {
     filmPriorityDots,
     filmMeta,
     filmDetailMeta,
-    screeningReason,
-    screeningStatusTone,
-    screeningComparisonStatus,
     screeningStateClass,
     screeningComparisonHints,
     screeningDecisionNote,
-    screeningPrimaryActionLabel,
     visualizationBlockClass,
     visualizationBlockTone,
     visualizationBlockLabel,

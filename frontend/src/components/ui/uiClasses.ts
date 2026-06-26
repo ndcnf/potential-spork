@@ -1,6 +1,6 @@
 export type UiTone = 'neutral' | 'accent' | 'confirmed' | 'tentative' | 'warning' | 'danger' | 'subtle'
 export type UiSize = 'sm' | 'md'
-export type UiButtonVariant = 'solid' | 'soft' | 'ghost' | 'state'
+export type UiButtonVariant = 'primary' | 'secondary' | 'ghost' | 'state' | 'confirm' | 'tentative'
 export type UiPanelDensity = 'normal' | 'compact'
 
 function compactClasses(classes: Array<string | false | null | undefined>): string[] {
@@ -9,25 +9,12 @@ function compactClasses(classes: Array<string | false | null | undefined>): stri
 
 export function uiButtonClasses({
   variant = 'ghost',
-  tone = 'neutral',
   size = 'md',
-  active = false,
-  block = false,
 }: {
   variant?: UiButtonVariant
-  tone?: UiTone
   size?: UiSize
-  active?: boolean
-  block?: boolean
 } = {}): string[] {
-  return compactClasses([
-    'ui-button',
-    `ui-button--${variant}`,
-    `ui-button--${tone}`,
-    `ui-button--${size}`,
-    active && 'ui-button--active',
-    block && 'ui-button--block',
-  ])
+  return compactClasses(['ui-button', `ui-button--${variant}`, `ui-button--${size}`])
 }
 
 export function uiBadgeClasses({

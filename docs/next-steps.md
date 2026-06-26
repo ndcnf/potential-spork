@@ -39,7 +39,17 @@ Principes :
   - `UiChip`
   - `UiPanel`
   - helpers BEM `uiClasses.ts`
-- prochaine règle : migrer les vues vers cette base par petites passes, sans changer le comportement visible
+- première migration faite dans `Planning` :
+  - `ScreeningActions`
+  - `getScreeningActions`
+  - `ScreeningStatusPill`
+  - `getScreeningStatusPresentation`
+  - boutons de séance rendus par `UiButton`
+- prochaine règle : continuer les migrations par petites passes, sans changer le comportement visible
+- simplification UI à étudier avant d'ajouter de nouveaux variants :
+  - transformer `UiButton` en primitive très fine
+  - passer les classes BEM depuis les composants métier ou les vues
+  - s'appuyer sur les `fallthrough attributes` Vue pour éviter une API de variants trop large
 - extraire ou supprimer la logique excessive de `usePlanningModel.ts`
   - garder le composable comme orchestrateur Vue
   - déplacer le ranking dans un petit `recommendationEngine`
@@ -104,11 +114,10 @@ Observations de review :
 
 Ordre recommandé :
 
-1. créer un composant `ScreeningActions`
-   - regrouper les boutons `Confirmer`, `Mettre une option`, `Ignorer`, `Ignoré`, `Annuler`, `Retirer du planning`
-   - s’appuyer sur `UiButton` au lieu de recréer des classes de bouton Planning
-   - l’utiliser dans la timeline, la séance active du panel et les alternatives
-   - bénéfice : moins de duplication UI et moins de risque qu’un état soit corrigé à un endroit mais pas ailleurs
+1. créer `RecommendationChips`
+   - regrouper reasons, drawbacks et blockedBy
+   - remplacer les blocs répétés du panneau détail et des alternatives
+   - bénéfice : réduire la duplication sans toucher au moteur de recommandation
 2. extraire un petit `recommendationEngine`
    - sortir le scoring et l’ordre des recommandations de `usePlanningModel.ts`
    - garder une API pure et testable : films, screenings, settings en entrée ; recommandations annotées en sortie
@@ -118,7 +127,8 @@ Ordre recommandé :
    - garder la page comme composition de blocs, pas comme fichier qui contient tout le produit Planning
    - bénéfice : réduire la taille du fichier sans changer le comportement
 4. réduire `planning.css`
-   - réutiliser `UiButton`, `UiBadge`, `UiChip`, `UiPanel` et leurs classes BEM
+   - garder `UiButton`, `UiBadge`, `UiChip`, `UiPanel` comme primitives fines
+   - porter les intentions visuelles Planning par des classes BEM Planning explicites
    - éviter un nouveau variant CSS pour chaque micro-état Planning
    - bénéfice : réduire les styles spécifiques et rendre les futurs polish moins coûteux
 5. simplifier la vue `Visualisation`

@@ -73,7 +73,7 @@ Fichiers les plus critiques :
 - `frontend/src/composables/usePlanningModel.ts` : environ 1053 lignes
 - `frontend/src/styles/planning.css` : environ 978 lignes
 - `frontend/src/style.css` : environ 818 lignes
-- `frontend/src/views/PlanningView.vue` : environ 700 lignes
+- `frontend/src/views/PlanningView.vue` : environ 559 lignes apres la premiere extraction `ScreeningActions`
 - `frontend/src/stores/festival.ts` : environ 520 lignes
 - `frontend/src/views/FilmsView.vue` : environ 443 lignes
 - `frontend/src/views/SettingsView.vue` : environ 424 lignes
@@ -147,20 +147,20 @@ Il faut separer :
 
 ### P1 - Le produit a besoin d'une reduction reelle, pas seulement d'une base UI
 
-La branche actuelle ajoute des composants UI generiques (`UiButton`, `UiBadge`, `UiChip`, `UiPanel`) et des styles globaux.
+La branche ajoute des composants UI generiques (`UiButton`, `UiBadge`, `UiChip`, `UiPanel`) et des styles globaux.
 
-Ce n'est pas encore une simplification si les vues existantes continuent d'utiliser leurs propres patterns.
+La premiere extraction utile a maintenant ete faite : `ScreeningActions` consomme `UiButton` et remplace les actions de seance repetees dans `Planning`.
 
 Risque :
 
-- on ajoute une deuxieme maniere de construire les memes boutons, badges et panels
+- si les migrations suivantes s'arretent ici, on garde deux manieres de construire badges, chips et panels
 - une junior dev doit comprendre l'ancien systeme et le nouveau systeme
-- le nombre de lignes augmente avant de baisser
+- le nombre de lignes baisse dans `PlanningView.vue`, mais la dette restante est encore dans les chips de recommendation et panels locaux
 
 Decision recommandee :
 
-- garder les composants seulement si la prochaine passe supprime du code dans `PlanningView.vue` et `planning.css`
-- sinon, les retirer ou les reporter
+- continuer uniquement les extractions qui suppriment du code dans `PlanningView.vue` ou `planning.css`
+- prochaine cible recommandee : `RecommendationChips`
 
 ### P1 - `Planning` doit etre le premier chantier de reduction
 
@@ -174,7 +174,7 @@ Decision recommandee :
 - panel detail
 - actions directes
 
-Le meilleur premier composant metier est `ScreeningActions`.
+Le premier composant metier extrait est `ScreeningActions`.
 
 Responsabilite proposee :
 
@@ -252,8 +252,9 @@ Les styles Planning sont longs parce qu'ils portent beaucoup d'etats visuels.
 Regle recommandee :
 
 - un composant metier decide l'etat
-- une classe systeme rend l'etat
-- on evite une nouvelle classe pour chaque cas local
+- une classe BEM explicite rend l'etat au point d'usage
+- un composant UI primitif ne doit pas recreer une API de variants si la classe BEM existe deja
+- on evite une nouvelle abstraction pour chaque cas local
 
 Exemples de classes a migrer progressivement :
 
@@ -265,9 +266,10 @@ Exemples de classes a migrer progressivement :
 
 Chaque migration doit supprimer des lignes de CSS.
 
-### P2 - La base UI doit avoir une API moins combinatoire
+### P2 - La base UI doit rester primitive
 
-L'API actuelle de `UiButton` combine `variant`, `tone`, `size`, `active`, `block`.
+La premiere tentative de `UiButton` allait vers une API de variants.
+La direction de simplification est maintenant plus stricte : `UiButton` doit rester une primitive fine.
 
 Risque :
 
@@ -277,15 +279,24 @@ Risque :
 
 Approche plus simple :
 
-- partir d'intentions produit
-- exemples : `primary`, `secondary`, `confirm`, `tentative`, `danger`, `ghost`
-- ne pas permettre des combinaisons qui n'ont pas de sens
+- option minimale recommandee : un `Button` primitif qui rend seulement un vrai `<button>`
+- passer les classes BEM depuis le parent ou depuis un composant metier comme `ScreeningActions`
+- eviter de recreer dans `UiButton` une API de variants qui duplique deja les classes CSS
+- garder les decisions produit dans les composants metier ou les fonctions pures, pas dans le bouton generique
 
 Reference Vue :
 
 - avec `<script setup>`, garder des props typees simples
-- utiliser les fallthrough attrs avec prudence
+- utiliser les fallthrough attrs pour laisser passer `class`, `disabled`, `aria-*` et autres attributs natifs quand le composant a un root element clair
 - reserver `aria-pressed` aux vrais boutons toggle
+
+Ce que cette option permettrait de simplifier :
+
+- supprimer une partie de `uiClasses.ts` si elle ne fait que reconstruire des classes predecibles
+- reduire les tests de classes generiques qui ne protegent pas une regle produit
+- eviter les combinaisons du type `variant + tone + active`
+- garder le BEM visible la ou la decision UI est prise
+- limiter `UiButton.vue` a l'accessibilite de base, au `type`, au `disabled` natif et aux slots
 
 ### P2 - Le theme `bujo` et les fonts doivent etre decides
 
@@ -359,16 +370,15 @@ Definition of done :
 - la PR explique ce qui doit etre simplifie
 - la PR ne pretend pas avoir deja reduit le code si ce n'est pas le cas
 
-### Phase 2 - Premier Gain Frontend Reel
+### Phase 2 - Continuer Le Gain Frontend
 
-But : reduire `Planning` sans changer le comportement.
+But : continuer a reduire `Planning` sans changer le comportement.
 
 Actions :
 
-- creer `ScreeningActions`
-- l'utiliser dans timeline, panel actif et alternatives
-- supprimer les classes CSS remplacees
-- ajouter des tests ciblant les libelles/actions
+- poursuivre apres `ScreeningActions` et `ScreeningStatusPill` avec `RecommendationChips`
+- supprimer les classes CSS remplacees apres migration effective
+- ajouter des tests ciblant les labels, tones et actions visibles
 
 Definition of done :
 
@@ -437,15 +447,15 @@ Definition of done :
 La branche `post-2026-simplification` est utile comme point de depart, mais elle doit etre presentee honnetement :
 
 - elle ajoute une base UI
-- elle ne l'a pas encore consommee dans les vues principales
-- elle ne reduit donc pas encore le code produit
+- elle commence a la consommer dans `Planning` via `ScreeningActions`
+- elle reduit maintenant une duplication concrete, mais ne simplifie pas encore tout le frontend
 - elle ajoute aussi un theme et des fonts qui semblent hors scope maintenabilite
 
 Points a traiter avant merge ou dans une decision explicite :
 
 - confirmer si `bujo-theme.css` et les fonts restent dans cette PR
 - les fichiers de licence des fonts ont ete normalises en `LF`; le point restant est uniquement produit : garder ces assets futurs ou les deplacer dans une branche theme dediee
-- clarifier l'API `UiButton`
+- simplifier `UiButton` vers une primitive fine si les classes BEM suffisent
 - choisir le premier composant metier a migrer
 - eviter que `next-steps.md` devienne la spec detaillee permanente
 

@@ -40,7 +40,12 @@ Le frontend courant assume :
   - `UiChip`
   - `UiPanel`
   - helpers de classes BEM dans `uiClasses.ts`
-- ces composants de base ne remplacent pas encore les vues existantes ; ils servent de fondation pour migrer `Planning`, `Films` et `Settings` par petites passes
+- `UiButton` est maintenant utilisé par `ScreeningActions` dans `Planning`
+- `ScreeningActions` centralise les actions de séance répétées dans la timeline, la séance active du panneau détail et les alternatives du même film
+- `getScreeningActions` centralise les libellés et actions disponibles selon l'état d'une séance, pour éviter de garder cette logique dans le template
+- `ScreeningStatusPill` centralise le rendu des statuts de séance dans la timeline, la séance active et les alternatives
+- `getScreeningStatusPresentation` centralise le label et le tone d'un statut, pour éviter de garder cette logique dans `usePlanningModel`
+- direction de simplification UI à privilégier : garder les composants UI primitifs très fins, par exemple un `Button` qui rend seulement un vrai `<button>` et accepte les classes BEM du parent via les attributs Vue
 
 ### `Films`
 
@@ -92,6 +97,11 @@ Le frontend courant assume :
   - alternatives comparables par rows
   - statut utilisateur dominant
   - recommendations en chips secondaires
+- actions de séance rendues par `ScreeningActions` dans les trois contextes principaux :
+  - timeline
+  - séance active du panneau détail
+  - alternatives du panneau détail
+- statuts de séance rendus par `ScreeningStatusPill` dans les mêmes contextes, en conservant le visuel pill existant
 - `Confirmée` utilise un vert doux, `Recommendation` utilise le doré, et `Tentative` / `Conflit` gardent des nuances et formes distinctes
 - l’ordre des critères secondaires de recommendation est réglable dans `Paramètres`, après la priorité fixe `Immanquable` avant `Peut-être`
 - la vue visualisation garde des blocs compacts, mais expose le statut de chaque séance par couleur/forme et marqueur interne
@@ -157,3 +167,4 @@ Composants :
 - le wording des recommandations et des conflits potentiels doit encore être surveillé sur cas réels
 - les états `error` réels vs mode démo doivent rester surveillés dans les prochaines passes
 - les nouveaux composants UI de base doivent maintenant être utilisés pour réduire progressivement les classes spécifiques `planning__action`, `planning__decision-badge`, `planning__recommendation-chip`, `ghost-button` et équivalents
+- prochaine dette frontend immédiate : appliquer la même logique DRY aux chips de recommendation, sans relancer un design system complet
