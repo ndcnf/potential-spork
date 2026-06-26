@@ -2,6 +2,8 @@
 
 ## Current Priorities
 
+Review globale de simplification : `docs/product-simplification-review.md`.
+
 Ordre recommandé :
 
 1. réduire fortement la complexité globale du projet
