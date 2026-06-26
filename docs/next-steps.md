@@ -39,7 +39,11 @@ Principes :
   - `UiChip`
   - `UiPanel`
   - helpers BEM `uiClasses.ts`
-- prochaine règle : migrer les vues vers cette base par petites passes, sans changer le comportement visible
+- première migration faite dans `Planning` :
+  - `ScreeningActions`
+  - `getScreeningActions`
+  - boutons de séance rendus par `UiButton`
+- prochaine règle : continuer les migrations par petites passes, sans changer le comportement visible
 - extraire ou supprimer la logique excessive de `usePlanningModel.ts`
   - garder le composable comme orchestrateur Vue
   - déplacer le ranking dans un petit `recommendationEngine`
@@ -104,32 +108,36 @@ Observations de review :
 
 Ordre recommandé :
 
-1. créer un composant `ScreeningActions`
-   - regrouper les boutons `Confirmer`, `Mettre une option`, `Ignorer`, `Ignoré`, `Annuler`, `Retirer du planning`
-   - s’appuyer sur `UiButton` au lieu de recréer des classes de bouton Planning
-   - l’utiliser dans la timeline, la séance active du panel et les alternatives
-   - bénéfice : moins de duplication UI et moins de risque qu’un état soit corrigé à un endroit mais pas ailleurs
-2. extraire un petit `recommendationEngine`
+1. créer un composant `ScreeningStatusPill`
+   - garder le style pill apprécié
+   - centraliser label / tone / classe de statut hors du template
+   - remplacer progressivement `planning__status-pill` et `planning__decision-badge`
+   - bénéfice : moins de variantes visuelles locales et un vocabulaire de statut plus stable
+2. créer `RecommendationChips`
+   - regrouper reasons, drawbacks et blockedBy
+   - remplacer les blocs répétés du panneau détail et des alternatives
+   - bénéfice : réduire la duplication sans toucher au moteur de recommandation
+3. extraire un petit `recommendationEngine`
    - sortir le scoring et l’ordre des recommandations de `usePlanningModel.ts`
    - garder une API pure et testable : films, screenings, settings en entrée ; recommandations annotées en sortie
    - bénéfice : rendre les recommandations explicables et testables sans Vue
-3. découper `PlanningView.vue`
+4. découper `PlanningView.vue`
    - extraire `PlanningSummary`, `PlanningControls`, `PlanningTimeline`, `PlanningVisualization`, `PlanningDetailPanel`
    - garder la page comme composition de blocs, pas comme fichier qui contient tout le produit Planning
    - bénéfice : réduire la taille du fichier sans changer le comportement
-4. réduire `planning.css`
+5. réduire `planning.css`
    - réutiliser `UiButton`, `UiBadge`, `UiChip`, `UiPanel` et leurs classes BEM
    - éviter un nouveau variant CSS pour chaque micro-état Planning
    - bénéfice : réduire les styles spécifiques et rendre les futurs polish moins coûteux
-5. simplifier la vue `Visualisation`
+6. simplifier la vue `Visualisation`
    - conserver le clic vers le panel et l’information compacte
    - questionner la nécessité d’une grille horaire précise à 15 minutes
    - bénéfice : garder la feature “vue visuelle” sans porter toute la complexité d’un scheduler complet
-6. alléger `festival.ts`
+7. alléger `festival.ts`
    - extraire la persistance locale dans `persistedChoices`
    - extraire la logique demo/live/import dans un module dédié
    - bénéfice : garder le store Pinia centré sur l’état courant plutôt que sur toutes les responsabilités annexes
-7. réduire les docs actives
+8. réduire les docs actives
    - garder `source-of-truth.md` et `next-steps.md` courts et prescriptifs
    - transformer les longues notes historiques en archive
    - bénéfice : retrouver rapidement les décisions actuelles

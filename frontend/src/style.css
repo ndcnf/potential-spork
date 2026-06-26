@@ -523,10 +523,6 @@ select:focus-visible,
   font-size: var(--font-size-sm);
 }
 
-.ui-button--block {
-  width: 100%;
-}
-
 .ui-button:disabled {
   cursor: default;
   opacity: 0.58;
@@ -546,17 +542,16 @@ select:focus-visible,
   white-space: nowrap;
 }
 
-.ui-button--soft,
-.ui-button--solid,
-.ui-button--active {
+.ui-button--primary {
   border-color: var(--color-accent-border);
   background: var(--color-accent-soft);
   color: var(--color-accent);
 }
 
-.ui-button--solid {
-  background: var(--color-accent);
-  color: var(--color-background);
+.ui-button--secondary {
+  border-color: var(--color-border-mid);
+  background: var(--color-surface-strong);
+  color: var(--color-text);
 }
 
 .ui-button--ghost {
@@ -569,7 +564,11 @@ select:focus-visible,
   cursor: default;
 }
 
-.ui-button--confirmed {
+.ui-button--state:disabled {
+  opacity: 1;
+}
+
+.ui-button--confirm {
   border-color: color-mix(in srgb, var(--color-state-confirmed) 46%, var(--color-background));
   background: var(--color-state-confirmed-soft);
   color: var(--color-state-confirmed);
@@ -579,19 +578,6 @@ select:focus-visible,
   border-color: color-mix(in srgb, var(--color-state-tentative) 44%, var(--color-background));
   background: var(--color-state-tentative-soft);
   color: var(--color-state-tentative);
-}
-
-.ui-button--warning,
-.ui-button--danger {
-  border-color: color-mix(in srgb, var(--color-state-conflict) 46%, var(--color-background));
-  background: var(--color-state-conflict-soft);
-  color: var(--color-state-conflict);
-}
-
-.ui-button--subtle {
-  border-color: var(--color-border-soft);
-  background: transparent;
-  color: var(--color-text-subtle);
 }
 
 .ui-badge,

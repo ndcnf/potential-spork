@@ -154,32 +154,9 @@
   color: var(--color-accent);
 }
 
-.planning__action--confirm {
-  border-color: color-mix(in srgb, var(--color-state-confirmed) 46%, var(--color-background));
-  background: var(--color-state-confirmed-soft);
-  color: var(--color-state-confirmed);
-}
-
-.planning__action--tentative {
-  border-color: color-mix(in srgb, var(--color-state-tentative) 44%, var(--color-background));
-  background: var(--color-state-tentative-soft);
-  color: var(--color-state-tentative);
-}
-
 .planning__action--secondary {
   border-color: var(--color-border-mid);
   background: var(--color-surface-strong);
-}
-
-.planning__action--state {
-  border-color: var(--color-border-soft);
-  background: transparent;
-  color: var(--color-text-subtle);
-  cursor: default;
-}
-
-.planning__action--state:disabled {
-  opacity: 1;
 }
 
 .planning__mode-button--active,
@@ -736,19 +713,14 @@
   color: var(--color-text-muted);
 }
 
-.planning__detail-actions {
+.screening-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
 }
 
-.planning__timeline .planning__detail-actions {
+.planning__timeline .screening-actions {
   margin-top: var(--space-2xs);
-}
-
-.planning__timeline .planning__action {
-  min-height: 2rem;
-  padding: var(--space-xs) var(--space-md);
 }
 
 .planning__status-pill {

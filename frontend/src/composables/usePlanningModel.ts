@@ -888,14 +888,6 @@ export function usePlanningModel() {
     return "Cette séance reste disponible sans collision immédiate.";
   }
 
-  function screeningPrimaryActionLabel(screening: PlanningScreening): string {
-    if (screening.isAlternative || screening.derived_state === "disabled") {
-      return "Remplacer par cette séance";
-    }
-
-    return "Mettre une option";
-  }
-
   function screeningStatusTone(screening: PlanningScreening): string {
     if (screening.selection_status === "rejected") return "rejected";
     if (screening.isSelected && screening.isConflict) return "conflict";
@@ -1035,7 +1027,6 @@ export function usePlanningModel() {
     screeningStateClass,
     screeningComparisonHints,
     screeningDecisionNote,
-    screeningPrimaryActionLabel,
     visualizationBlockClass,
     visualizationBlockTone,
     visualizationBlockLabel,

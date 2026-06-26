@@ -2,6 +2,7 @@
 import { computed, reactive } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import ScreeningActions from '@/components/planning/ScreeningActions.vue'
 import { useIcalExport } from '@/composables/useIcalExport'
 import { usePlanningModel } from '@/composables/usePlanningModel'
 import { filmDirectorLabel, filmTaglineLabel, hasFilmDetailInfo } from '@/lib/filmDisplay'
@@ -35,7 +36,6 @@ const {
   screeningStateClass,
   screeningComparisonHints,
   screeningDecisionNote,
-  screeningPrimaryActionLabel,
   visualizationBlockClass,
   visualizationBlockTone,
   visualizationBlockLabel,
@@ -359,49 +359,13 @@ async function removeScreeningSelection(screeningId: number) {
                     </span>
                   </div>
                   <p class="planning__timeline-meta">{{ screening.venue_name || 'Salle inconnue' }} · {{ filmMeta(screening) }}</p>
-                  <div class="planning__detail-actions" aria-label="Actions sur la séance">
-                    <button
-                      v-if="screening.selection_status === 'tentative'"
-                      type="button"
-                      class="planning__action planning__action--primary planning__action--confirm"
-                      @click="applyScreeningSelection(screening.id, 'confirmed')"
-                    >
-                      Confirmer cette séance
-                    </button>
-                    <button
-                      v-else-if="screening.selection_status === 'rejected'"
-                      type="button"
-                      class="planning__action planning__action--state"
-                      disabled
-                    >
-                      Ignoré
-                    </button>
-                    <button
-                      v-else-if="screening.selection_status !== 'confirmed'"
-                      type="button"
-                      class="planning__action planning__action--primary planning__action--tentative"
-                      @click="applyScreeningSelection(screening.id, 'tentative')"
-                    >
-                      {{ screeningPrimaryActionLabel(screening) }}
-                    </button>
-
-                    <button
-                      v-if="screening.selection_status !== 'rejected'"
-                      type="button"
-                      class="planning__action planning__action--ghost"
-                      @click="applyScreeningSelection(screening.id, 'rejected')"
-                    >
-                      Ignorer
-                    </button>
-                    <button
-                      v-else
-                      type="button"
-                      class="planning__action planning__action--ghost"
-                      @click="removeScreeningSelection(screening.id)"
-                    >
-                      Annuler
-                    </button>
-                   </div>
+                  <ScreeningActions
+                    :screening="screening"
+                    context="timeline"
+                    size="sm"
+                    @select="applyScreeningSelection(screening.id, $event)"
+                    @clear="removeScreeningSelection(screening.id)"
+                  />
                    <p v-if="screening.isConflict || screening.isAlternative || screening.isMustLock" class="planning__timeline-note">
                      {{ screeningDecisionNote(screening) }}
                    </p>
@@ -495,64 +459,12 @@ async function removeScreeningSelection(screeningId: number) {
             <span v-if="detailScreening.recommendationBlockedBy" class="planning__recommendation-chip planning__recommendation-chip--warning">{{ detailScreening.recommendationBlockedBy }}</span>
           </div>
           <p v-if="screeningDecisionNote(detailScreening)" class="planning__detail-note">{{ screeningDecisionNote(detailScreening) }}</p>
-          <div class="planning__detail-actions">
-            <button
-              v-if="detailScreening.selection_status === 'tentative'"
-              type="button"
-              class="planning__action planning__action--primary planning__action--confirm"
-              @click="applyScreeningSelection(detailScreening.id, 'confirmed')"
-            >
-              Confirmer cette séance
-            </button>
-            <button
-              v-else-if="detailScreening.selection_status === 'rejected'"
-              type="button"
-              class="planning__action planning__action--state"
-              disabled
-            >
-              Ignoré
-            </button>
-            <button
-              v-else-if="detailScreening.selection_status !== 'confirmed'"
-              type="button"
-              class="planning__action planning__action--primary planning__action--tentative"
-              @click="applyScreeningSelection(detailScreening.id, 'tentative')"
-            >
-              {{ screeningPrimaryActionLabel(detailScreening) }}
-            </button>
-            <button
-              v-if="detailScreening.selection_status === 'confirmed'"
-              type="button"
-              class="planning__action planning__action--secondary"
-              @click="applyScreeningSelection(detailScreening.id, 'tentative')"
-            >
-              Repasser en tentative
-            </button>
-            <button
-              v-if="detailScreening.selection_status === 'tentative' || detailScreening.selection_status === 'confirmed'"
-              type="button"
-              class="planning__action planning__action--ghost"
-              @click="removeScreeningSelection(detailScreening.id)"
-            >
-              Retirer du planning
-            </button>
-            <button
-              v-else-if="detailScreening.selection_status !== 'rejected'"
-              type="button"
-              class="planning__action planning__action--ghost"
-              @click="applyScreeningSelection(detailScreening.id, 'rejected')"
-            >
-              Ignorer cette séance
-            </button>
-            <button
-              v-else
-              type="button"
-              class="planning__action planning__action--ghost"
-              @click="removeScreeningSelection(detailScreening.id)"
-            >
-              Annuler
-            </button>
-          </div>
+          <ScreeningActions
+            :screening="detailScreening"
+            context="detail"
+            @select="applyScreeningSelection(detailScreening.id, $event)"
+            @clear="removeScreeningSelection(detailScreening.id)"
+          />
         </section>
 
         <section class="planning__film-context">
@@ -612,65 +524,12 @@ async function removeScreeningSelection(screeningId: number) {
                 <span v-if="option.recommendationBlockedBy" class="planning__recommendation-chip planning__recommendation-chip--warning">{{ option.recommendationBlockedBy }}</span>
                </div>
                <p class="planning__detail-note">{{ screeningDecisionNote(option) }}</p>
-              <div class="planning__detail-actions">
-                <button
-                  v-if="option.selection_status === 'tentative'"
-                  type="button"
-                  class="planning__action planning__action--primary planning__action--confirm"
-                  @click="applyScreeningSelection(option.id, 'confirmed')"
-                >
-                  Confirmer cette séance
-                </button>
-                <button
-                  v-else-if="option.selection_status === 'rejected'"
-                  type="button"
-                  class="planning__action planning__action--state"
-                  disabled
-                >
-                  Ignoré
-                </button>
-                <button
-                  v-else-if="option.selection_status !== 'confirmed'"
-                  type="button"
-                  class="planning__action planning__action--primary planning__action--tentative"
-                  @click="applyScreeningSelection(option.id, 'tentative')"
-                >
-                  {{ screeningPrimaryActionLabel(option) }}
-                </button>
-
-                <button
-                  v-if="option.selection_status === 'confirmed'"
-                  type="button"
-                  class="planning__action planning__action--secondary"
-                  @click="applyScreeningSelection(option.id, 'tentative')"
-                >
-                  Repasser en tentative
-                </button>
-                <button
-                  v-if="option.selection_status === 'tentative' || option.selection_status === 'confirmed'"
-                  type="button"
-                  class="planning__action planning__action--ghost"
-                  @click="removeScreeningSelection(option.id)"
-                >
-                  Retirer du planning
-                </button>
-                <button
-                  v-else-if="option.selection_status !== 'rejected'"
-                  type="button"
-                  class="planning__action planning__action--ghost"
-                  @click="applyScreeningSelection(option.id, 'rejected')"
-                >
-                  Ignorer cette séance
-                </button>
-                <button
-                  v-else
-                  type="button"
-                  class="planning__action planning__action--ghost"
-                  @click="removeScreeningSelection(option.id)"
-                >
-                  Annuler
-                </button>
-              </div>
+              <ScreeningActions
+                :screening="option"
+                context="detail"
+                @select="applyScreeningSelection(option.id, $event)"
+                @clear="removeScreeningSelection(option.id)"
+              />
               <div class="planning__session-links">
                 <a v-if="option.ticket_url" :href="option.ticket_url" target="_blank" rel="noopener">billetterie</a>
                 <a href="#" @click="exportScreeningIcal(option, $event)">agenda</a>

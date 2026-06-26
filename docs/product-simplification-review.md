@@ -73,7 +73,7 @@ Fichiers les plus critiques :
 - `frontend/src/composables/usePlanningModel.ts` : environ 1053 lignes
 - `frontend/src/styles/planning.css` : environ 978 lignes
 - `frontend/src/style.css` : environ 818 lignes
-- `frontend/src/views/PlanningView.vue` : environ 700 lignes
+- `frontend/src/views/PlanningView.vue` : environ 559 lignes apres la premiere extraction `ScreeningActions`
 - `frontend/src/stores/festival.ts` : environ 520 lignes
 - `frontend/src/views/FilmsView.vue` : environ 443 lignes
 - `frontend/src/views/SettingsView.vue` : environ 424 lignes
@@ -147,20 +147,20 @@ Il faut separer :
 
 ### P1 - Le produit a besoin d'une reduction reelle, pas seulement d'une base UI
 
-La branche actuelle ajoute des composants UI generiques (`UiButton`, `UiBadge`, `UiChip`, `UiPanel`) et des styles globaux.
+La branche ajoute des composants UI generiques (`UiButton`, `UiBadge`, `UiChip`, `UiPanel`) et des styles globaux.
 
-Ce n'est pas encore une simplification si les vues existantes continuent d'utiliser leurs propres patterns.
+La premiere extraction utile a maintenant ete faite : `ScreeningActions` consomme `UiButton` et remplace les actions de seance repetees dans `Planning`.
 
 Risque :
 
-- on ajoute une deuxieme maniere de construire les memes boutons, badges et panels
+- si les migrations suivantes s'arretent ici, on garde deux manieres de construire badges, chips et panels
 - une junior dev doit comprendre l'ancien systeme et le nouveau systeme
-- le nombre de lignes augmente avant de baisser
+- le nombre de lignes baisse dans `PlanningView.vue`, mais la dette restante est encore dans les pills, chips et panels locaux
 
 Decision recommandee :
 
-- garder les composants seulement si la prochaine passe supprime du code dans `PlanningView.vue` et `planning.css`
-- sinon, les retirer ou les reporter
+- continuer uniquement les extractions qui suppriment du code dans `PlanningView.vue` ou `planning.css`
+- prochaine cible recommandee : `ScreeningStatusPill` et `RecommendationChips`
 
 ### P1 - `Planning` doit etre le premier chantier de reduction
 
@@ -174,7 +174,7 @@ Decision recommandee :
 - panel detail
 - actions directes
 
-Le meilleur premier composant metier est `ScreeningActions`.
+Le premier composant metier extrait est `ScreeningActions`.
 
 Responsabilite proposee :
 
@@ -359,16 +359,16 @@ Definition of done :
 - la PR explique ce qui doit etre simplifie
 - la PR ne pretend pas avoir deja reduit le code si ce n'est pas le cas
 
-### Phase 2 - Premier Gain Frontend Reel
+### Phase 2 - Continuer Le Gain Frontend
 
-But : reduire `Planning` sans changer le comportement.
+But : continuer a reduire `Planning` sans changer le comportement.
 
 Actions :
 
-- creer `ScreeningActions`
-- l'utiliser dans timeline, panel actif et alternatives
-- supprimer les classes CSS remplacees
-- ajouter des tests ciblant les libelles/actions
+- poursuivre apres `ScreeningActions` avec `ScreeningStatusPill`
+- creer `RecommendationChips`
+- supprimer les classes CSS remplacees apres migration effective
+- ajouter des tests ciblant les labels, tones et actions visibles
 
 Definition of done :
 
@@ -437,8 +437,8 @@ Definition of done :
 La branche `post-2026-simplification` est utile comme point de depart, mais elle doit etre presentee honnetement :
 
 - elle ajoute une base UI
-- elle ne l'a pas encore consommee dans les vues principales
-- elle ne reduit donc pas encore le code produit
+- elle commence a la consommer dans `Planning` via `ScreeningActions`
+- elle reduit maintenant une duplication concrete, mais ne simplifie pas encore tout le frontend
 - elle ajoute aussi un theme et des fonts qui semblent hors scope maintenabilite
 
 Points a traiter avant merge ou dans une decision explicite :

@@ -6,19 +6,13 @@ describe('uiClasses', () => {
   it('builds BEM classes for button variants', () => {
     expect(
       uiButtonClasses({
-        variant: 'soft',
-        tone: 'confirmed',
+        variant: 'confirm',
         size: 'sm',
-        active: true,
-        block: true,
       }),
     ).toEqual([
       'ui-button',
-      'ui-button--soft',
-      'ui-button--confirmed',
+      'ui-button--confirm',
       'ui-button--sm',
-      'ui-button--active',
-      'ui-button--block',
     ])
   })
 
